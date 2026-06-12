@@ -1,0 +1,40 @@
+:root {
+  --color-canvas: 210 55% 97%;
+  --color-surface: 0 0% 100%;
+  --color-panel: 0 0% 100%;
+  --color-border: 210 34% 82%;
+  --color-ink: 218 32% 16%;
+  --color-muted: 216 14% 43%;
+  --color-accent: 218 89% 56%;
+  --color-accent-soft: 193 100% 92%;
+  --color-accent-strong: 216 87% 36%;
+  --color-success: 164 56% 38%;
+  --color-warning: 31 94% 55%;
+
+  --space-gutter: clamp(1rem, 2vw, 1.5rem);
+  --space-card: clamp(1.25rem, 2.8vw, 1.75rem);
+  --space-cluster: clamp(2rem, 4vw, 3rem);
+  --space-section: clamp(3rem, 8vw, 6rem);
+
+  --font-display: "Sora", "SF Pro Display", "Segoe UI", sans-serif;
+  --font-body: "Inter", "SF Pro Text", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace;
+
+  --shadow-soft: 0 14px 36px -22px rgba(15, 23, 42, 0.25);
+  --shadow-glass:
+    0 30px 70px -34px rgba(15, 23, 42, 0.34),
+    0 18px 34px -22px rgba(47, 107, 255, 0.18);
+  --shadow-lifted:
+    0 36px 88px -36px rgba(8, 21, 33, 0.34),
+    0 24px 44px -28px rgba(18, 165, 148, 0.16);
+
+  --radius-panel: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --space-section: clamp(2.5rem, 10vw, 4rem);
+    --radius-panel: 1.25rem;
+  }
+}
+
