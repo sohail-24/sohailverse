@@ -10,8 +10,17 @@ export default function AdminPage() {
   const [rating, setRating] = useState("");
   const [message, setMessage] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
   const addMovie = async () => {
+    if (!title || !genre || !rating) {
+      setMessage("⚠️ Please fill all fields");
+      return;
+    }
+
     try {
+      setLoading(true);
+
       const response = await fetch(
         "https://sohailverse-api.sohailkhan88008.workers.dev/api/movies",
         {
@@ -31,7 +40,6 @@ export default function AdminPage() {
 
       if (data.success) {
         setMessage("✅ Movie added successfully");
-      
         setTitle("");
         setGenre("");
         setRating("");
@@ -41,8 +49,11 @@ export default function AdminPage() {
     } catch (error) {
       console.error(error);
       setMessage("❌ Error connecting to API");
+    } finally {
+      setLoading(false);
     }
   };   
+
       if (!authenticated) {
         return (
           <PageShell
@@ -118,9 +129,10 @@ export default function AdminPage() {
 
             <button
               onClick={addMovie}
+              disabled={loading}
               className="rounded-xl bg-black px-4 py-3 text-white"
             >
-              Add Movie
+              {loading ? "Adding..." : "Add Movie"}
             </button>
 
             {message && (
