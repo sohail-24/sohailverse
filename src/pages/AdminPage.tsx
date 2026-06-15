@@ -9,6 +9,13 @@ type Movie = {
   rating: number;
 };
 
+type TravelPost = {
+  id: number;
+  country: string;
+  city: string;
+  description: string;
+};
+
 const API_URL =
   "https://sohailverse-api.sohailkhan88008.workers.dev";
 
@@ -26,6 +33,13 @@ export default function AdminPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [moviesLoading, setMoviesLoading] = useState(false);
 
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [description, setDescription] = useState("");
+
+  const [travels, setTravels] = useState<TravelPost[]>([]);
+  const [travelLoading, setTravelLoading] = useState(false);
+
   const loadMovies = async () => {
     try {
       setMoviesLoading(true);
@@ -42,6 +56,25 @@ export default function AdminPage() {
       setMessage("❌ Failed to load movies");
     } finally {
       setMoviesLoading(false);
+    }
+  };
+  
+  const loadTravelPosts = async () => {
+    try {
+      setTravelLoading(true);
+
+      const response = await fetch(
+        `${API_URL}/api/travel`
+      );
+
+      const data = await response.json();
+
+      setTravels(data);
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Failed to load travel posts");
+    } finally {
+      setTravelLoading(false);
     }
   };
 
