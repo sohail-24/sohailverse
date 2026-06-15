@@ -81,6 +81,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (authenticated) {
       loadMovies();
+      loadTravelPosts();
     }
   }, [authenticated]);
 
@@ -128,6 +129,83 @@ export default function AdminPage() {
       setLoading(false);
     }
   };
+  
+  const addTravelPost = async () => {
+    if (!country || !city) {
+      setMessage("⚠️ Please fill country and city");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        `${API_URL}/api/travel`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            country,
+            city,
+            description,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage("✅ Travel post added successfully");
+
+        setCountry("");
+        setCity("");
+        setDescription("");
+
+        loadTravelPosts();
+      } else {
+        setMessage("❌ Failed to add travel post");
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Error connecting to API");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteTravelPost = async (id: number) => {
+    const confirmDelete = window.confirm(
+      "Delete this travel post?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/travel/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage("🗑️ Travel post deleted");
+        loadTravelPosts();
+      } else {
+        setMessage("❌ Delete failed");
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Error deleting travel post");
+    }
+  };
+
+
+
 
   const deleteMovie = async (id: number) => {
     const confirmDelete = window.confirm(
@@ -308,6 +386,87 @@ export default function AdminPage() {
           )}
         </GlassPanel>
       </div>
+      <GlassPanel className="p-6">
+        <h2 className="mb-4 text-2xl font-semibold">
+          🌍 Travel Manager
+        </h2>
+
+        <div className="grid gap-4">
+          <input
+            type="text"
+            placeholder="Country"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className="rounded-xl border p-3"
+          />
+
+          <input
+            type="text"
+            placeholder="City"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className="rounded-xl border p-3"
+          />
+
+          <textarea
+            placeholder="Travel Description"
+            value={description}
+            onChange={(e) =>
+              setDescription(e.target.value)
+            }
+            className="rounded-xl border p-3 min-h-[120px]"
+          />
+
+          <button
+            onClick={addTravelPost}
+            disabled={loading}
+            className="rounded-xl bg-black px-4 py-3 text-white"
+          >
+            Add Travel Post
+          </button>
+        </div>
+      </GlassPanel>
+
+      <GlassPanel className="p-6">
+        <h2 className="mb-4 text-2xl font-semibold">
+          🌎 Travel Library
+        </h2>
+
+        {travelLoading ? (
+          <p>Loading travel posts...</p>
+        ) : (
+          <div className="grid gap-4">
+            {travels.map((travel) => (
+              <div
+                key={travel.id}
+                className="rounded-xl border p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold">
+                      #{travel.id} - {travel.country}
+                    </h3>
+
+                    <p>City: {travel.city}</p>
+
+                    <p>{travel.description}</p>
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      deleteTravelPost(travel.id)
+                    }
+                    className="rounded-xl bg-red-500 px-4 py-2 text-white"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </GlassPanel>
+
     </PageShell>
   );
 }
