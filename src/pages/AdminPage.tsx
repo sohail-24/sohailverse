@@ -16,6 +16,13 @@ type TravelPost = {
   description: string;
 };
 
+type AcademyPost = {
+  id: number;
+  skill: string;
+  category: string;
+  level: string;
+};
+
 const API_URL = "https://sohailverse-api.sohailkhan88008.workers.dev";
 
 export default function AdminPage() {
@@ -34,6 +41,12 @@ export default function AdminPage() {
   const [description, setDescription] = useState("");
   const [travels, setTravels] = useState<TravelPost[]>([]);
   const [travelLoading, setTravelLoading] = useState(false);
+
+  const [skill, setSkill] = useState("");
+  const [category, setCategory] = useState("");
+  const [level, setLevel] = useState("");
+  const [academy, setAcademy] = useState<AcademyPost[]>([]);
+  const [academyLoading, setAcademyLoading] = useState(false);
 
   const loadMovies = async () => {
     try {
@@ -63,10 +76,25 @@ export default function AdminPage() {
     }
   };
 
+  const loadAcademyPosts = async () => {
+    try {
+      setAcademyLoading(true);
+      const response = await fetch(`${API_URL}/api/academy`);
+      const data = await response.json();
+      setAcademy(data);
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Failed to load academy posts");
+    } finally {
+      setAcademyLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (authenticated) {
       loadMovies();
       loadTravelPosts();
+      loadAcademyPosts();
     }
   }, [authenticated]);
 
@@ -179,6 +207,62 @@ export default function AdminPage() {
     } catch (error) {
       console.error(error);
       setMessage("❌ Error deleting travel post");
+    }
+  };
+
+  const addAcademyPost = async () => {
+    if (!skill || !category || !level) {
+      setMessage("⚠️ Please fill all fields");
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/api/academy`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          skill,
+          category,
+          level,
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setMessage("✅ Academy post added successfully");
+        setSkill("");
+        setCategory("");
+        setLevel("");
+        loadAcademyPosts();
+      } else {
+        setMessage("❌ Failed to add academy post");
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Error connecting to API");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteAcademyPost = async (id: number) => {
+    const confirmDelete = window.confirm("Delete this academy post?");
+    if (!confirmDelete) return;
+    try {
+      const response = await fetch(`${API_URL}/api/academy/${id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (data.success) {
+        setMessage("🗑️ Academy post deleted");
+        loadAcademyPosts();
+      } else {
+        setMessage("❌ Delete failed");
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Error deleting academy post");
     }
   };
 
@@ -350,6 +434,71 @@ export default function AdminPage() {
                     </div>
                     <button
                       onClick={() => deleteTravelPost(travel.id)}
+                      className="rounded-xl bg-red-500 px-4 py-2 text-white"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </GlassPanel>
+
+        {/* Academy Manager */}
+        <GlassPanel className="p-6">
+          <h2 className="text-2xl font-semibold mb-6">🎓 Academy Manager</h2>
+          <div className="grid gap-4">
+            <input
+              type="text"
+              placeholder="Skill"
+              value={skill}
+              onChange={(e) => setSkill(e.target.value)}
+              className="rounded-xl border p-3"
+            />
+            <input
+              type="text"
+              placeholder="Category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="rounded-xl border p-3"
+            />
+            <input
+              type="text"
+              placeholder="Level"
+              value={level}
+              onChange={(e) => setLevel(e.target.value)}
+              className="rounded-xl border p-3"
+            />
+            <button
+              onClick={addAcademyPost}
+              disabled={loading}
+              className="rounded-xl bg-black px-4 py-3 text-white"
+            >
+              {loading ? "Adding..." : "Add Academy Post"}
+            </button>
+          </div>
+        </GlassPanel>
+
+        {/* Academy Library */}
+        <GlassPanel className="p-6">
+          <h2 className="mb-4 text-2xl font-semibold">📚 Academy Library</h2>
+          {academyLoading ? (
+            <p>Loading academy posts...</p>
+          ) : (
+            <div className="grid gap-4">
+              {academy.map((post) => (
+                <div key={post.id} className="rounded-xl border p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">
+                        #{post.id} - {post.skill}
+                      </h3>
+                      <p>Category: {post.category}</p>
+                      <p>Level: {post.level}</p>
+                    </div>
+                    <button
+                      onClick={() => deleteAcademyPost(post.id)}
                       className="rounded-xl bg-red-500 px-4 py-2 text-white"
                     >
                       Delete
