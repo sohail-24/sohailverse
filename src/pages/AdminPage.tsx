@@ -23,6 +23,13 @@ type AcademyPost = {
   level: string;
 };
 
+type DevOpsPost = {
+  id: number;
+  title: string;
+  category: string;
+  description: string;
+};
+
 const API_URL = "https://sohailverse-api.sohailkhan88008.workers.dev";
 
 export default function AdminPage() {
@@ -47,6 +54,13 @@ export default function AdminPage() {
   const [level, setLevel] = useState("");
   const [academy, setAcademy] = useState<AcademyPost[]>([]);
   const [academyLoading, setAcademyLoading] = useState(false);
+
+  const [devopsTitle, setDevopsTitle] = useState("");
+  const [devopsCategory, setDevopsCategory] = useState("");
+  const [devopsDescription, setDevopsDescription] = useState("");
+
+  const [devops, setDevops] = useState<DevOpsPost[]>([]);
+  const [devopsLoading, setDevopsLoading] = useState(false);
 
   const loadMovies = async () => {
     try {
@@ -90,11 +104,28 @@ export default function AdminPage() {
     }
   };
 
+  const loadDevOpsPosts = async () => {
+    try {
+      setDevopsLoading(true);
+
+      const response = await fetch(`${API_URL}/api/devops`);
+      const data = await response.json();
+
+      setDevops(data);
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Failed to load DevOps posts");
+    } finally {
+      setDevopsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (authenticated) {
       loadMovies();
       loadTravelPosts();
       loadAcademyPosts();
+      loadDevOpsPosts();
     }
   }, [authenticated]);
 
@@ -265,6 +296,76 @@ export default function AdminPage() {
       setMessage("❌ Error deleting academy post");
     }
   };
+
+  const addDevOpsPost = async () => {
+    if (!devopsTitle || !devopsCategory || !devopsDescription) {
+      setMessage("⚠️ Please fill all fields");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_URL}/api/devops`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: devopsTitle,
+          category: devopsCategory,
+          description: devopsDescription,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage("✅ DevOps post added");
+
+        setDevopsTitle("");
+        setDevopsCategory("");
+        setDevopsDescription("");
+
+        loadDevOpsPosts();
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Error adding DevOps post");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteDevOpsPost = async (id: number) => {
+    const confirmDelete = window.confirm(
+      "Delete this DevOps post?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/devops/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage("🗑️ DevOps post deleted");
+        loadDevOpsPosts();
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Error deleting DevOps post");
+    }
+  };
+
+
+
 
   if (!authenticated) {
     return (
@@ -509,6 +610,101 @@ export default function AdminPage() {
             </div>
           )}
         </GlassPanel>
+
+        <GlassPanel className="p-6">
+          <h2 className="text-2xl font-semibold mb-6">
+            ⚙️ DevOps Manager
+          </h2>
+
+          <div className="grid gap-4">
+            <input
+              type="text"
+              placeholder="Project Title"
+              value={devopsTitle}
+              onChange={(e) =>
+                setDevopsTitle(e.target.value)
+              }
+              className="rounded-xl border p-3"
+            />
+
+            <input
+              type="text"
+              placeholder="Category"
+              value={devopsCategory}
+              onChange={(e) =>
+                setDevopsCategory(e.target.value)
+              }
+              className="rounded-xl border p-3"
+            />
+
+            <textarea
+              placeholder="Description"
+              value={devopsDescription}
+              onChange={(e) =>
+                setDevopsDescription(e.target.value)
+              }
+              rows={3}
+              className="rounded-xl border p-3"
+            />
+
+            <button
+              onClick={addDevOpsPost}
+              disabled={loading}
+              className="rounded-xl bg-black px-4 py-3 text-white"
+            >
+              {loading ? "Adding..." : "Add DevOps Project"}
+            </button>
+          </div>
+        </GlassPanel>
+
+        <GlassPanel className="p-6">
+          <h2 className="mb-4 text-2xl font-semibold">
+            🚀 DevOps Library
+          </h2>
+
+          {devopsLoading ? (
+            <p>Loading projects...</p>
+          ) : (
+            <div className="grid gap-4">
+              {devops.map((project) => (
+                <div
+                  key={project.id}
+                  className="rounded-xl border p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">
+                        #{project.id} - {project.title}
+                      </h3>
+
+                      <p>
+                        Category: {project.category}
+                      </p>
+
+                      <p>
+                        Description:
+                        {project.description}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        deleteDevOpsPost(project.id)
+                      }
+                      className="rounded-xl bg-red-500 px-4 py-2 text-white"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </GlassPanel>
+
+
+
+
       </div>
     </PageShell>
   );

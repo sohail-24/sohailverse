@@ -1,6 +1,17 @@
+import { useEffect, useState } from "react";
 import PageShell from "../components/layout/PageShell";
 import GlassPanel from "../components/ui/GlassPanel";
 import Badge from "../components/ui/Badge";
+
+type DevOpsProject = {
+  id: number;
+  title: string;
+  category: string;
+  description: string;
+};
+
+const API_URL =
+  "https://sohailverse-api.sohailkhan88008.workers.dev";
 
 const technologies = [
   "AWS",
@@ -13,34 +24,30 @@ const technologies = [
   "Jenkins",
 ];
 
-const projects = [
-  {
-    name: "SohailVerse",
-    stack: "React + Cloudflare",
-    description:
-      "Personal universe platform combining travel, learning, movies, and DevOps.",
-  },
-  {
-    name: "School Management System",
-    stack: "Django + DevOps",
-    description:
-      "Full-stack academic management platform with deployment planning.",
-  },
-  {
-    name: "Kubernetes Cluster",
-    stack: "Kubeadm + Calico",
-    description:
-      "Multi-node cluster built for learning orchestration and networking.",
-  },
-  {
-    name: "GitOps Experiments",
-    stack: "ArgoCD",
-    description:
-      "Learning declarative deployments and Git-driven infrastructure.",
-  },
-];
-
 export default function DevOpsPage() {
+  const [projects, setProjects] = useState<DevOpsProject[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/devops`
+      );
+
+      const data = await response.json();
+
+      setProjects(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <PageShell
       eyebrow="DevOps Forge"
@@ -50,27 +57,43 @@ export default function DevOpsPage() {
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <GlassPanel className="p-6">
-          <p className="text-sm text-muted">Technologies</p>
-          <p className="mt-2 text-4xl font-bold">8+</p>
+          <p className="text-sm text-muted">
+            Technologies
+          </p>
+          <p className="mt-2 text-4xl font-bold">
+            {technologies.length}+
+          </p>
         </GlassPanel>
 
         <GlassPanel className="p-6">
-          <p className="text-sm text-muted">Projects</p>
-          <p className="mt-2 text-4xl font-bold">10+</p>
+          <p className="text-sm text-muted">
+            Projects
+          </p>
+          <p className="mt-2 text-4xl font-bold">
+            {projects.length}
+          </p>
         </GlassPanel>
 
         <GlassPanel className="p-6">
-          <p className="text-sm text-muted">Cloud Platforms</p>
-          <p className="mt-2 text-4xl font-bold">2</p>
+          <p className="text-sm text-muted">
+            Cloud Platforms
+          </p>
+          <p className="mt-2 text-4xl font-bold">
+            2
+          </p>
         </GlassPanel>
 
         <GlassPanel className="p-6">
-          <p className="text-sm text-muted">Years Learning</p>
-          <p className="mt-2 text-4xl font-bold">3+</p>
+          <p className="text-sm text-muted">
+            Years Learning
+          </p>
+          <p className="mt-2 text-4xl font-bold">
+            3+
+          </p>
         </GlassPanel>
       </div>
 
-      {/* Technologies */}
+      {/* Technology Stack */}
       <GlassPanel className="p-8">
         <h2 className="mb-6 text-2xl font-semibold">
           Technology Stack
@@ -92,43 +115,65 @@ export default function DevOpsPage() {
         </h2>
 
         <div className="flex flex-wrap gap-3">
-          <Badge variant="accent">Kubernetes</Badge>
-          <Badge variant="accent">GitOps</Badge>
-          <Badge variant="accent">Cloudflare Workers</Badge>
-          <Badge variant="accent">Cloudflare D1</Badge>
-          <Badge variant="accent">React</Badge>
-          <Badge variant="accent">Platform Engineering</Badge>
+          <Badge variant="accent">
+            Kubernetes
+          </Badge>
+          <Badge variant="accent">
+            GitOps
+          </Badge>
+          <Badge variant="accent">
+            Cloudflare Workers
+          </Badge>
+          <Badge variant="accent">
+            Cloudflare D1
+          </Badge>
+          <Badge variant="accent">
+            React
+          </Badge>
+          <Badge variant="accent">
+            Platform Engineering
+          </Badge>
         </div>
       </GlassPanel>
 
-      {/* Projects */}
+      {/* Dynamic Projects */}
       <div>
         <h2 className="mb-4 text-2xl font-semibold">
           Featured Projects
         </h2>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {projects.map((project) => (
-            <GlassPanel
-              key={project.name}
-              className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold">
-                  {project.name}
-                </h3>
+        {loading ? (
+          <GlassPanel className="p-6">
+            Loading DevOps Projects...
+          </GlassPanel>
+        ) : projects.length === 0 ? (
+          <GlassPanel className="p-6">
+            No DevOps projects found.
+          </GlassPanel>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {projects.map((project) => (
+              <GlassPanel
+                key={project.id}
+                className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold">
+                    {project.title}
+                  </h3>
 
-                <span className="text-sm text-muted">
-                  {project.stack}
-                </span>
-              </div>
+                  <Badge variant="accent">
+                    {project.category}
+                  </Badge>
+                </div>
 
-              <p className="mt-4 leading-7 text-muted">
-                {project.description}
-              </p>
-            </GlassPanel>
-          ))}
-        </div>
+                <p className="mt-4 leading-7 text-muted">
+                  {project.description}
+                </p>
+              </GlassPanel>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Certifications */}
@@ -144,7 +189,8 @@ export default function DevOpsPage() {
             </h3>
 
             <p className="text-muted">
-              Cloud architecture, networking, security, and AWS services.
+              Cloud architecture, networking,
+              security, and AWS services.
             </p>
           </div>
 
@@ -154,13 +200,14 @@ export default function DevOpsPage() {
             </h3>
 
             <p className="text-muted">
-              Docker, Kubernetes, Linux, Git, CI/CD, and automation.
+              Docker, Kubernetes, Linux, Git,
+              CI/CD, and automation.
             </p>
           </div>
         </div>
       </GlassPanel>
 
-      {/* Journey Timeline */}
+      {/* Journey */}
       <GlassPanel className="p-8">
         <h2 className="mb-6 text-2xl font-semibold">
           DevOps Journey
@@ -173,7 +220,8 @@ export default function DevOpsPage() {
             </h3>
 
             <p className="text-muted">
-              Electronics & Instrumentation Engineering
+              Electronics & Instrumentation
+              Engineering
             </p>
           </div>
 
@@ -183,7 +231,8 @@ export default function DevOpsPage() {
             </h3>
 
             <p className="text-muted">
-              Cloud foundations and architecture concepts.
+              Cloud foundations and architecture
+              concepts.
             </p>
           </div>
 
@@ -193,7 +242,8 @@ export default function DevOpsPage() {
             </h3>
 
             <p className="text-muted">
-              Docker, Kubernetes, Linux, Git, and CI/CD.
+              Docker, Kubernetes, Linux, Git,
+              and CI/CD.
             </p>
           </div>
 
@@ -203,7 +253,8 @@ export default function DevOpsPage() {
             </h3>
 
             <p className="text-muted">
-              Applying cloud and DevOps concepts through real projects.
+              Applying cloud and DevOps concepts
+              through real projects.
             </p>
           </div>
         </div>
@@ -216,10 +267,13 @@ export default function DevOpsPage() {
         </h2>
 
         <p className="leading-8 text-muted">
-          DevOps combines development, automation, cloud computing,
-          and operations into a single discipline focused on building
-          reliable systems. I enjoy creating solutions that are scalable,
-          repeatable, and continuously improving through automation.
+          DevOps combines development,
+          automation, cloud computing, and
+          operations into a single discipline
+          focused on building reliable systems.
+          I enjoy creating solutions that are
+          scalable, repeatable, and continuously
+          improving through automation.
         </p>
       </GlassPanel>
     </PageShell>
