@@ -36,6 +36,14 @@ type TimelinePost = {
   description: string;
 };
 
+type AtlasPost = {
+  id: number;
+  country: string;
+  status: string;
+  year: string;
+  highlight: string;
+};
+
 const API_URL = "https://sohailverse-api.sohailkhan88008.workers.dev";
 
 export default function AdminPage() {
@@ -74,6 +82,18 @@ export default function AdminPage() {
 
   const [timeline, setTimeline] = useState<TimelinePost[]>([]);
   const [timelineLoading, setTimelineLoading] = useState(false);
+
+  const [atlasCountry, setAtlasCountry] = useState("");
+  const [atlasStatus, setAtlasStatus] = useState("");
+  const [atlasYear, setAtlasYear] = useState("");
+  const [atlasHighlight, setAtlasHighlight] =
+    useState("");
+
+const [atlas, setAtlas] =
+  useState<AtlasPost[]>([]);
+
+const [atlasLoading, setAtlasLoading] =
+  useState(false);
 
   const loadMovies = async () => {
     try {
@@ -140,6 +160,7 @@ export default function AdminPage() {
       loadAcademyPosts();
       loadDevOpsPosts();
       loadTimelinePosts();
+      loadAtlasPosts();
     }
   }, [authenticated]);
 
@@ -452,6 +473,92 @@ export default function AdminPage() {
 
       if (data.success) {
         loadTimelinePosts();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const loadAtlasPosts = async () => {
+    try {
+      setAtlasLoading(true);
+
+      const response = await fetch(
+        `${API_URL}/api/atlas`
+      );
+
+      const data = await response.json();
+
+      setAtlas(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setAtlasLoading(false);
+    }
+  };
+
+  const addAtlasPost = async () => {
+    if (
+      !atlasCountry ||
+      !atlasStatus ||
+      !atlasYear ||
+      !atlasHighlight
+    ) {
+      setMessage("⚠️ Please fill all fields");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/atlas`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            country: atlasCountry,
+            status: atlasStatus,
+            year: atlasYear,
+            highlight: atlasHighlight,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setAtlasCountry("");
+        setAtlasStatus("");
+        setAtlasYear("");
+        setAtlasHighlight("");
+
+        loadAtlasPosts();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const deleteAtlasPost = async (
+    id: number
+  ) => {
+    if (!window.confirm("Delete country?"))
+      return;
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/atlas/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        loadAtlasPosts();
       }
     } catch (error) {
       console.error(error);
@@ -888,6 +995,117 @@ export default function AdminPage() {
             </div>
           )}
         </GlassPanel>
+
+        <GlassPanel className="p-6">
+          <h2 className="text-2xl font-semibold mb-6">
+            🌍 Atlas Manager
+          </h2>
+
+          <div className="grid gap-4">
+            <input
+              type="text"
+              placeholder="Country"
+              value={atlasCountry}
+              onChange={(e) =>
+                setAtlasCountry(e.target.value)
+              }
+              className="rounded-xl border p-3"
+            />
+
+            <input
+              type="text"
+              placeholder="Status"
+              value={atlasStatus}
+              onChange={(e) =>
+                setAtlasStatus(e.target.value)
+              }
+              className="rounded-xl border p-3"
+            />
+
+            <input
+              type="text"
+              placeholder="Year"
+              value={atlasYear}
+              onChange={(e) =>
+                setAtlasYear(e.target.value)
+              }
+              className="rounded-xl border p-3"
+            />
+
+            <textarea
+              placeholder="Highlight"
+              value={atlasHighlight}
+              onChange={(e) =>
+                setAtlasHighlight(
+                  e.target.value
+                )
+              }
+              rows={3}
+              className="rounded-xl border p-3"
+            />
+
+            <button
+              onClick={addAtlasPost}
+              className="rounded-xl bg-black px-4 py-3 text-white"
+            >
+              Add Country
+            </button>
+          </div>
+        </GlassPanel>
+
+        <GlassPanel className="p-6">
+          <h2 className="mb-4 text-2xl font-semibold">
+            🌎 Atlas Library
+          </h2>
+
+          {atlasLoading ? (
+            <p>Loading countries...</p>
+          ) : (
+            <div className="grid gap-4">
+              {atlas.map((country) => (
+                <div
+                  key={country.id}
+                  className="rounded-xl border p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">
+                        #{country.id} - {country.country}
+                      </h3>
+
+                      <p>
+                        Status: {country.status}
+                      </p>
+
+                      <p>
+                        Year: {country.year}
+                      </p>
+
+                      <p>
+                        Highlight:
+                        {country.highlight}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        deleteAtlasPost(
+                          country.id
+                        )
+                      }
+                      className="rounded-xl bg-red-500 px-4 py-2 text-white"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </GlassPanel>
+
+
+
 
 
 
