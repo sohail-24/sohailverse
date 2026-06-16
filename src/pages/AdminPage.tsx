@@ -139,6 +139,7 @@ export default function AdminPage() {
       loadTravelPosts();
       loadAcademyPosts();
       loadDevOpsPosts();
+      loadTimelinePosts();
     }
   }, [authenticated]);
 
@@ -376,6 +377,90 @@ export default function AdminPage() {
       setMessage("❌ Error deleting DevOps post");
     }
   };
+
+  const loadTimelinePosts = async () => {
+    try {
+      setTimelineLoading(true);
+
+      const response = await fetch(
+        `${API_URL}/api/timeline`
+      );
+
+      const data = await response.json();
+
+      setTimeline(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setTimelineLoading(false);
+    }
+  };
+
+  const addTimelinePost = async () => {
+    if (
+      !timelineTitle ||
+      !timelineCategory ||
+      !timelineDescription
+    ) {
+      setMessage("⚠️ Please fill all fields");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/timeline`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: timelineTitle,
+            category: timelineCategory,
+            description: timelineDescription,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setTimelineTitle("");
+        setTimelineCategory("");
+        setTimelineDescription("");
+
+        loadTimelinePosts();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const deleteTimelinePost = async (id: number) => {
+    if (!window.confirm("Delete timeline event?"))
+      return;
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/timeline/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        loadTimelinePosts();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  
+
+
 
 
 
@@ -714,6 +799,97 @@ export default function AdminPage() {
             </div>
           )}
         </GlassPanel>
+
+        <GlassPanel className="p-6">
+          <h2 className="text-2xl font-semibold mb-6">
+            📅 Timeline Manager
+          </h2>
+
+          <div className="grid gap-4">
+            <input
+              type="text"
+              placeholder="Event Title"
+              value={timelineTitle}
+              onChange={(e) =>
+                setTimelineTitle(e.target.value)
+              }
+              className="rounded-xl border p-3"
+            />
+
+            <input
+              type="text"
+              placeholder="Category"
+              value={timelineCategory}
+              onChange={(e) =>
+                setTimelineCategory(e.target.value)
+              }
+              className="rounded-xl border p-3"
+            />
+
+            <textarea
+              placeholder="Description"
+              value={timelineDescription}
+              onChange={(e) =>
+                setTimelineDescription(e.target.value)
+              }
+              rows={3}
+              className="rounded-xl border p-3"
+            />
+
+            <button
+              onClick={addTimelinePost}
+              className="rounded-xl bg-black px-4 py-3 text-white"
+            >
+              Add Timeline Event
+            </button>
+          </div>
+        </GlassPanel>
+
+        <GlassPanel className="p-6">
+          <h2 className="mb-4 text-2xl font-semibold">
+            🕒 Timeline Library
+          </h2>
+
+          {timelineLoading ? (
+            <p>Loading timeline...</p>
+          ) : (
+            <div className="grid gap-4">
+              {timeline.map((event) => (
+                <div
+                  key={event.id}
+                  className="rounded-xl border p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">
+                        #{event.id} - {event.title}
+                      </h3>
+
+                      <p>
+                        Category: {event.category}
+                      </p>
+
+                      <p>
+                        Description: {event.description}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        deleteTimelinePost(event.id)
+                      }
+                      className="rounded-xl bg-red-500 px-4 py-2 text-white"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </GlassPanel>
+
+
 
 
 
