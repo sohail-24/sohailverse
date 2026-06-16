@@ -9,12 +9,7 @@ type Movie = {
   rating: number;
 };
 
-type TravelPost = {
-  id: number;
-  country: string;
-  city: string;
-  description: string;
-};
+
 
 type AcademyPost = {
   id: number;
@@ -57,11 +52,7 @@ export default function AdminPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [moviesLoading, setMoviesLoading] = useState(false);
 
-  const [country, setCountry] = useState("");
-  const [city, setCity] = useState("");
-  const [description, setDescription] = useState("");
-  const [travels, setTravels] = useState<TravelPost[]>([]);
-  const [travelLoading, setTravelLoading] = useState(false);
+
 
   const [skill, setSkill] = useState("");
   const [category, setCategory] = useState("");
@@ -109,19 +100,7 @@ const [atlasLoading, setAtlasLoading] =
     }
   };
 
-  const loadTravelPosts = async () => {
-    try {
-      setTravelLoading(true);
-      const response = await fetch(`${API_URL}/api/travel`);
-      const data = await response.json();
-      setTravels(data);
-    } catch (error) {
-      console.error(error);
-      setMessage("❌ Failed to load travel posts");
-    } finally {
-      setTravelLoading(false);
-    }
-  };
+  
 
   const loadAcademyPosts = async () => {
     try {
@@ -156,7 +135,7 @@ const [atlasLoading, setAtlasLoading] =
   useEffect(() => {
     if (authenticated) {
       loadMovies();
-      loadTravelPosts();
+      
       loadAcademyPosts();
       loadDevOpsPosts();
       loadTimelinePosts();
@@ -220,61 +199,7 @@ const [atlasLoading, setAtlasLoading] =
     }
   };
 
-  const addTravelPost = async () => {
-    if (!country || !city || !description) {
-      setMessage("⚠️ Please fill all fields");
-      return;
-    }
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_URL}/api/travel`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          country,
-          city,
-          description,
-        }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setMessage("✅ Travel post added successfully");
-        setCountry("");
-        setCity("");
-        setDescription("");
-        loadTravelPosts();
-      } else {
-        setMessage("❌ Failed to add travel post");
-      }
-    } catch (error) {
-      console.error(error);
-      setMessage("❌ Error connecting to API");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteTravelPost = async (id: number) => {
-    const confirmDelete = window.confirm("Delete this travel post?");
-    if (!confirmDelete) return;
-    try {
-      const response = await fetch(`${API_URL}/api/travel/${id}`, {
-        method: "DELETE",
-      });
-      const data = await response.json();
-      if (data.success) {
-        setMessage("🗑️ Travel post deleted");
-        loadTravelPosts();
-      } else {
-        setMessage("❌ Delete failed");
-      }
-    } catch (error) {
-      console.error(error);
-      setMessage("❌ Error deleting travel post");
-    }
-  };
+  
 
   const addAcademyPost = async () => {
     if (!skill || !category || !level) {
@@ -608,7 +533,7 @@ const [atlasLoading, setAtlasLoading] =
     <PageShell
       eyebrow="Control Center"
       title="SohailVerse Admin"
-      description="Manage movies, travel posts and academy skills."
+      description="Control all SohailVerse content from one dashboard."
     >
       <div className="grid gap-6">
         {/* Movie Manager */}
@@ -686,70 +611,7 @@ const [atlasLoading, setAtlasLoading] =
           )}
         </GlassPanel>
 
-        {/* Travel Manager */}
-        <GlassPanel className="p-6">
-          <h2 className="text-2xl font-semibold mb-6">🌍 Travel Manager</h2>
-          <div className="grid gap-4">
-            <input
-              type="text"
-              placeholder="Country"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              className="rounded-xl border p-3"
-            />
-            <input
-              type="text"
-              placeholder="City"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="rounded-xl border p-3"
-            />
-            <textarea
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="rounded-xl border p-3"
-            />
-            <button
-              onClick={addTravelPost}
-              disabled={loading}
-              className="rounded-xl bg-black px-4 py-3 text-white"
-            >
-              {loading ? "Adding..." : "Add Travel Post"}
-            </button>
-          </div>
-        </GlassPanel>
-
-        {/* Travel Library */}
-        <GlassPanel className="p-6">
-          <h2 className="mb-4 text-2xl font-semibold">🌎 Travel Library</h2>
-          {travelLoading ? (
-            <p>Loading travel posts...</p>
-          ) : (
-            <div className="grid gap-4">
-              {travels.map((travel) => (
-                <div key={travel.id} className="rounded-xl border p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">
-                        #{travel.id} - {travel.country}
-                      </h3>
-                      <p>City: {travel.city}</p>
-                      <p>Description: {travel.description}</p>
-                    </div>
-                    <button
-                      onClick={() => deleteTravelPost(travel.id)}
-                      className="rounded-xl bg-red-500 px-4 py-2 text-white"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </GlassPanel>
+        
 
         {/* Academy Manager */}
         <GlassPanel className="p-6">
