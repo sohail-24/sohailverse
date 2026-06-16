@@ -29,6 +29,12 @@ type DevOpsPost = {
   category: string;
   description: string;
 };
+type TimelinePost = {
+  id: number;
+  title: string;
+  category: string;
+  description: string;
+};
 
 const API_URL = "https://sohailverse-api.sohailkhan88008.workers.dev";
 
@@ -61,6 +67,13 @@ export default function AdminPage() {
 
   const [devops, setDevops] = useState<DevOpsPost[]>([]);
   const [devopsLoading, setDevopsLoading] = useState(false);
+
+  const [timelineTitle, setTimelineTitle] = useState("");
+  const [timelineCategory, setTimelineCategory] = useState("");
+  const [timelineDescription, setTimelineDescription] = useState("");
+
+  const [timeline, setTimeline] = useState<TimelinePost[]>([]);
+  const [timelineLoading, setTimelineLoading] = useState(false);
 
   const loadMovies = async () => {
     try {
