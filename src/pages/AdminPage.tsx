@@ -7,6 +7,7 @@ type Movie = {
   title: string;
   genre: string;
   rating: number;
+  trailer_url: string;
 };
 
 
@@ -47,6 +48,8 @@ export default function AdminPage() {
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
   const [rating, setRating] = useState("");
+  const [trailerUrl, setTrailerUrl] =
+    useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -144,7 +147,12 @@ const [atlasLoading, setAtlasLoading] =
   }, [authenticated]);
 
   const addMovie = async () => {
-    if (!title || !genre || !rating) {
+    if (
+      !title ||
+      !genre ||
+      !rating ||
+      !trailerUrl
+    ) {
       setMessage("⚠️ Please fill all fields");
       return;
     }
@@ -159,6 +167,7 @@ const [atlasLoading, setAtlasLoading] =
           title,
           genre,
           rating: Number(rating),
+          trailer_url: trailerUrl,
         }),
       });
       const data = await response.json();
@@ -167,6 +176,7 @@ const [atlasLoading, setAtlasLoading] =
         setTitle("");
         setGenre("");
         setRating("");
+        setTrailerUrl("");
         loadMovies();
       } else {
         setMessage("❌ Failed to add movie");
@@ -570,6 +580,16 @@ const [atlasLoading, setAtlasLoading] =
               onChange={(e) => setRating(e.target.value)}
               className="rounded-xl border p-3"
             />
+            <input
+              type="text"
+              placeholder="Trailer URL"
+              value={trailerUrl}
+              onChange={(e) =>
+                setTrailerUrl(e.target.value)
+              }
+              className="rounded-xl border p-3"
+            />
+
             <button
               onClick={addMovie}
               disabled={loading}
@@ -597,6 +617,17 @@ const [atlasLoading, setAtlasLoading] =
                       </h3>
                       <p>Genre: {movie.genre}</p>
                       <p>Rating: ⭐ {movie.rating}</p>
+                      <p>
+                        Trailer:
+                        <a
+                          href={movie.trailer_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="ml-2 text-blue-500 underline"
+                        >
+                          Open Trailer
+                        </a>
+                      </p>
                     </div>
                     <button
                       onClick={() => deleteMovie(movie.id)}

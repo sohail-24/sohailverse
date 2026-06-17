@@ -8,7 +8,11 @@ type Movie = {
   title: string;
   genre: string;
   rating: number;
+  trailer_url: string;
 };
+
+const API_URL =
+  "https://sohailverse-api.sohailkhan88008.workers.dev";
 
 const genres = [
   "Action",
@@ -20,25 +24,34 @@ const genres = [
 ];
 
 export default function CinemaPage() {
-
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(
-      "https://sohailverse-api.sohailkhan88008.workers.dev/api/movies"
-    )
-      .then((res) => {
-        console.log("STATUS:", res.status);
-        return res.json();
-      })
-      .then((data) => {
-        console.log("MOVIES:", data);
-        setMovies(data);
-      })
-    .catch((err) => console.error("ERROR:", err));
-}, []);
+    loadMovies();
+  }, []);
 
-  
+  const loadMovies = async () => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/movies`
+      );
+
+      const data = await response.json();
+
+      setMovies(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const topMovie =
+    movies.length > 0
+      ? movies[0].title
+      : "Loading...";
+
   return (
     <PageShell
       eyebrow="Movie Observatory"
@@ -48,23 +61,43 @@ export default function CinemaPage() {
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <GlassPanel className="p-6">
-          <p className="text-sm text-muted">Favorite Movies</p>
-          <p className="mt-2 text-4xl font-bold">20+</p>
+          <p className="text-sm text-muted">
+            Favorite Movies
+          </p>
+
+          <p className="mt-2 text-4xl font-bold">
+            {movies.length}
+          </p>
         </GlassPanel>
 
         <GlassPanel className="p-6">
-          <p className="text-sm text-muted">Genres Explored</p>
-          <p className="mt-2 text-4xl font-bold">6</p>
+          <p className="text-sm text-muted">
+            Genres Explored
+          </p>
+
+          <p className="mt-2 text-4xl font-bold">
+            {genres.length}
+          </p>
         </GlassPanel>
 
         <GlassPanel className="p-6">
-          <p className="text-sm text-muted">Current Favorite</p>
-          <p className="mt-2 text-2xl font-bold">Interstellar</p>
+          <p className="text-sm text-muted">
+            Current Favorite
+          </p>
+
+          <p className="mt-2 text-xl font-bold">
+            {topMovie}
+          </p>
         </GlassPanel>
 
         <GlassPanel className="p-6">
-          <p className="text-sm text-muted">Watching Goal</p>
-          <p className="mt-2 text-2xl font-bold">100+</p>
+          <p className="text-sm text-muted">
+            Trailer Library
+          </p>
+
+          <p className="mt-2 text-4xl font-bold">
+            {movies.length}
+          </p>
         </GlassPanel>
       </div>
 
@@ -76,60 +109,89 @@ export default function CinemaPage() {
 
         <div className="flex flex-wrap gap-3">
           {genres.map((genre) => (
-            <Badge key={genre} variant="accent">
+            <Badge
+              key={genre}
+              variant="accent"
+            >
               {genre}
             </Badge>
           ))}
         </div>
       </GlassPanel>
 
-      {/* Movie Collection */}
+      {/* Movies */}
       <div>
         <h2 className="mb-4 text-2xl font-semibold">
           Featured Collection
         </h2>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {movies.map((movie) => (
-            <GlassPanel
-              key={movie.title}
-              className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold">
-                  {movie.title}
-                </h3>
+        {loading ? (
+          <GlassPanel className="p-6">
+            Loading movies...
+          </GlassPanel>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {movies.map((movie) => (
+              <GlassPanel
+                key={movie.id}
+                className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
+              >
+                <div className="flex items-center justify-between">
+                  <a
+                    href={movie.trailer_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xl font-semibold hover:text-accent"
+                  >
+                    {movie.title}
+                  </a>
 
-                <span className="text-sm text-muted">
-                  {movie.genre}
-                </span>
-              </div>
+                  <span className="text-sm text-muted">
+                    {movie.genre}
+                  </span>
+                </div>
 
-              <p className="mt-4 leading-7 text-muted">
-                Rating: ⭐ {movie.rating}
-              </p>
-            </GlassPanel>
-          ))}
-        </div>
+                <p className="mt-4 text-muted">
+                  Rating: ⭐ {movie.rating}
+                </p>
+
+                <div className="mt-5">
+                  <a
+                    href={movie.trailer_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex rounded-xl bg-black px-4 py-2 text-white"
+                  >
+                    ▶ Watch Trailer
+                  </a>
+                </div>
+              </GlassPanel>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Current Favorite */}
       <GlassPanel className="p-8">
-        <Badge variant="accent">Current Favorite</Badge>
+        <Badge variant="accent">
+          Current Favorite
+        </Badge>
 
         <h2 className="mt-4 mb-4 text-2xl font-semibold">
           Interstellar
         </h2>
 
         <p className="leading-8 text-muted">
-          Interstellar stands out because it combines science,
-          exploration, emotion, and ambition. It reflects the same
-          curiosity that drives learning, travel, engineering,
-          and building new systems.
+          Interstellar stands out because it
+          combines science, exploration,
+          emotion, and ambition. It reflects
+          the same curiosity that drives
+          learning, travel, engineering, and
+          building new systems.
         </p>
       </GlassPanel>
 
-      {/* Cinema Timeline */}
+      {/* Cinema Journey */}
       <GlassPanel className="p-8">
         <h2 className="mb-6 text-2xl font-semibold">
           Cinema Journey
@@ -152,7 +214,8 @@ export default function CinemaPage() {
             </h3>
 
             <p className="text-muted">
-              Movies helped improve listening and vocabulary.
+              Movies helped improve listening
+              and vocabulary.
             </p>
           </div>
 
@@ -162,7 +225,8 @@ export default function CinemaPage() {
             </h3>
 
             <p className="text-muted">
-              Movies inspire creativity, learning, and imagination.
+              Movies inspire creativity,
+              learning, and imagination.
             </p>
           </div>
         </div>
@@ -175,10 +239,13 @@ export default function CinemaPage() {
         </h2>
 
         <p className="leading-8 text-muted">
-          Great movies are more than entertainment. They inspire
-          curiosity, improve language skills, teach new perspectives,
-          and encourage imagination. Cinema remains one of the worlds
-          that powers SohailVerse.
+          Great movies are more than
+          entertainment. They inspire
+          curiosity, improve language skills,
+          teach new perspectives, and
+          encourage imagination. Cinema
+          remains one of the worlds that power
+          SohailVerse.
         </p>
       </GlassPanel>
     </PageShell>
