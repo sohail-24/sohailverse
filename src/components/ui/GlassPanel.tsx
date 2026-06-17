@@ -14,8 +14,8 @@ export default function GlassPanel({
         `
         rounded-panel
         border
-        bg-white/[0.65]
-        border-white/60
+        bg-slate-900/60
+        border-white/10
         backdrop-blur-xl
         shadow-[0_8px_40px_rgba(0,0,0,0.35)]
         transition-all
