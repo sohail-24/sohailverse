@@ -1,13 +1,20 @@
 :root {
-  --color-canvas: 210 55% 97%;
-  --color-surface: 0 0% 100%;
-  --color-panel: 0 0% 100%;
-  --color-border: 210 34% 82%;
-  --color-ink: 218 32% 16%;
-  --color-muted: 216 14% 43%;
-  --color-accent: 218 89% 56%;
-  --color-accent-soft: 193 100% 92%;
-  --color-accent-strong: 216 87% 36%;
+  --color-canvas: 222 47% 11%;
+  --color-surface: 222 40% 14%;
+  --color-panel: 222 38% 16%;
+
+  --color-border: 217 33% 25%;
+
+  --color-ink: 210 40% 98%;
+  --color-muted: 215 20% 65%;
+
+  --color-accent: 221 83% 63%;
+  --color-accent-soft: 233 45% 25%;
+  --color-accent-strong: 217 91% 70%;
+
+  --color-success: 160 84% 39%;
+  --color-warning: 38 92% 50%;
+
   --color-success: 164 56% 38%;
   --color-warning: 31 94% 55%;
 
@@ -20,13 +27,14 @@
   --font-body: "Inter", "SF Pro Text", "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace;
 
-  --shadow-soft: 0 14px 36px -22px rgba(15, 23, 42, 0.25);
+  --shadow-soft:
+    0 20px 40px -20px rgba(0,0,0,.45);
   --shadow-glass:
-    0 30px 70px -34px rgba(15, 23, 42, 0.34),
-    0 18px 34px -22px rgba(47, 107, 255, 0.18);
+    0 30px 80px -30px rgba(0,0,0,.60),
+    0 0 40px rgba(59,130,246,.12);
   --shadow-lifted:
-    0 36px 88px -36px rgba(8, 21, 33, 0.34),
-    0 24px 44px -28px rgba(18, 165, 148, 0.16);
+    0 40px 90px -25px rgba(0,0,0,.70),
+    0 0 50px rgba(99,102,241,.18);
 
   --radius-panel: 1.5rem;
 }
