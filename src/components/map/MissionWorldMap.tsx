@@ -47,8 +47,34 @@ export default function MissionWorldMap({ nodes, routes }: MissionWorldMapProps)
   const activeNode = nodeLookup.get(activeNodeId) ?? nodes[0];
 
   return (
-    <GlassPanel className="overflow-hidden border-white/70 bg-white/[0.72] px-3 py-3 shadow-lifted sm:px-5 sm:py-5">
-      <div className="overflow-hidden rounded-[1.5rem] border border-white/70 bg-[linear-gradient(160deg,rgba(247,251,255,0.95),rgba(238,246,255,0.72))] p-3 sm:p-5">
+    <GlassPanel
+      className="
+        overflow-hidden
+        border-white/10
+        bg-slate-950/50
+        px-3
+        py-3
+        shadow-lifted
+        backdrop-blur-xl
+        sm:px-5
+        sm:py-5
+      "
+    >
+
+      <div
+        className="
+          overflow-hidden
+          rounded-[1.5rem]
+          border
+          border-white/10
+          bg-gradient-to-br
+          from-slate-950
+          via-slate-900
+          to-indigo-950
+          p-3
+          sm:p-5
+        "
+      >
         <svg
           aria-labelledby="mission-map-title"
           className="h-auto w-full"
@@ -62,13 +88,20 @@ export default function MissionWorldMap({ nodes, routes }: MissionWorldMapProps)
               <stop offset="0%" stopColor="rgba(8,21,33,0.16)" />
               <stop offset="100%" stopColor="rgba(8,21,33,0.04)" />
             </linearGradient>
-            <linearGradient id="mapSurface" x1="0" x2="1" y1="0" y2="1">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.74)" />
-              <stop offset="100%" stopColor="rgba(209,229,255,0.38)" />
+            <filter id="nodeGlow">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <linearGradient id="mapSurface">
+              <stop offset="0%" stopColor="rgba(30,41,59,0.70)" />
+              <stop offset="100%" stopColor="rgba(15,23,42,0.45)" />
             </linearGradient>
           </defs>
 
-          <g opacity="0.55">
+          <g opacity="0.35">
             <path
               d="M95 170C121 146 153 134 192 134C243 134 284 148 319 176C342 194 362 201 385 199C404 198 421 188 437 181C470 164 496 162 521 178C549 195 566 218 573 246C582 281 563 312 533 321C501 330 467 326 445 307C421 287 394 276 362 277C327 278 302 292 278 319C255 344 232 355 204 350C181 346 163 332 147 314C122 287 102 250 94 212C90 194 91 180 95 170Z"
               fill="url(#mapSurface)"
@@ -115,7 +148,7 @@ export default function MissionWorldMap({ nodes, routes }: MissionWorldMapProps)
                 x2="1152"
                 y1={110 + index * 84}
                 y2={110 + index * 84}
-                stroke="#2F6BFF"
+                stroke="rgba(96,165,250,0.18)"
                 strokeWidth="1"
               />
             ))}
@@ -126,7 +159,7 @@ export default function MissionWorldMap({ nodes, routes }: MissionWorldMapProps)
                 x2={130 + index * 145}
                 y1="78"
                 y2="498"
-                stroke="#2F6BFF"
+                stroke="rgba(96,165,250,0.18)"
                 strokeWidth="1"
               />
             ))}
@@ -189,22 +222,25 @@ export default function MissionWorldMap({ nodes, routes }: MissionWorldMapProps)
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  fill="#F7FBFF"
+                  filter="url(#nodeGlow)"
+                  fill="#ffffff"
                   r={active ? 7.5 : 6}
                   stroke={color}
                   strokeWidth={active ? 3.5 : 3}
                 />
                 <g opacity={active ? 1 : 0.78}>
                   <rect
-                    x={node.x - 48}
+                    x={node.x - 52}
                     y={node.y - 42}
-                    width="96"
-                    height="26"
-                    fill="rgba(247,251,255,0.9)"
-                    rx="13"
+                    width="104"
+                    height="28"
+                    fill="rgba(15,23,42,0.85)"
+                    stroke="rgba(96,165,250,0.20)"
+                    rx="14"
                   />
+
                   <text
-                    fill="#081521"
+                    fill="#ffffff"
                     fontFamily="Inter, sans-serif"
                     fontSize="12"
                     fontWeight="600"
@@ -222,7 +258,26 @@ export default function MissionWorldMap({ nodes, routes }: MissionWorldMapProps)
       </div>
 
       {activeNode ? (
-        <div className="mt-4 flex flex-col gap-4 rounded-[1.25rem] border border-white/70 bg-white/[0.62] px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+        <div
+          className="
+            mt-4
+            flex
+            flex-col
+            gap-4
+            rounded-[1.25rem]
+            border
+            border-white/10
+            bg-slate-900/70
+            px-4
+            py-4
+            backdrop-blur-xl
+            sm:flex-row
+            sm:items-start
+            sm:justify-between
+            sm:px-5
+          "
+        >
+
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <span
@@ -234,20 +289,42 @@ export default function MissionWorldMap({ nodes, routes }: MissionWorldMapProps)
               </p>
             </div>
             <div>
-              <h3 className="font-display text-2xl font-semibold tracking-tight text-[#081521]">
+              <h3 className="font-display text-2xl font-semibold tracking-tight text-white">
                 {activeNode.name}, {activeNode.country}
               </h3>
-              <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
+              <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">
                 {activeNode.summary}
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full border border-white/70 bg-white/75 px-3 py-2 text-sm text-slate-600">
+            <span
+              className="
+                rounded-full
+                border
+                border-blue-500/20
+                bg-blue-500/10
+                px-3
+                py-2
+                text-sm
+                text-blue-300
+              "
+            >
               5 travel nodes
             </span>
-            <span className="rounded-full border border-white/70 bg-white/75 px-3 py-2 text-sm text-slate-600">
+            <span
+              className="
+                rounded-full
+                border
+                border-blue-500/20
+                bg-blue-500/10
+                px-3
+                py-2
+                text-sm
+                text-blue-300
+              "
+            >
               Animated route layer
             </span>
           </div>

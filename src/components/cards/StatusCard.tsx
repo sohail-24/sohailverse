@@ -6,31 +6,83 @@ interface StatusCardProps {
   item: LiveStatusItem;
 }
 
-export default function StatusCard({ item }: StatusCardProps) {
+export default function StatusCard({
+  item,
+}: StatusCardProps) {
   const accent = missionPalette[item.tone];
 
   return (
-    <GlassPanel className="relative overflow-hidden border-white/70 bg-white/[0.72] px-5 py-5 shadow-soft">
+    <GlassPanel
+      className="
+        relative
+        overflow-hidden
+        border-white/10
+        bg-slate-900/60
+        px-5
+        py-5
+        shadow-soft
+        backdrop-blur-xl
+      "
+    >
       <div
         aria-hidden="true"
         className="absolute inset-x-6 top-0 h-px"
-        style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }}
+        style={{
+          background: `linear-gradient(
+            90deg,
+            transparent,
+            ${accent},
+            transparent
+          )`,
+        }}
       />
+
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: accent }} />
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+          <span
+            className="h-2.5 w-2.5 rounded-full"
+            style={{
+              backgroundColor: accent,
+            }}
+          />
+
+          <p
+            className="
+              text-xs
+              font-semibold
+              uppercase
+              tracking-[0.22em]
+              text-slate-400
+            "
+          >
             {item.label}
           </p>
         </div>
+
         <div className="space-y-2">
-          <p className="font-display text-2xl font-semibold tracking-tight text-[#081521]">
+          <p
+            className="
+              font-display
+              text-2xl
+              font-semibold
+              tracking-tight
+              text-white
+            "
+          >
             {item.value}
           </p>
-          <p className="text-sm leading-6 text-slate-600">{item.note}</p>
+
+          <p
+            className="
+              text-sm
+              leading-6
+              text-slate-400
+            "
+          >
+            {item.note}
+          </p>
         </div>
       </div>
     </GlassPanel>
   );
 }
-

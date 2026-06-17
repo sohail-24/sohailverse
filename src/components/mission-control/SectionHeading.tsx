@@ -13,14 +13,18 @@ export default function SectionHeading({
 }: SectionHeadingProps) {
   return (
     <div className="max-w-3xl space-y-4">
-      <Badge className="bg-white/[0.85] text-[#081521]" variant="neutral">
+      <Badge variant="accent">
         {eyebrow}
       </Badge>
+
       <div className="space-y-3">
-        <h2 className="font-display text-3xl font-semibold tracking-tight text-[#081521] sm:text-4xl">
+        <h2 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">
           {title}
         </h2>
-        <p className="text-base leading-7 text-slate-600 sm:text-lg">{description}</p>
+
+        <p className="text-base leading-7 text-slate-400 sm:text-lg">
+          {description}
+        </p>
       </div>
     </div>
   );
