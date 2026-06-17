@@ -1,131 +1,30 @@
 import type { WorldGateway } from "../../types/mission-control";
-import { missionPalette } from "../../data/mission-control";
-import GlassPanel from "../ui/GlassPanel";
-import RouteLinkButton from "../mission-control/RouteLinkButton";
+import WorldGatewayCard from "../cards/WorldGatewayCard";
+import SectionHeading from "./SectionHeading";
 
-interface WorldGatewayCardProps {
-  item: WorldGateway;
+interface WorldGatewaysProps {
+  items: WorldGateway[];
 }
 
-export default function WorldGatewayCard({
-  item,
-}: WorldGatewayCardProps) {
-  const accent = missionPalette[item.tone];
-
+export default function WorldGateways({
+  items,
+}: WorldGatewaysProps) {
   return (
-    <GlassPanel
-      className="
-        relative
-        flex
-        h-full
-        flex-col
-        overflow-hidden
-        border-white/10
-        bg-slate-900/60
-        px-6
-        py-6
-        shadow-soft
-        backdrop-blur-xl
-      "
-    >
-      <div
-        aria-hidden="true"
-        className="
-          absolute
-          right-[-3rem]
-          top-[-3rem]
-          h-28
-          w-28
-          rounded-full
-          blur-3xl
-        "
-        style={{
-          backgroundColor: `${accent}24`,
-        }}
+    <section className="space-y-6">
+      <SectionHeading
+        eyebrow="Four World Gateways"
+        title="Choose the world you want to enter."
+        description="Each gateway opens into a different world inside SohailVerse, with one shared visual language and one connected personal story."
       />
 
-      <div className="relative flex h-full flex-col gap-6">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-4">
-            <span
-              className="
-                inline-flex
-                rounded-full
-                px-3
-                py-1
-                text-xs
-                font-semibold
-                uppercase
-                tracking-[0.2em]
-              "
-              style={{
-                backgroundColor: `${accent}20`,
-                color: accent,
-              }}
-            >
-              {item.metricLabel}
-            </span>
-
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{
-                backgroundColor: accent,
-              }}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <h3
-              className="
-                font-display
-                text-2xl
-                font-semibold
-                tracking-tight
-                text-white
-              "
-            >
-              {item.title}
-            </h3>
-
-            <p
-              className="
-                text-sm
-                leading-7
-                text-slate-400
-              "
-            >
-              {item.description}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-auto flex items-end justify-between gap-4">
-          <div>
-            <p
-              className="
-                font-display
-                text-3xl
-                font-semibold
-                tracking-tight
-                text-white
-              "
-            >
-              {item.metricValue}
-            </p>
-
-            <p className="text-sm text-slate-500">
-              {item.metricLabel}
-            </p>
-          </div>
-
-          <RouteLinkButton
-            to={item.href}
-            variant="ghost"
-          >
-            {item.cta}
-          </RouteLinkButton>
-        </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {items.map((item) => (
+          <WorldGatewayCard
+            key={item.id}
+            item={item}
+          />
+        ))}
       </div>
-    </GlassPanel>
+    </section>
   );
 }
