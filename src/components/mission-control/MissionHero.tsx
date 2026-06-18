@@ -6,7 +6,7 @@ import type {
   HeroContent,
   HeroOrbitStat,
 } from "../../types/mission-control";
-import { missionPalette } from "../../data/mission-control";
+
 
 interface MissionHeroProps {
   content: HeroContent;
@@ -95,11 +95,11 @@ export default function MissionHero({
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                  Live Orbit
+                  Professional Profile
                 </p>
 
                 <h2 className="font-display text-2xl font-semibold text-white">
-                  Connected Worlds
+                  Professional Hub
                 </h2>
               </div>
 
@@ -129,37 +129,94 @@ export default function MissionHero({
               </div>
             </div>
 
-            {/* STATS */}
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {stats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="
-                    rounded-2xl
-                    border
-                    border-white/10
-                    bg-slate-950/50
-                    px-4
-                    py-4
-                  "
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-white/10
+                  bg-slate-950/50
+                  px-4
+                  py-4
+                "
+              >
+                <p className="text-sm text-slate-400">
+                  Current Role
+                </p>
+
+                <p className="mt-2 text-lg font-semibold text-white">
+                  DevOps Engineer
+                </p>
+
+                <p className="text-sm text-cyan-400">
+                  @ Visys
+                </p>
+              </div>
+
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-white/10
+                  bg-slate-950/50
+                  px-4
+                  py-4
+                "
+              >
+                <p className="text-sm text-slate-400">
+                  Resume
+                </p>
+
+                <a
+                  href="/resume.pdf"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 block text-lg font-semibold text-white hover:text-cyan-400"
                 >
-                  <span
-                    className="mb-3 inline-flex h-2.5 w-2.5 rounded-full"
-                    style={{
-                      backgroundColor:
-                        missionPalette[stat.tone],
-                    }}
-                  />
+                  Download CV
+                </a>
+              </div>
 
-                  <p className="text-2xl font-semibold tracking-tight text-white">
-                    {stat.value}
-                  </p>
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-white/10
+                  bg-slate-950/50
+                  px-4
+                  py-4
+                "
+              >
+                <p className="text-sm text-slate-400">
+                  Connect
+                </p>
 
-                  <p className="mt-1 text-sm text-slate-400">
-                    {stat.label}
-                  </p>
+                <div className="mt-2 flex flex-col gap-1">
+                  <a
+                    href="https://github.com/sohail-24"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-white hover:text-cyan-400"
+                  >
+                    GitHub
+                  </a>
+
+                  <a
+                    href="https://www.linkedin.com/in/md-sohail2001"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-white hover:text-cyan-400"
+                  >
+                    LinkedIn
+                  </a>
+                  <a
+                    href="mailto:mdsohail88008@gmail.com"
+                    className="text-white hover:text-cyan-400"
+                  >
+                    Email
+                  </a>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
 
