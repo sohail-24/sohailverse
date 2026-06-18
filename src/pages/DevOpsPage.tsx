@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PageShell from "../components/layout/PageShell";
 import GlassPanel from "../components/ui/GlassPanel";
 import Badge from "../components/ui/Badge";
+import { useNavigate } from "react-router-dom";
 
 type DevOpsProject = {
   id: number;
@@ -25,6 +26,7 @@ const technologies = [
 ];
 
 export default function DevOpsPage() {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<DevOpsProject[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -155,7 +157,17 @@ export default function DevOpsPage() {
             {projects.map((project) => (
               <GlassPanel
                 key={project.id}
-                className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
+                onClick={() =>
+                  navigate(`/devops/${project.id}`)
+                }
+                className="
+                  cursor-pointer
+                  p-6
+                  transition-all
+                  duration-300
+                  hover:-translate-y-1
+                  hover:shadow-lifted
+                "
               >
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-semibold">
