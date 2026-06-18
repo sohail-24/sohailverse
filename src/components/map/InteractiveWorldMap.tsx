@@ -43,14 +43,20 @@ export default function InteractiveWorldMap() {
             coordinates={node.coordinates}
           >
             <circle
+              r={12}
+              fill="#68E6FF"
+              opacity={0.25}
+            />
+            <circle
               r={6}
               fill="#68E6FF"
             />
             <text
-              y={-12}
+              y={-16}
               textAnchor="middle"
-              fill="white"
-              fontSize={10}
+              fill="#F8FAFC"
+              fontSize={12}
+              fontWeight="600"
             >
               {node.name}
             </text>

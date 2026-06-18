@@ -171,13 +171,8 @@ export const liveStatusItems: LiveStatusItem[] = [
     tone: "auroraCyan",
   },
 ];
+
 export const realWorldNodes = [
-  {
-    id: "london",
-    name: "London",
-    country: "United Kingdom",
-    coordinates: [-0.1276, 51.5072] as [number, number],
-  },
   {
     id: "riyadh",
     name: "Riyadh",
@@ -197,13 +192,24 @@ export const realWorldNodes = [
     coordinates: [78.4867, 17.385] as [number, number],
   },
   {
-    id: "singapore",
-    name: "Singapore",
-    country: "Singapore",
-    coordinates: [103.8198, 1.3521] as [number, number],
+    id: "mumbai",
+    name: "Mumbai",
+    country: "India",
+    coordinates: [72.8777, 19.0760] as [number, number],
+  },
+  {
+    id: "chennai",
+    name: "Chennai",
+    country: "India",
+    coordinates: [80.2707, 13.0827] as [number, number],
+  },
+  {
+    id: "usa",
+    name: "USA",
+    country: "United States",
+    coordinates: [-95.7129, 37.0902] as [number, number],
   },
 ];
-
 
 export const worldNodes: WorldNode[] = [
   {

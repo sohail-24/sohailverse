@@ -28,9 +28,9 @@ export default function MissionControlPage() {
 
       <section className="space-y-6">
         <SectionHeading
-          description="A responsive SVG world map anchors the homepage with routes, nodes, and spatial memory across the places shaping the journey."
+          description="A living map of places I've visited, cities that shaped my journey, and destinations I plan to explore next."
           eyebrow="World Map"
-          title="Routes, cities, and a living travel layer."
+          title="Visited Places & Future Destinations"
         />
         <InteractiveWorldMap />
       </section>
