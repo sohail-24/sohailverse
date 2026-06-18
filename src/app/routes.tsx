@@ -8,6 +8,7 @@ import DashboardPage from "../pages/DashboardPage";
 import DevOpsPage from "../pages/DevOpsPage";
 import MissionControlPage from "../pages/MissionControlPage";
 import TimelinePage from "../pages/TimelinePage";
+import ProjectDetailPage from "../pages/ProjectDetailPage";
 
 export const routes: RouteObject[] = [
   {
@@ -33,6 +34,10 @@ export const routes: RouteObject[] = [
       {
         path: "devops",
         element: <DevOpsPage />,
+      },
+      {
+        path: "devops/:id",
+        element: <ProjectDetailPage />,
       },
       {
         path: "timeline",
