@@ -4,18 +4,18 @@ import RouteLinkButton from "./RouteLinkButton";
 import HeroBackground from "./HeroBackground";
 import type {
   HeroContent,
-  HeroOrbitStat,
+  
 } from "../../types/mission-control";
 
 
 interface MissionHeroProps {
   content: HeroContent;
-  stats: HeroOrbitStat[];
+  
 }
 
 export default function MissionHero({
   content,
-  stats,
+  
 }: MissionHeroProps) {
   return (
     <GlassPanel
@@ -148,8 +148,17 @@ export default function MissionHero({
                   DevOps Engineer
                 </p>
 
-                <p className="text-sm text-cyan-400">
-                  @ Visys
+                <a
+                  href="https://visyscloudtech.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-cyan-400 hover:text-cyan-300"
+                >
+                  Visys Cloud Technologies
+                </a>
+
+                <p className="mt-1 text-xs text-slate-500">
+                  7 Months Experience
                 </p>
               </div>
 
@@ -167,14 +176,24 @@ export default function MissionHero({
                   Resume
                 </p>
 
-                <a
-                  href="/resume.pdf"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-2 block text-lg font-semibold text-white hover:text-cyan-400"
-                >
-                  Download CV
-                </a>
+                <div className="mt-2 flex flex-col gap-1">
+                  <a
+                    href="/resume.pdf"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-white hover:text-cyan-400"
+                  >
+                    View Resume
+                  </a>
+
+                  <a
+                    href="/resume.pdf"
+                    download
+                    className="text-white hover:text-cyan-400"
+                  >
+                    Download CV
+                  </a>
+                </div>
               </div>
 
               <div

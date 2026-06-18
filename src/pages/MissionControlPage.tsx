@@ -1,13 +1,12 @@
 import {
   currentSignals,
   heroContent,
-  heroOrbitStats,
+ 
   liveStatusItems,
   missionManifesto,
   timelinePreview,
   worldGateways,
-  worldNodes,
-  worldRoutes,
+  
 } from "../data/mission-control";
 import CurrentSignals from "../components/mission-control/CurrentSignals";
 import JourneyTimelinePreview from "../components/mission-control/JourneyTimelinePreview";
@@ -16,13 +15,15 @@ import MissionHero from "../components/mission-control/MissionHero";
 import MissionManifesto from "../components/mission-control/MissionManifesto";
 import SectionHeading from "../components/mission-control/SectionHeading";
 import WorldGateways from "../components/mission-control/WorldGateways";
-import MissionWorldMap from "../components/map/MissionWorldMap";
+
 import InteractiveWorldMap from "../components/map/InteractiveWorldMap";
 
 export default function MissionControlPage() {
   return (
     <div className="flex flex-col gap-10 pb-6 lg:gap-14">
-      <MissionHero content={heroContent} stats={heroOrbitStats} />
+      <MissionHero
+        content={heroContent}
+      />
 
       <LiveStatusBar items={liveStatusItems} />
 
