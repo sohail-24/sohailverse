@@ -17,6 +17,7 @@ import MissionManifesto from "../components/mission-control/MissionManifesto";
 import SectionHeading from "../components/mission-control/SectionHeading";
 import WorldGateways from "../components/mission-control/WorldGateways";
 import MissionWorldMap from "../components/map/MissionWorldMap";
+import InteractiveWorldMap from "../components/map/InteractiveWorldMap";
 
 export default function MissionControlPage() {
   return (
@@ -31,7 +32,7 @@ export default function MissionControlPage() {
           eyebrow="World Map"
           title="Routes, cities, and a living travel layer."
         />
-        <MissionWorldMap nodes={worldNodes} routes={worldRoutes} />
+        <InteractiveWorldMap />
       </section>
 
       <WorldGateways items={worldGateways} />
