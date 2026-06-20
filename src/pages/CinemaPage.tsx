@@ -162,7 +162,7 @@ export default function CinemaPage() {
                     rel="noreferrer"
                     className="inline-flex rounded-xl bg-black px-4 py-2 text-white"
                   >
-                    ▶ Watch Trailer
+                    ▶ Watch Movie
                   </a>
                 </div>
               </GlassPanel>
