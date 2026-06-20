@@ -6,24 +6,29 @@ export default function MissionOverview() {
       </h2>
 
       <p className="leading-8 text-slate-300">
-        SohailShop is a production-grade ecommerce platform
-        built during my internship at Visys Cloud Technologies.
+        SohailShop is a production-grade Django 5 ecommerce platform
+        engineered to demonstrate modern DevOps practices across
+        containerized, self-managed and cloud-native Kubernetes
+        environments.
 
-        The goal was to design, build, containerize,
-        deploy and operate a complete application across
-        multiple infrastructure environments.
+        The application was designed as a modular monolith with
+        dedicated domains for authentication, products, orders,
+        payments and core services. The platform is containerized
+        using Docker, automated through GitHub Actions CI/CD,
+        deployed through GitOps workflows with ArgoCD and managed
+        using Infrastructure as Code with Terraform.
 
-        The platform includes custom authentication,
-        product catalog management, inventory tracking,
-        cart and checkout workflows, PostgreSQL persistence,
-        Redis caching, CI/CD automation and GitOps delivery.
+        To gain both operational and production experience, the
+        same application was deployed across two Kubernetes
+        implementations: a self-managed kubeadm cluster running
+        on AWS EC2 and a managed AWS EKS environment.
 
-        What makes this project unique is that the same
-        application was deployed on both a self-managed
-        Kubernetes cluster using kubeadm and a managed
-        AWS EKS platform, providing deep understanding
-        of Kubernetes from cluster internals to
-        cloud-native production operations.
+        The project integrates PostgreSQL for persistence, Redis
+        for caching, Helm for Kubernetes templating and AWS
+        services including IAM, S3 and EBS. Through this project
+        I developed practical experience in Kubernetes
+        architecture, cloud infrastructure, CI/CD automation,
+        GitOps delivery and production troubleshooting.
       </p>
     </section>
   );

@@ -1,70 +1,86 @@
 export default function DeploymentEvolution() {
+  const phases = [
+    {
+      title: "Application Foundation",
+      subtitle: "Django 5 Modular Monolith",
+      description:
+        "Built authentication, products, orders, payments and core services using Django 5, PostgreSQL and Redis.",
+    },
+    {
+      title: "Containerization",
+      subtitle: "Docker & Production Images",
+      description:
+        "Created optimized Docker images using Python 3.12-slim, Gunicorn and production-ready configurations.",
+    },
+    {
+      title: "Continuous Delivery",
+      subtitle: "GitHub Actions CI/CD",
+      description:
+        "Automated image builds, tagging, Docker Hub publishing and infrastructure repository updates.",
+    },
+    {
+      title: "Kubernetes Internals",
+      subtitle: "Self-Managed kubeadm",
+      description:
+        "Built and operated a complete Kubernetes cluster on AWS EC2 to understand networking, storage and cluster operations.",
+    },
+    {
+      title: "Cloud Native Platform",
+      subtitle: "AWS EKS",
+      description:
+        "Deployed the same application on a managed Kubernetes platform using Terraform, IRSA, EBS CSI and ALB.",
+    },
+    {
+      title: "GitOps Operations",
+      subtitle: "ArgoCD & Helm",
+      description:
+        "Implemented declarative deployments, automated synchronization and environment consistency through GitOps.",
+    },
+  ];
+
   return (
     <section className="mt-10 rounded-3xl border border-white/10 bg-slate-950/50 p-8">
-      <h2 className="mb-8 text-3xl font-bold">
-        Deployment Evolution
-      </h2>
+      <div className="mb-10">
+        <p className="mb-2 text-sm uppercase tracking-[0.3em] text-cyan-400">
+          Engineering Journey
+        </p>
 
-      <div className="space-y-6 border-l-2 border-cyan-500 pl-8">
-        <div>
-          <h3 className="font-semibold">
-            Phase 1 — Backend Development
-          </h3>
+        <h2 className="text-3xl font-bold">
+          Evolution of SohailShop
+        </h2>
+      </div>
 
-          <p className="text-slate-400">
-            Django 5 + PostgreSQL
-          </p>
-        </div>
+      <div className="space-y-8">
+        {phases.map((phase, index) => (
+          <div
+            key={phase.title}
+            className="flex gap-6"
+          >
+            <div className="flex flex-col items-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-bold">
+                {index + 1}
+              </div>
 
-        <div>
-          <h3 className="font-semibold">
-            Phase 2 — Docker
-          </h3>
+              {index !== phases.length - 1 && (
+                <div className="mt-2 h-20 w-px bg-gradient-to-b from-cyan-500 to-transparent" />
+              )}
+            </div>
 
-          <p className="text-slate-400">
-            Multi-stage container builds
-          </p>
-        </div>
+            <div className="flex-1 rounded-2xl border border-white/10 bg-slate-900/40 p-6">
+              <p className="text-xs uppercase tracking-wider text-cyan-400">
+                {phase.title}
+              </p>
 
-        <div>
-          <h3 className="font-semibold">
-            Phase 3 — EC2 Deployment
-          </h3>
+              <h3 className="mt-2 text-xl font-semibold">
+                {phase.subtitle}
+              </h3>
 
-          <p className="text-slate-400">
-            NGINX + Gunicorn
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold">
-            Phase 4 — kubeadm Kubernetes
-          </h3>
-
-          <p className="text-slate-400">
-            Self-managed cluster
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold">
-            Phase 5 — AWS EKS
-          </h3>
-
-          <p className="text-slate-400">
-            Production Kubernetes platform
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold">
-            Phase 6 — GitOps
-          </h3>
-
-          <p className="text-slate-400">
-            GitHub Actions + ArgoCD
-          </p>
-        </div>
+              <p className="mt-3 text-slate-400">
+                {phase.description}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
