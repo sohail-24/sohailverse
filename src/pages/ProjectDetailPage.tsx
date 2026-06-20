@@ -29,11 +29,11 @@ export default function ProjectDetailPage() {
 
       <MissionOverview />
 
-      <DeploymentEvolution />
+  
 
-      <DeploymentTracks />
+      
 
-      <ArchitectureComparison />
+     
 
       <ArchitectureDiagram />
 

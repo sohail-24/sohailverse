@@ -116,7 +116,7 @@ function FlowSection({ flow }: { flow: Flow }) {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-6">
+      <div className="grid gap-4 lg:flex flex-wrap">
         {flow.steps.map((step, index) => (
           <StepCard
             key={step.title}
@@ -345,7 +345,7 @@ export default function ArchitectureDiagram() {
 
             <div>
               <h2 className="text-4xl font-bold tracking-tight text-white">
-                Evolution of SohailShop
+                Dual Deployment Architecture
               </h2>
               <p className="mt-3 max-w-2xl text-base leading-7 text-slate-400">
                 SohailShop was deployed using two different Kubernetes approaches to
