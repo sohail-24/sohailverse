@@ -5,7 +5,6 @@ import {
   Layers3,
   Package,
   Server,
-  Workflow,
   Database,
   Cloud,
   Code2,
@@ -28,7 +27,6 @@ type Flow = {
   subtitle: string;
   accent: string;
   steps: FlowStep[];
-  infra: FlowStep[];
   repos: RepoCard[];
 };
 
@@ -96,7 +94,9 @@ function FlowSection({ flow }: { flow: Flow }) {
     <div className="rounded-[2rem] border border-white/10 bg-gradient-to-b from-slate-950/90 to-slate-950/50 p-6">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <p className={`text-sm font-semibold uppercase tracking-[0.3em] ${flow.accent}`}>
+          <p
+            className={`text-sm font-semibold uppercase tracking-[0.3em] ${flow.accent}`}
+          >
             {flow.label}
           </p>
           <h3 className="mt-2 text-2xl font-bold text-white">{flow.subtitle}</h3>
@@ -116,48 +116,26 @@ function FlowSection({ flow }: { flow: Flow }) {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:flex flex-wrap">
+      <div className="flex flex-wrap gap-4">
         {flow.steps.map((step, index) => (
-          <StepCard
-            key={step.title}
-            index={index + 1}
-            title={step.title}
-            description={step.description}
-            icon={step.icon}
-            accent={flow.accent}
-          />
-        ))}
-      </div>
+          <div key={step.title} className="flex items-stretch gap-4">
+            <StepCard
+              index={index + 1}
+              title={step.title}
+              description={step.description}
+              icon={step.icon}
+              accent={flow.accent}
+            />
 
-      <div className="mt-6 rounded-2xl border border-dashed border-white/15 bg-white/5 p-5">
-        <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-slate-300">
-          Infrastructure Layer
-        </p>
-
-        <div className="grid gap-4 md:grid-cols-4">
-          {flow.infra.map((item, index) => (
-            <div
-              key={item.title}
-              className="rounded-2xl border border-white/10 bg-slate-950/60 p-4"
-            >
-              <div className="flex items-center gap-3">
-                <div className={`rounded-xl border border-white/10 bg-white/5 p-2 ${flow.accent}`}>
-                  {item.icon}
-                </div>
-                <div>
-                  <p className="font-semibold text-white">{item.title}</p>
-                  <p className="text-sm text-slate-400">{item.description}</p>
+            {index !== flow.steps.length - 1 && (
+              <div className="hidden items-center justify-center md:flex">
+                <div className="rounded-full border border-white/10 bg-white/5 p-2 text-slate-400">
+                  <ArrowRight className="h-4 w-4" />
                 </div>
               </div>
-
-              {index < flow.infra.length - 1 && (
-                <div className="mt-4 hidden justify-end md:flex">
-                  <ArrowRight className="h-4 w-4 text-slate-500" />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        ))}
       </div>
 
       <div className="mt-6">
@@ -209,28 +187,6 @@ export default function ArchitectureDiagram() {
       {
         title: "Data Layer",
         description: "PostgreSQL and Redis for persistence and caching.",
-        icon: <Database className="h-5 w-5" />,
-      },
-    ],
-    infra: [
-      {
-        title: "Terraform",
-        description: "Platform infrastructure",
-        icon: <Cloud className="h-5 w-5" />,
-      },
-      {
-        title: "AWS EC2",
-        description: "Control plane and nodes",
-        icon: <Server className="h-5 w-5" />,
-      },
-      {
-        title: "Networking",
-        description: "VPC + routing",
-        icon: <Workflow className="h-5 w-5" />,
-      },
-      {
-        title: "Storage",
-        description: "EBS volumes",
         icon: <Database className="h-5 w-5" />,
       },
     ],
@@ -286,28 +242,6 @@ export default function ArchitectureDiagram() {
       {
         title: "Data & Services",
         description: "PostgreSQL, Redis, S3-backed media and storage integrations.",
-        icon: <Database className="h-5 w-5" />,
-      },
-    ],
-    infra: [
-      {
-        title: "Terraform",
-        description: "EKS platform",
-        icon: <Cloud className="h-5 w-5" />,
-      },
-      {
-        title: "EKS Cluster",
-        description: "Managed control plane",
-        icon: <Cloud className="h-5 w-5" />,
-      },
-      {
-        title: "Node Groups",
-        description: "Managed workers",
-        icon: <Server className="h-5 w-5" />,
-      },
-      {
-        title: "EBS + S3",
-        description: "Storage layer",
         icon: <Database className="h-5 w-5" />,
       },
     ],

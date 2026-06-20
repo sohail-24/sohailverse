@@ -18,6 +18,8 @@ import MissionAssets from "../components/projects/MissionAssets";
 import ProjectLinks from "../components/projects/ProjectLinks";
 import ProjectGallery from "../components/projects/ProjectGallery";
 
+import InfrastructureBlueprint from "../components/projects/InfrastructureBlueprint";
+
 export default function ProjectDetailPage() {
   
 
@@ -28,16 +30,14 @@ export default function ProjectDetailPage() {
       <ProjectMetrics />
 
       <MissionOverview />
-
-  
-
-      
-
-     
+    
 
       <ArchitectureDiagram />
 
       <TechnologyArsenal />
+
+      <InfrastructureBlueprint />
+      
 
       <ProductionIncidents />
 

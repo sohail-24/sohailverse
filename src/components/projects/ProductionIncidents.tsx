@@ -30,12 +30,13 @@ export default function ProductionIncidents() {
 
         <div className="rounded-2xl border border-white/10 p-6">
           <h3 className="font-semibold">
-            Redis 500 Errors
+            Redis Connection Failure
+            Service discovery problem
           </h3>
 
           <p className="mt-3 text-slate-400">
-            Fixed infrastructure dependency issues
-            affecting application availability.
+            ArgoCD Sync Failed
+            Manifest validation issue
           </p>
         </div>
       </div>
