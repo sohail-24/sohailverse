@@ -7,7 +7,7 @@ export default function ProjectMetrics() {
         </p>
 
         <p className="mt-2 text-3xl font-bold text-cyan-400">
-          6
+          5
         </p>
 
         <p className="mt-2 text-xs text-slate-500">
@@ -21,7 +21,7 @@ export default function ProjectMetrics() {
         </p>
 
         <p className="mt-2 text-3xl font-bold text-blue-400">
-          200+
+          50+
         </p>
 
         <p className="mt-2 text-xs text-slate-500">
