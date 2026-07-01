@@ -293,8 +293,8 @@ export default function ArchitectureDiagram() {
 
         <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[520px] xl:grid-cols-4">
           {[
-            ["6", "Repositories", "App + Infra"],
-            ["200+", "Git Commits", "Continuous Dev"],
+            ["5", "Repositories", "App + Infra"],
+            ["50+", "Git Commits", "Continuous Dev"],
             ["2", "Kubernetes", "Platforms"],
             ["Ready", "Status", "Production"],
           ].map(([value, label, hint]) => (
