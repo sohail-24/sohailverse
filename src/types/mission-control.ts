@@ -1,5 +1,20 @@
 export type MissionTone = "orbitBlue" | "auroraCyan" | "horizonTeal" | "signalCoral";
 
+export interface UniverseProject {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  status: "live" | "building" | "coming_soon";
+  statusLabel: string;
+  featured?: boolean;
+  technologies?: string[];
+  link?: string;
+  externalUrl?: string;
+  complexity?: number;
+  highlightMetric?: string;
+}
+
 export interface HeroContent {
   eyebrow: string;
   title: string;

@@ -1,10 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { navigation } from "../../data/navigation";
-import { profile } from "../../data/profile";
 import { cn } from "../../lib/utils";
-import Badge from "../ui/Badge";
-import Button from "../ui/Button";
-import GlassPanel from "../ui/GlassPanel";
 
 interface MobileMenuProps {
   open: boolean;
@@ -12,46 +7,66 @@ interface MobileMenuProps {
 }
 
 export default function MobileMenu({ open, onClose }: MobileMenuProps) {
+  const navLinks = [
+    { label: "Home", path: "/" },
+    { label: "About", path: "/timeline" },
+    { label: "Journey", path: "/atlas" },
+    { label: "Projects", path: "/devops" },
+    { label: "Academy", path: "/academy" },
+    { label: "Cinema", path: "/cinema" },
+  ];
+
+  if (!open) return null;
+
   return (
     <div
       id="mobile-navigation"
-      className={cn("mx-auto mt-3 w-full max-w-7xl lg:hidden", open ? "block" : "hidden")}
+      className="mx-4 mt-2 max-w-7xl md:hidden transition-all duration-300"
     >
-      <GlassPanel className="space-y-5 px-4 py-4 sm:px-5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="space-y-1">
-            <p className="font-display text-lg font-semibold text-ink">{profile.productName}</p>
-            <p className="text-sm text-muted">{profile.motto}</p>
+      <div className="space-y-4 rounded-2xl border border-white/15 bg-slate-950/95 p-5 shadow-2xl backdrop-blur-2xl">
+        <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-base font-bold text-lime-400">&lt;/&gt;</span>
+            <span className="font-display text-base font-bold text-white">sohailverse</span>
           </div>
-          <Badge variant="neutral">{profile.status}</Badge>
+          <div className="flex items-center gap-1.5 rounded-full border border-lime-400/30 bg-lime-500/10 px-2.5 py-0.5 text-xs text-lime-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-lime-400 animate-pulse" />
+            <span>Active</span>
+          </div>
         </div>
 
-        <nav className="grid gap-2" aria-label="Mobile primary">
-          {navigation.map((item) => (
+        <nav className="grid grid-cols-1 gap-1.5 sm:grid-cols-2" aria-label="Mobile primary">
+          {navLinks.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               end={item.path === "/"}
+              onClick={onClose}
               className={({ isActive }) =>
                 cn(
-                  "rounded-2xl border px-4 py-3 text-sm font-medium transition-all duration-200",
+                  "flex min-h-[44px] items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition-colors duration-150 active:scale-[0.98]",
                   isActive
-                    ? "border-accent/25 bg-accent-soft/80 text-accent-strong shadow-soft"
-                    : "border-white/60 bg-white/[0.65] text-ink hover:border-accent/20 hover:bg-white",
+                    ? "border border-lime-400/40 bg-lime-500/15 text-lime-200 font-semibold"
+                    : "border border-white/5 bg-slate-900/60 text-slate-300 hover:border-white/15 hover:bg-slate-800/80 hover:text-white"
                 )
               }
             >
-              {item.label}
+              <span>{item.label}</span>
+              <span className="text-xs text-slate-500">→</span>
             </NavLink>
           ))}
         </nav>
 
-        <div className="flex justify-end">
-          <Button size="sm" variant="ghost" onClick={onClose}>
-            Dismiss
-          </Button>
+        <div className="pt-2 border-t border-white/10">
+          <a
+            href="mailto:mdsohail88008@gmail.com"
+            onClick={onClose}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-slate-900 border border-lime-400/40 py-2.5 text-xs font-bold text-lime-300 transition hover:bg-slate-800"
+          >
+            <span>Let&apos;s Connect 🚀</span>
+          </a>
         </div>
-      </GlassPanel>
+      </div>
     </div>
   );
 }

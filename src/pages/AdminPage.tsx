@@ -40,11 +40,13 @@ type AtlasPost = {
   highlight: string;
 };
 
-const API_URL = "https://sohailverse-api.sohailkhan88008.workers.dev";
-
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
   const [rating, setRating] = useState("");
@@ -54,6 +56,74 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [moviesLoading, setMoviesLoading] = useState(false);
+
+  useEffect(() => {
+    checkSession();
+  }, []);
+
+  const checkSession = async () => {
+    try {
+      setAuthChecking(true);
+      const res = await fetch("/api/auth/session");
+      if (res.ok) {
+        const data = await res.json();
+        setAuthenticated(data.authenticated === true);
+      } else {
+        setAuthenticated(false);
+      }
+    } catch {
+      setAuthenticated(false);
+    } finally {
+      setAuthChecking(false);
+    }
+  };
+
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!password) {
+      setLoginError("Please enter your admin password.");
+      return;
+    }
+
+    try {
+      setLoginLoading(true);
+      setLoginError("");
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.authenticated === true) {
+        setAuthenticated(true);
+        setPassword("");
+        setLoginError("");
+      } else {
+        setAuthenticated(false);
+        setLoginError(data.error || "Invalid credentials");
+      }
+    } catch {
+      setLoginError("Unable to connect to authentication service.");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+    } catch (err) {
+      console.error("Logout request error:", err);
+    } finally {
+      setAuthenticated(false);
+      setPassword("");
+    }
+  };
 
 
 
@@ -92,9 +162,9 @@ const [atlasLoading, setAtlasLoading] =
   const loadMovies = async () => {
     try {
       setMoviesLoading(true);
-      const response = await fetch(`${API_URL}/api/movies`);
+      const response = await fetch("/api/movies");
       const data = await response.json();
-      setMovies(data);
+      setMovies(Array.isArray(data) ? data : data?.data || []);
     } catch (error) {
       console.error(error);
       setMessage("❌ Failed to load movies");
@@ -108,9 +178,9 @@ const [atlasLoading, setAtlasLoading] =
   const loadAcademyPosts = async () => {
     try {
       setAcademyLoading(true);
-      const response = await fetch(`${API_URL}/api/academy`);
+      const response = await fetch("/api/academy");
       const data = await response.json();
-      setAcademy(data);
+      setAcademy(Array.isArray(data) ? data : data?.data || []);
     } catch (error) {
       console.error(error);
       setMessage("❌ Failed to load academy posts");
@@ -123,10 +193,10 @@ const [atlasLoading, setAtlasLoading] =
     try {
       setDevopsLoading(true);
 
-      const response = await fetch(`${API_URL}/api/devops`);
+      const response = await fetch("/api/devops");
       const data = await response.json();
 
-      setDevops(data);
+      setDevops(Array.isArray(data) ? data : data?.data || []);
     } catch (error) {
       console.error(error);
       setMessage("❌ Failed to load DevOps posts");
@@ -158,7 +228,7 @@ const [atlasLoading, setAtlasLoading] =
     }
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/movies`, {
+      const response = await fetch("/api/movies", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -170,8 +240,8 @@ const [atlasLoading, setAtlasLoading] =
           trailer_url: trailerUrl,
         }),
       });
-      const data = await response.json();
-      if (data.success) {
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && (data.success || data.data)) {
         setMessage("✅ Movie added successfully");
         setTitle("");
         setGenre("");
@@ -179,7 +249,7 @@ const [atlasLoading, setAtlasLoading] =
         setTrailerUrl("");
         loadMovies();
       } else {
-        setMessage("❌ Failed to add movie");
+        setMessage(`❌ ${data.error || "Failed to add movie"}`);
       }
     } catch (error) {
       console.error(error);
@@ -193,15 +263,15 @@ const [atlasLoading, setAtlasLoading] =
     const confirmDelete = window.confirm("Delete this movie?");
     if (!confirmDelete) return;
     try {
-      const response = await fetch(`${API_URL}/api/movies/${id}`, {
+      const response = await fetch(`/api/movies/${id}`, {
         method: "DELETE",
       });
-      const data = await response.json();
-      if (data.success) {
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data.success) {
         setMessage("🗑️ Movie deleted");
         loadMovies();
       } else {
-        setMessage("❌ Delete failed");
+        setMessage(`❌ ${data.error || "Delete failed"}`);
       }
     } catch (error) {
       console.error(error);
@@ -218,7 +288,7 @@ const [atlasLoading, setAtlasLoading] =
     }
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/academy`, {
+      const response = await fetch("/api/academy", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -229,15 +299,15 @@ const [atlasLoading, setAtlasLoading] =
           level,
         }),
       });
-      const data = await response.json();
-      if (data.success) {
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && (data.success || data.data)) {
         setMessage("✅ Academy post added successfully");
         setSkill("");
         setCategory("");
         setLevel("");
         loadAcademyPosts();
       } else {
-        setMessage("❌ Failed to add academy post");
+        setMessage(`❌ ${data.error || "Failed to add academy post"}`);
       }
     } catch (error) {
       console.error(error);
@@ -251,15 +321,15 @@ const [atlasLoading, setAtlasLoading] =
     const confirmDelete = window.confirm("Delete this academy post?");
     if (!confirmDelete) return;
     try {
-      const response = await fetch(`${API_URL}/api/academy/${id}`, {
+      const response = await fetch(`/api/academy/${id}`, {
         method: "DELETE",
       });
-      const data = await response.json();
-      if (data.success) {
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data.success) {
         setMessage("🗑️ Academy post deleted");
         loadAcademyPosts();
       } else {
-        setMessage("❌ Delete failed");
+        setMessage(`❌ ${data.error || "Delete failed"}`);
       }
     } catch (error) {
       console.error(error);
@@ -276,7 +346,7 @@ const [atlasLoading, setAtlasLoading] =
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_URL}/api/devops`, {
+      const response = await fetch("/api/devops", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -288,9 +358,9 @@ const [atlasLoading, setAtlasLoading] =
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (data.success) {
+      if (response.ok && (data.success || data.data)) {
         setMessage("✅ DevOps post added");
 
         setDevopsTitle("");
@@ -298,6 +368,8 @@ const [atlasLoading, setAtlasLoading] =
         setDevopsDescription("");
 
         loadDevOpsPosts();
+      } else {
+        setMessage(`❌ ${data.error || "Failed to add DevOps post"}`);
       }
     } catch (error) {
       console.error(error);
@@ -316,17 +388,19 @@ const [atlasLoading, setAtlasLoading] =
 
     try {
       const response = await fetch(
-        `${API_URL}/api/devops/${id}`,
+        `/api/devops/${id}`,
         {
           method: "DELETE",
         }
       );
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (data.success) {
+      if (response.ok && data.success) {
         setMessage("🗑️ DevOps post deleted");
         loadDevOpsPosts();
+      } else {
+        setMessage(`❌ ${data.error || "Delete failed"}`);
       }
     } catch (error) {
       console.error(error);
@@ -338,13 +412,10 @@ const [atlasLoading, setAtlasLoading] =
     try {
       setTimelineLoading(true);
 
-      const response = await fetch(
-        `${API_URL}/api/timeline`
-      );
-
+      const response = await fetch("/api/timeline");
       const data = await response.json();
 
-      setTimeline(data);
+      setTimeline(Array.isArray(data) ? data : data?.data || []);
     } catch (error) {
       console.error(error);
     } finally {
@@ -364,7 +435,7 @@ const [atlasLoading, setAtlasLoading] =
 
     try {
       const response = await fetch(
-        `${API_URL}/api/timeline`,
+        "/api/timeline",
         {
           method: "POST",
           headers: {
@@ -378,9 +449,9 @@ const [atlasLoading, setAtlasLoading] =
         }
       );
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (data.success) {
+      if (response.ok && (data.success || data.data)) {
         setTimelineTitle("");
         setTimelineCategory("");
         setTimelineDescription("");
@@ -398,15 +469,15 @@ const [atlasLoading, setAtlasLoading] =
 
     try {
       const response = await fetch(
-        `${API_URL}/api/timeline/${id}`,
+        `/api/timeline/${id}`,
         {
           method: "DELETE",
         }
       );
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (data.success) {
+      if (response.ok && data.success) {
         loadTimelinePosts();
       }
     } catch (error) {
@@ -418,13 +489,10 @@ const [atlasLoading, setAtlasLoading] =
     try {
       setAtlasLoading(true);
 
-      const response = await fetch(
-        `${API_URL}/api/atlas`
-      );
-
+      const response = await fetch("/api/atlas");
       const data = await response.json();
 
-      setAtlas(data);
+      setAtlas(Array.isArray(data) ? data : data?.data || []);
     } catch (error) {
       console.error(error);
     } finally {
@@ -445,7 +513,7 @@ const [atlasLoading, setAtlasLoading] =
 
     try {
       const response = await fetch(
-        `${API_URL}/api/atlas`,
+        "/api/atlas",
         {
           method: "POST",
           headers: {
@@ -461,9 +529,9 @@ const [atlasLoading, setAtlasLoading] =
         }
       );
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (data.success) {
+      if (response.ok && (data.success || data.data)) {
         setAtlasCountry("");
         setAtlasStatus("");
         setAtlasYear("");
@@ -484,15 +552,15 @@ const [atlasLoading, setAtlasLoading] =
 
     try {
       const response = await fetch(
-        `${API_URL}/api/atlas/${id}`,
+        `/api/atlas/${id}`,
         {
           method: "DELETE",
         }
       );
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (data.success) {
+      if (response.ok && data.success) {
         loadAtlasPosts();
       }
     } catch (error) {
@@ -507,6 +575,23 @@ const [atlasLoading, setAtlasLoading] =
 
 
 
+  if (authChecking) {
+    return (
+      <PageShell
+        eyebrow="Protected Area"
+        title="Admin Access"
+        description="Verifying administrator session..."
+      >
+        <GlassPanel className="p-8 max-w-xl text-center">
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+            <p className="text-sm text-slate-400">Verifying credentials...</p>
+          </div>
+        </GlassPanel>
+      </PageShell>
+    );
+  }
+
   if (!authenticated) {
     return (
       <PageShell
@@ -514,26 +599,36 @@ const [atlasLoading, setAtlasLoading] =
         title="Admin Access"
         description="Enter password to access SohailVerse CMS."
       >
-        <GlassPanel className="p-8 max-w-xl">
-          <input
-            type="password"
-            placeholder="Enter Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border p-3"
-          />
-          <button
-            className="mt-4 rounded-xl bg-black px-4 py-3 text-white"
-            onClick={() => {
-              if (password === "sohail@123") {
-                setAuthenticated(true);
-              } else {
-                alert("Wrong Password");
-              }
-            }}
-          >
-            Login
-          </button>
+        <GlassPanel className="p-5 sm:p-8 max-w-xl">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Administrator Password
+              </label>
+              <input
+                type="password"
+                placeholder="Enter Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loginLoading}
+                className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+            </div>
+
+            {loginError && (
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+                {loginError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loginLoading || !password}
+              className="w-full rounded-xl bg-accent px-4 py-3 font-semibold text-slate-950 transition hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+            >
+              {loginLoading ? "Authenticating..." : "Access Control Center"}
+            </button>
+          </form>
         </GlassPanel>
       </PageShell>
     );
@@ -545,32 +640,32 @@ const [atlasLoading, setAtlasLoading] =
       title="SohailVerse Admin"
       description="Control all SohailVerse content from one dashboard."
     >
-      <div className="grid gap-6">
+      <div className="grid gap-4 sm:gap-6">
         {/* Movie Manager */}
-        <GlassPanel className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold">🎬 Movie Manager</h2>
+        <GlassPanel className="p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-semibold">🎬 Movie Manager</h2>
             <button
-              onClick={() => setAuthenticated(false)}
-              className="rounded-xl bg-red-500 px-4 py-2 text-white"
+              onClick={handleLogout}
+              className="rounded-xl bg-red-500/80 hover:bg-red-500 px-4 py-2 text-white font-medium transition text-sm min-h-[40px]"
             >
               Logout
             </button>
           </div>
-          <div className="grid gap-4">
+          <div className="grid gap-3 sm:gap-4">
             <input
               type="text"
               placeholder="Movie Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
             <input
               type="text"
               placeholder="Genre"
               value={genre}
               onChange={(e) => setGenre(e.target.value)}
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
             <input
               type="number"
@@ -578,7 +673,7 @@ const [atlasLoading, setAtlasLoading] =
               placeholder="Rating"
               value={rating}
               onChange={(e) => setRating(e.target.value)}
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
             <input
               type="text"
@@ -587,43 +682,43 @@ const [atlasLoading, setAtlasLoading] =
               onChange={(e) =>
                 setTrailerUrl(e.target.value)
               }
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
             <button
               onClick={addMovie}
               disabled={loading}
-              className="rounded-xl bg-black px-4 py-3 text-white"
+              className="rounded-xl bg-cyan-500 hover:bg-cyan-400 font-semibold px-4 py-3 text-slate-950 min-h-[44px] transition disabled:opacity-50"
             >
               {loading ? "Adding..." : "Add Movie"}
             </button>
-            {message && <p className="font-medium">{message}</p>}
+            {message && <p className="font-medium text-xs sm:text-sm">{message}</p>}
           </div>
         </GlassPanel>
 
         {/* Movie Library */}
-        <GlassPanel className="p-6">
-          <h2 className="mb-4 text-2xl font-semibold">🎞️ Movie Library</h2>
+        <GlassPanel className="p-5 sm:p-6">
+          <h2 className="mb-4 text-xl sm:text-2xl font-semibold">🎞️ Movie Library</h2>
           {moviesLoading ? (
-            <p>Loading movies...</p>
+            <p className="text-sm text-slate-400">Loading movies...</p>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {movies.map((movie) => (
-                <div key={movie.id} className="rounded-xl border p-4">
-                  <div className="flex items-center justify-between">
+                <div key={movie.id} className="rounded-xl border border-white/10 bg-slate-900/40 p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold">
+                      <h3 className="font-semibold text-base sm:text-lg">
                         #{movie.id} - {movie.title}
                       </h3>
-                      <p>Genre: {movie.genre}</p>
-                      <p>Rating: ⭐ {movie.rating}</p>
-                      <p>
+                      <p className="text-xs sm:text-sm text-slate-300">Genre: {movie.genre}</p>
+                      <p className="text-xs sm:text-sm text-slate-300">Rating: ⭐ {movie.rating}</p>
+                      <p className="text-xs sm:text-sm text-slate-300">
                         Trailer:
                         <a
                           href={movie.trailer_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="ml-2 text-blue-500 underline"
+                          className="ml-2 text-cyan-400 underline break-all"
                         >
                           Open Trailer
                         </a>
@@ -631,7 +726,7 @@ const [atlasLoading, setAtlasLoading] =
                     </div>
                     <button
                       onClick={() => deleteMovie(movie.id)}
-                      className="rounded-xl bg-red-500 px-4 py-2 text-white"
+                      className="rounded-xl bg-red-500 hover:bg-red-600 px-4 py-2 text-white text-sm font-medium transition min-h-[40px] self-start sm:self-auto"
                     >
                       Delete
                     </button>
@@ -642,37 +737,35 @@ const [atlasLoading, setAtlasLoading] =
           )}
         </GlassPanel>
 
-        
-
         {/* Academy Manager */}
-        <GlassPanel className="p-6">
-          <h2 className="text-2xl font-semibold mb-6">🎓 Academy Manager</h2>
-          <div className="grid gap-4">
+        <GlassPanel className="p-5 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">🎓 Academy Manager</h2>
+          <div className="grid gap-3 sm:gap-4">
             <input
               type="text"
               placeholder="Skill"
               value={skill}
               onChange={(e) => setSkill(e.target.value)}
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
             <input
               type="text"
               placeholder="Category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
             <input
               type="text"
               placeholder="Level"
               value={level}
               onChange={(e) => setLevel(e.target.value)}
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
             <button
               onClick={addAcademyPost}
               disabled={loading}
-              className="rounded-xl bg-black px-4 py-3 text-white"
+              className="rounded-xl bg-cyan-500 hover:bg-cyan-400 font-semibold px-4 py-3 text-slate-950 min-h-[44px] transition disabled:opacity-50"
             >
               {loading ? "Adding..." : "Add Academy Post"}
             </button>
@@ -680,25 +773,25 @@ const [atlasLoading, setAtlasLoading] =
         </GlassPanel>
 
         {/* Academy Library */}
-        <GlassPanel className="p-6">
-          <h2 className="mb-4 text-2xl font-semibold">📚 Academy Library</h2>
+        <GlassPanel className="p-5 sm:p-6">
+          <h2 className="mb-4 text-xl sm:text-2xl font-semibold">📚 Academy Library</h2>
           {academyLoading ? (
-            <p>Loading academy posts...</p>
+            <p className="text-sm text-slate-400">Loading academy posts...</p>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {academy.map((post) => (
-                <div key={post.id} className="rounded-xl border p-4">
-                  <div className="flex items-center justify-between">
+                <div key={post.id} className="rounded-xl border border-white/10 bg-slate-900/40 p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold">
+                      <h3 className="font-semibold text-base sm:text-lg">
                         #{post.id} - {post.skill}
                       </h3>
-                      <p>Category: {post.category}</p>
-                      <p>Level: {post.level}</p>
+                      <p className="text-xs sm:text-sm text-slate-300">Category: {post.category}</p>
+                      <p className="text-xs sm:text-sm text-slate-300">Level: {post.level}</p>
                     </div>
                     <button
                       onClick={() => deleteAcademyPost(post.id)}
-                      className="rounded-xl bg-red-500 px-4 py-2 text-white"
+                      className="rounded-xl bg-red-500 hover:bg-red-600 px-4 py-2 text-white text-sm font-medium transition min-h-[40px] self-start sm:self-auto"
                     >
                       Delete
                     </button>
@@ -709,12 +802,12 @@ const [atlasLoading, setAtlasLoading] =
           )}
         </GlassPanel>
 
-        <GlassPanel className="p-6">
-          <h2 className="text-2xl font-semibold mb-6">
+        <GlassPanel className="p-5 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
             ⚙️ DevOps Manager
           </h2>
 
-          <div className="grid gap-4">
+          <div className="grid gap-3 sm:gap-4">
             <input
               type="text"
               placeholder="Project Title"
@@ -722,7 +815,7 @@ const [atlasLoading, setAtlasLoading] =
               onChange={(e) =>
                 setDevopsTitle(e.target.value)
               }
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
             <input
@@ -732,7 +825,7 @@ const [atlasLoading, setAtlasLoading] =
               onChange={(e) =>
                 setDevopsCategory(e.target.value)
               }
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
             <textarea
@@ -742,46 +835,45 @@ const [atlasLoading, setAtlasLoading] =
                 setDevopsDescription(e.target.value)
               }
               rows={3}
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
             <button
               onClick={addDevOpsPost}
               disabled={loading}
-              className="rounded-xl bg-black px-4 py-3 text-white"
+              className="rounded-xl bg-cyan-500 hover:bg-cyan-400 font-semibold px-4 py-3 text-slate-950 min-h-[44px] transition disabled:opacity-50"
             >
               {loading ? "Adding..." : "Add DevOps Project"}
             </button>
           </div>
         </GlassPanel>
 
-        <GlassPanel className="p-6">
-          <h2 className="mb-4 text-2xl font-semibold">
+        <GlassPanel className="p-5 sm:p-6">
+          <h2 className="mb-4 text-xl sm:text-2xl font-semibold">
             🚀 DevOps Library
           </h2>
 
           {devopsLoading ? (
-            <p>Loading projects...</p>
+            <p className="text-sm text-slate-400">Loading projects...</p>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {devops.map((project) => (
                 <div
                   key={project.id}
-                  className="rounded-xl border p-4"
+                  className="rounded-xl border border-white/10 bg-slate-900/40 p-4"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold">
+                      <h3 className="font-semibold text-base sm:text-lg">
                         #{project.id} - {project.title}
                       </h3>
 
-                      <p>
+                      <p className="text-xs sm:text-sm text-slate-300">
                         Category: {project.category}
                       </p>
 
-                      <p>
-                        Description:
-                        {project.description}
+                      <p className="text-xs sm:text-sm text-slate-300">
+                        Description: {project.description}
                       </p>
                     </div>
 
@@ -789,7 +881,7 @@ const [atlasLoading, setAtlasLoading] =
                       onClick={() =>
                         deleteDevOpsPost(project.id)
                       }
-                      className="rounded-xl bg-red-500 px-4 py-2 text-white"
+                      className="rounded-xl bg-red-500 hover:bg-red-600 px-4 py-2 text-white text-sm font-medium transition min-h-[40px] self-start sm:self-auto"
                     >
                       Delete
                     </button>
@@ -800,12 +892,12 @@ const [atlasLoading, setAtlasLoading] =
           )}
         </GlassPanel>
 
-        <GlassPanel className="p-6">
-          <h2 className="text-2xl font-semibold mb-6">
+        <GlassPanel className="p-5 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
             📅 Timeline Manager
           </h2>
 
-          <div className="grid gap-4">
+          <div className="grid gap-3 sm:gap-4">
             <input
               type="text"
               placeholder="Event Title"
@@ -813,7 +905,7 @@ const [atlasLoading, setAtlasLoading] =
               onChange={(e) =>
                 setTimelineTitle(e.target.value)
               }
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
             <input
@@ -823,7 +915,7 @@ const [atlasLoading, setAtlasLoading] =
               onChange={(e) =>
                 setTimelineCategory(e.target.value)
               }
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
             <textarea
@@ -833,43 +925,43 @@ const [atlasLoading, setAtlasLoading] =
                 setTimelineDescription(e.target.value)
               }
               rows={3}
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
             <button
               onClick={addTimelinePost}
-              className="rounded-xl bg-black px-4 py-3 text-white"
+              className="rounded-xl bg-cyan-500 hover:bg-cyan-400 font-semibold px-4 py-3 text-slate-950 min-h-[44px] transition disabled:opacity-50"
             >
               Add Timeline Event
             </button>
           </div>
         </GlassPanel>
 
-        <GlassPanel className="p-6">
-          <h2 className="mb-4 text-2xl font-semibold">
+        <GlassPanel className="p-5 sm:p-6">
+          <h2 className="mb-4 text-xl sm:text-2xl font-semibold">
             🕒 Timeline Library
           </h2>
 
           {timelineLoading ? (
-            <p>Loading timeline...</p>
+            <p className="text-sm text-slate-400">Loading timeline...</p>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {timeline.map((event) => (
                 <div
                   key={event.id}
-                  className="rounded-xl border p-4"
+                  className="rounded-xl border border-white/10 bg-slate-900/40 p-4"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold">
+                      <h3 className="font-semibold text-base sm:text-lg">
                         #{event.id} - {event.title}
                       </h3>
 
-                      <p>
+                      <p className="text-xs sm:text-sm text-slate-300">
                         Category: {event.category}
                       </p>
 
-                      <p>
+                      <p className="text-xs sm:text-sm text-slate-300">
                         Description: {event.description}
                       </p>
                     </div>
@@ -878,7 +970,7 @@ const [atlasLoading, setAtlasLoading] =
                       onClick={() =>
                         deleteTimelinePost(event.id)
                       }
-                      className="rounded-xl bg-red-500 px-4 py-2 text-white"
+                      className="rounded-xl bg-red-500 hover:bg-red-600 px-4 py-2 text-white text-sm font-medium transition min-h-[40px] self-start sm:self-auto"
                     >
                       Delete
                     </button>
@@ -889,12 +981,12 @@ const [atlasLoading, setAtlasLoading] =
           )}
         </GlassPanel>
 
-        <GlassPanel className="p-6">
-          <h2 className="text-2xl font-semibold mb-6">
+        <GlassPanel className="p-5 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
             🌍 Atlas Manager
           </h2>
 
-          <div className="grid gap-4">
+          <div className="grid gap-3 sm:gap-4">
             <input
               type="text"
               placeholder="Country"
@@ -902,7 +994,7 @@ const [atlasLoading, setAtlasLoading] =
               onChange={(e) =>
                 setAtlasCountry(e.target.value)
               }
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
             <input
@@ -912,7 +1004,7 @@ const [atlasLoading, setAtlasLoading] =
               onChange={(e) =>
                 setAtlasStatus(e.target.value)
               }
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
             <input
@@ -922,7 +1014,7 @@ const [atlasLoading, setAtlasLoading] =
               onChange={(e) =>
                 setAtlasYear(e.target.value)
               }
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
             <textarea
@@ -934,49 +1026,48 @@ const [atlasLoading, setAtlasLoading] =
                 )
               }
               rows={3}
-              className="rounded-xl border p-3"
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
             <button
               onClick={addAtlasPost}
-              className="rounded-xl bg-black px-4 py-3 text-white"
+              className="rounded-xl bg-cyan-500 hover:bg-cyan-400 font-semibold px-4 py-3 text-slate-950 min-h-[44px] transition disabled:opacity-50"
             >
               Add Country
             </button>
           </div>
         </GlassPanel>
 
-        <GlassPanel className="p-6">
-          <h2 className="mb-4 text-2xl font-semibold">
+        <GlassPanel className="p-5 sm:p-6">
+          <h2 className="mb-4 text-xl sm:text-2xl font-semibold">
             🌎 Atlas Library
           </h2>
 
           {atlasLoading ? (
-            <p>Loading countries...</p>
+            <p className="text-sm text-slate-400">Loading countries...</p>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {atlas.map((country) => (
                 <div
                   key={country.id}
-                  className="rounded-xl border p-4"
+                  className="rounded-xl border border-white/10 bg-slate-900/40 p-4"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold">
+                      <h3 className="font-semibold text-base sm:text-lg">
                         #{country.id} - {country.country}
                       </h3>
 
-                      <p>
+                      <p className="text-xs sm:text-sm text-slate-300">
                         Status: {country.status}
                       </p>
 
-                      <p>
+                      <p className="text-xs sm:text-sm text-slate-300">
                         Year: {country.year}
                       </p>
 
-                      <p>
-                        Highlight:
-                        {country.highlight}
+                      <p className="text-xs sm:text-sm text-slate-300">
+                        Highlight: {country.highlight}
                       </p>
                     </div>
 
@@ -986,7 +1077,7 @@ const [atlasLoading, setAtlasLoading] =
                           country.id
                         )
                       }
-                      className="rounded-xl bg-red-500 px-4 py-2 text-white"
+                      className="rounded-xl bg-red-500 hover:bg-red-600 px-4 py-2 text-white text-sm font-medium transition min-h-[40px] self-start sm:self-auto"
                     >
                       Delete
                     </button>
@@ -996,16 +1087,8 @@ const [atlasLoading, setAtlasLoading] =
             </div>
           )}
         </GlassPanel>
-
-
-
-
-
-
-
-
-
       </div>
     </PageShell>
   );
 }
+

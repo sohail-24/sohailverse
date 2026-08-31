@@ -1,48 +1,34 @@
-import {
-  currentSignals,
-  heroContent,
- 
-  liveStatusItems,
-  missionManifesto,
-  timelinePreview,
-  worldGateways,
-  
-} from "../data/mission-control";
-import CurrentSignals from "../components/mission-control/CurrentSignals";
-import JourneyTimelinePreview from "../components/mission-control/JourneyTimelinePreview";
-import LiveStatusBar from "../components/mission-control/LiveStatusBar";
-import MissionHero from "../components/mission-control/MissionHero";
-import MissionManifesto from "../components/mission-control/MissionManifesto";
-import SectionHeading from "../components/mission-control/SectionHeading";
-import WorldGateways from "../components/mission-control/WorldGateways";
-
-import InteractiveWorldMap from "../components/map/InteractiveWorldMap";
+import CinematicHero from "../components/mission-control/CinematicHero";
+import ConnectCtaBanner from "../components/mission-control/ConnectCtaBanner";
+import FeaturedProjectsSection from "../components/mission-control/FeaturedProjectsSection";
+import PhilosophyNexus from "../components/mission-control/PhilosophyNexus";
+import SohailVerseWorldsSection from "../components/mission-control/SohailVerseWorldsSection";
+import TelemetryStrip from "../components/mission-control/TelemetryStrip";
+import WhatILoveToDoSection from "../components/mission-control/WhatILoveToDoSection";
 
 export default function MissionControlPage() {
   return (
-    <div className="flex flex-col gap-10 pb-6 lg:gap-14">
-      <MissionHero
-        content={heroContent}
-      />
+    <div className="flex flex-col gap-12 sm:gap-16 lg:gap-20 pb-12">
+      {/* 1. Cinematic Hero Section */}
+      <CinematicHero />
 
-      <LiveStatusBar items={liveStatusItems} />
+      {/* 2. Telemetry & Metrics Strip */}
+      <TelemetryStrip />
 
-      <section className="space-y-6">
-        <SectionHeading
-          description="A living map of places I've visited, cities that shaped my journey, and destinations I plan to explore next."
-          eyebrow="World Map"
-          title="Visited Places & Future Destinations"
-        />
-        <InteractiveWorldMap />
-      </section>
+      {/* 3. Engineering Philosophy & Infinity Loop */}
+      <PhilosophyNexus />
 
-      <WorldGateways items={worldGateways} />
+      {/* 4. What I Love To Do (5 Neon Cards) */}
+      <WhatILoveToDoSection />
 
-      <CurrentSignals items={currentSignals} />
+      {/* 5. Featured Projects Showcase (sohail-shop, sohail-studio, Fresh Flow, wedding) */}
+      <FeaturedProjectsSection />
 
-      <JourneyTimelinePreview items={timelinePreview} />
+      {/* 6. Explore SohailVerse Worlds (DevOps, Atlas, Cinema, Academy, Timeline) */}
+      <SohailVerseWorldsSection />
 
-      <MissionManifesto statement={missionManifesto} />
+      {/* 7. Curved Planetary Horizon CTA Banner */}
+      <ConnectCtaBanner />
     </div>
   );
 }

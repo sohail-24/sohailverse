@@ -24,18 +24,18 @@ function AssetCard({
       {...(href
         ? { href, target: "_blank", rel: "noreferrer" }
         : {})}
-      className="group rounded-2xl border border-white/10 bg-slate-950/55 p-5 transition hover:border-cyan-400/30 hover:bg-slate-900/70"
+      className="group rounded-2xl border border-white/10 bg-slate-950/55 p-4 sm:p-5 transition hover:border-cyan-400/30 hover:bg-slate-900/70"
     >
-      <div className="flex items-start gap-4">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-cyan-300">
+      <div className="flex items-start gap-3 sm:gap-4">
+        <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 p-2.5 sm:p-3 text-cyan-300">
           {icon}
         </div>
 
         <div className="min-w-0">
-          <h3 className="font-semibold text-white">{title}</h3>
-          <p className="mt-1 text-sm leading-6 text-slate-400">{description}</p>
+          <h3 className="text-sm sm:text-base font-semibold text-white">{title}</h3>
+          <p className="mt-1 text-xs sm:text-sm leading-5 sm:leading-6 text-slate-400">{description}</p>
           {href && (
-            <p className="mt-3 text-xs uppercase tracking-[0.2em] text-cyan-300/80">
+            <p className="mt-2 sm:mt-3 text-[11px] sm:text-xs uppercase tracking-[0.2em] text-cyan-300/80">
               Open asset
             </p>
           )}
@@ -47,15 +47,16 @@ function AssetCard({
 
 export default function MissionAssets() {
   return (
-    <section className="mt-10 rounded-[2rem] border border-white/10 bg-slate-950/40 p-8">
-      <div className="mb-8">
-        <p className="mb-2 text-sm uppercase tracking-[0.35em] text-cyan-400">
+    <section className="mt-6 sm:mt-10 rounded-2xl sm:rounded-[2rem] border border-white/10 bg-slate-950/40 p-5 sm:p-8">
+      <div className="mb-5 sm:mb-8">
+        <p className="mb-1.5 sm:mb-2 text-xs sm:text-sm uppercase tracking-[0.24em] sm:tracking-[0.35em] text-cyan-400 font-semibold">
           Mission Assets
         </p>
-        <h2 className="text-3xl font-bold text-white">Supporting Material</h2>
+        <h2 className="text-xl sm:text-3xl font-bold text-white">Supporting Material</h2>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
+
         <AssetCard
           title="Interview Guide"
           description="Complete technical explanation and interview-ready breakdown."

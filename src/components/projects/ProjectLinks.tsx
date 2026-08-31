@@ -41,35 +41,35 @@ const links = [
 
 export default function ProjectLinks() {
   return (
-    <section className="mt-10 rounded-[2rem] border border-white/10 bg-slate-950/40 p-8">
-      <div className="mb-8">
-        <p className="mb-2 text-sm uppercase tracking-[0.35em] text-cyan-400">
+    <section className="mt-6 sm:mt-10 rounded-2xl sm:rounded-[2rem] border border-white/10 bg-slate-950/40 p-5 sm:p-8">
+      <div className="mb-5 sm:mb-8">
+        <p className="mb-1.5 sm:mb-2 text-xs sm:text-sm uppercase tracking-[0.24em] sm:tracking-[0.35em] text-cyan-400 font-semibold">
           Project Links
         </p>
-        <h2 className="text-3xl font-bold text-white">GitHub Repositories</h2>
+        <h2 className="text-xl sm:text-3xl font-bold text-white">GitHub Repositories</h2>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
         {links.map((link) => (
           <a
             key={link.title + link.href}
             href={link.href}
             target="_blank"
             rel="noreferrer"
-            className="group rounded-2xl border border-white/10 bg-slate-950/55 p-5 transition hover:border-cyan-400/30 hover:bg-slate-900/70"
+            className="group rounded-2xl border border-white/10 bg-slate-950/55 p-4 sm:p-5 transition hover:border-cyan-400/30 hover:bg-slate-900/70"
           >
-            <div className="flex items-start gap-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-cyan-300">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 p-2.5 sm:p-3 text-cyan-300">
                 {link.icon}
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-white">{link.title}</h3>
-                  <ExternalLink className="h-4 w-4 shrink-0 text-slate-400" />
+                  <h3 className="text-sm sm:text-base font-semibold text-white group-hover:text-cyan-300">{link.title}</h3>
+                  <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-slate-400 group-hover:text-cyan-300" />
                 </div>
-                <p className="mt-1 text-sm text-slate-400">{link.description}</p>
-                <p className="mt-3 break-all text-xs text-cyan-300/80">
+                <p className="mt-1 text-xs sm:text-sm text-slate-400 leading-5">{link.description}</p>
+                <p className="mt-2 sm:mt-3 break-all text-[11px] sm:text-xs text-cyan-300/80">
                   {link.href.replace("https://github.com/", "github.com/")}
                 </p>
               </div>
@@ -78,10 +78,10 @@ export default function ProjectLinks() {
         ))}
       </div>
 
-      <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/5 p-5">
+      <div className="mt-4 sm:mt-6 rounded-xl sm:rounded-2xl border border-dashed border-white/10 bg-white/5 p-4 sm:p-5">
         <div className="flex items-center gap-3 text-slate-300">
-          <BookOpenText className="h-5 w-5 text-cyan-300" />
-          <p className="font-medium">
+          <BookOpenText className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-cyan-300" />
+          <p className="text-xs sm:text-sm font-medium">
             These links should stay visible in the portfolio for recruiters and interviewers.
           </p>
         </div>

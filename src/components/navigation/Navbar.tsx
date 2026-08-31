@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { navigation } from "../../data/navigation";
-import { profile } from "../../data/profile";
 import { cn } from "../../lib/utils";
-import GlassPanel from "../ui/GlassPanel";
-import Badge from "../ui/Badge";
-import Button from "../ui/Button";
 import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
@@ -16,112 +11,80 @@ export default function Navbar() {
     setMenuOpen(false);
   }, [location.pathname]);
 
+  const navLinks = [
+    { label: "Home", path: "/" },
+    { label: "About", path: "/timeline" },
+    { label: "Journey", path: "/atlas" },
+    { label: "Blog", path: "/academy" },
+    { label: "Contact", path: "mailto:mdsohail88008@gmail.com", external: true },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 px-4 pb-2 pt-4 sm:px-6 lg:px-8">
-      <GlassPanel
-        className="
-        mx-auto
-        flex
-        w-full
-        max-w-7xl
-        items-center
-        justify-between
-        gap-4
-        px-4
-        py-3
-        sm:px-6
-        bg-slate-950/70
-        border-white/10
-      "
-      >
-        <div className="flex min-w-0 items-center gap-3">
-          <NavLink to="/" end className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-700 text-sm font-bold text-white shadow-lg">
-              SV
-            </div>
-            <div className="min-w-0">
-              <p className="truncate font-display text-base font-semibold tracking-tight text-white">
-                {profile.productName}
-              </p>
-              <p className="truncate text-sm text-slate-400">{profile.name}</p>
-            </div>
-          </NavLink>
-          <Badge className="hidden md:inline-flex" variant="accent">
-            v2.0
-          </Badge>
-        </div>
+    <header className="sticky top-0 z-50 w-full transition-all duration-200">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        {/* Left: Brand logo treatment </> sohaildevops */}
+        <NavLink to="/" end className="flex items-center gap-2 group">
+          <span className="font-mono text-base font-bold text-lime-400">&lt;/&gt;</span>
+          <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-white group-hover:text-lime-300 transition-colors">
+            sohail<span className="text-lime-400">devops</span>
+          </span>
+        </NavLink>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
-          {navigation.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === "/"}
-              className={({ isActive }) =>
-                cn(
-                  "rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105",
-                  isActive
-                    ? `
-                        bg-gradient-to-r
-                        from-blue-500/20
-                        to-indigo-500/20
-                        text-blue-300
-                        border
-                        border-blue-400/20
-                        shadow-[0_0_25px_rgba(59,130,246,0.35)]
-                      `
-                    : `
-                        text-slate-400
-                        hover:text-white
-                        hover:bg-slate-800/60
-                      `
-
-
-
-                )
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
+        {/* Center: Editorial navigation */}
+        <nav className="hidden items-center gap-7 lg:gap-9 md:flex" aria-label="Primary">
+          {navLinks.map((item) =>
+            item.external ? (
+              <a
+                key={item.label}
+                href={item.path}
+                className="relative py-1 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === "/"}
+                className={({ isActive }) =>
+                  cn(
+                    "relative py-1 text-sm font-medium transition-colors duration-200",
+                    isActive
+                      ? "text-white font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-lime-400 after:rounded-full after:shadow-[0_0_8px_rgba(163,230,53,0.8)]"
+                      : "text-slate-300 hover:text-white"
+                  )
+                }
+              >
+                {item.label}
+              </NavLink>
+            )
+          )}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <div
-            className="
-            hidden
-            md:flex
-            items-center
-            gap-2
-            rounded-full
-            border
-            border-slate-700
-            bg-slate-900/70
-            px-3
-            py-2
-            text-sm
-            text-slate-300
-          "
+        {/* Right: Let's Connect CTA Button & Mobile Trigger */}
+        <div className="flex items-center gap-3">
+          <a
+            href="mailto:mdsohail88008@gmail.com"
+            className="hidden sm:inline-flex items-center gap-2 rounded-full border border-white/15 bg-slate-950/80 px-5 py-2 text-xs font-semibold text-white shadow-sm transition hover:border-lime-400/50 hover:bg-slate-900 hover:text-lime-300 active:scale-[0.98]"
           >
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>{profile.status}</span>
-          </div>
+            <span>Let&apos;s Connect</span>
+            <span className="text-xs">🚀</span>
+          </a>
 
-          <Button
+          {/* Mobile Menu Button */}
+          <button
+            type="button"
             aria-controls="mobile-navigation"
             aria-expanded={menuOpen}
-            className="lg:hidden"
-            size="sm"
-            variant="secondary"
+            className="md:hidden min-h-[40px] px-4 py-1.5 rounded-full font-mono text-xs font-semibold uppercase tracking-wider border border-white/15 bg-slate-950 text-white hover:bg-slate-900 transition"
             onClick={() => setMenuOpen((open) => !open)}
           >
             {menuOpen ? "Close" : "Menu"}
-          </Button>
+          </button>
         </div>
-      </GlassPanel>
+      </div>
 
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </header>
   );
 }
-

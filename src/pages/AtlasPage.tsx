@@ -1,17 +1,8 @@
 import { useEffect, useState } from "react";
 import PageShell from "../components/layout/PageShell";
 import GlassPanel from "../components/ui/GlassPanel";
-
-type AtlasPost = {
-  id: number;
-  country: string;
-  status: string;
-  year: string;
-  highlight: string;
-};
-
-const API_URL =
-  "https://sohailverse-api.sohailkhan88008.workers.dev";
+import { fetchApi, isValidAtlasPost, type AtlasPost } from "../lib/api";
+import { ErrorState, EmptyState, LoadingSkeleton } from "../components/ui/StatusStates";
 
 const wishlist = [
   {
@@ -33,23 +24,19 @@ const wishlist = [
 ];
 
 export default function AtlasPage() {
-  const [countries, setCountries] =
-    useState<AtlasPost[]>([]);
-
-  const [loading, setLoading] =
-    useState(true);
+  const [countries, setCountries] = useState<AtlasPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadAtlasPosts = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch(
-        `${API_URL}/api/atlas`
-      );
-
-      const data = await response.json();
-
+      const data = await fetchApi<AtlasPost>("/api/atlas", isValidAtlasPost);
       setCountries(data);
-    } catch (error) {
-      console.error(error);
+    } catch (err: any) {
+      console.error("Failed to load atlas data:", err);
+      setError(err?.message || "Unable to load data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -77,80 +64,82 @@ export default function AtlasPage() {
       description="Places visited, lessons learned, and destinations still waiting on the horizon."
     >
       {/* Hero Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <GlassPanel className="p-6">
-          <p className="text-sm text-muted">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <GlassPanel className="p-4 sm:p-6">
+          <p className="text-xs sm:text-sm text-muted">
             Countries Recorded
           </p>
 
-          <p className="mt-2 text-4xl font-bold">
-            {countries.length}
+          <p className="mt-1 sm:mt-2 text-2xl sm:text-4xl font-bold">
+            {loading ? "..." : error ? "-" : countries.length}
           </p>
         </GlassPanel>
 
-        <GlassPanel className="p-6">
-          <p className="text-sm text-muted">
+        <GlassPanel className="p-4 sm:p-6">
+          <p className="text-xs sm:text-sm text-muted">
             Countries Visited
           </p>
 
-          <p className="mt-2 text-4xl font-bold">
-            {visitedCount}
+          <p className="mt-1 sm:mt-2 text-2xl sm:text-4xl font-bold">
+            {loading ? "..." : error ? "-" : visitedCount}
           </p>
         </GlassPanel>
 
-        <GlassPanel className="p-6">
-          <p className="text-sm text-muted">
+        <GlassPanel className="p-4 sm:p-6">
+          <p className="text-xs sm:text-sm text-muted">
             Future Destinations
           </p>
 
-          <p className="mt-2 text-4xl font-bold">
-            {futureCount}
+          <p className="mt-1 sm:mt-2 text-2xl sm:text-4xl font-bold">
+            {loading ? "..." : error ? "-" : futureCount}
           </p>
         </GlassPanel>
 
-        <GlassPanel className="p-6">
-          <p className="text-sm text-muted">
+        <GlassPanel className="p-4 sm:p-6">
+          <p className="text-xs sm:text-sm text-muted">
             Atlas Entries
           </p>
 
-          <p className="mt-2 text-4xl font-bold">
-            {countries.length}
+          <p className="mt-1 sm:mt-2 text-2xl sm:text-4xl font-bold">
+            {loading ? "..." : error ? "-" : countries.length}
           </p>
         </GlassPanel>
       </div>
 
       {/* Countries */}
       <div>
-        <h2 className="mb-4 text-2xl font-semibold">
+        <h2 className="mb-3 text-xl sm:text-2xl font-semibold">
           Visited & Planned Countries
         </h2>
 
         {loading ? (
-          <GlassPanel className="p-6">
-            Loading Atlas...
-          </GlassPanel>
+          <LoadingSkeleton label="Loading atlas from D1 database..." />
+        ) : error ? (
+          <ErrorState message={error} onRetry={loadAtlasPosts} />
+        ) : countries.length === 0 ? (
+          <EmptyState message="No destinations found in the atlas." />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
             {countries.map((country) => (
               <GlassPanel
                 key={country.id}
-                className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
+                className="p-4 sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
               >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-lg sm:text-xl font-semibold">
                     {country.country}
                   </h3>
 
-                  <span className="text-xs font-medium text-muted">
+                  <span className="rounded-full bg-white/5 border border-white/10 px-2.5 py-0.5 text-xs font-medium text-slate-300">
                     {country.status}
                   </span>
                 </div>
 
-                <p className="mt-2 text-sm text-muted">
+                <p className="mt-1.5 text-xs sm:text-sm text-muted">
                   {country.year}
                 </p>
 
-                <p className="mt-4 leading-7">
+                <p className="mt-3 text-xs sm:text-sm leading-6 text-slate-300 sm:leading-7">
                   {country.highlight}
                 </p>
               </GlassPanel>
@@ -160,12 +149,12 @@ export default function AtlasPage() {
       </div>
 
       {/* Saudi Story */}
-      <GlassPanel className="p-8">
-        <h2 className="mb-4 text-2xl font-semibold">
+      <GlassPanel className="p-5 sm:p-8">
+        <h2 className="mb-3 text-xl sm:text-2xl font-semibold">
           Saudi Arabia Journey
         </h2>
 
-        <p className="leading-8 text-muted">
+        <p className="text-xs sm:text-base leading-6 sm:leading-8 text-muted">
           Saudi Arabia was my first
           international journey and one of the
           most important experiences of my
@@ -181,21 +170,21 @@ export default function AtlasPage() {
 
       {/* Wishlist */}
       <div>
-        <h2 className="mb-4 text-2xl font-semibold">
+        <h2 className="mb-3 text-xl sm:text-2xl font-semibold">
           Future Destinations
         </h2>
 
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
           {wishlist.map((item) => (
             <GlassPanel
               key={item.country}
-              className="p-5"
+              className="p-4 sm:p-5"
             >
-              <h3 className="font-semibold">
+              <h3 className="font-semibold text-base sm:text-lg">
                 {item.country}
               </h3>
 
-              <p className="mt-2 text-sm text-muted">
+              <p className="mt-1.5 text-xs sm:text-sm text-muted">
                 {item.reason}
               </p>
             </GlassPanel>
@@ -203,5 +192,6 @@ export default function AtlasPage() {
         </div>
       </div>
     </PageShell>
+
   );
 }

@@ -1,0 +1,10 @@
+# Cloudflare Pages Functions Server-Side Secrets (Local Development)
+# Copy this file to .dev.vars for wrangler pages dev, or set in Cloudflare Dashboard Secrets.
+# NEVER commit actual secrets or .dev.vars to Git!
+
+# PBKDF2 hash of the admin password.
+# Generate via: node scripts/generate-password-hash.js "<your-password>"
+ADMIN_PASSWORD_HASH=pbkdf2:600000:example_salt:example_hash
+
+# Cryptographic secret for signing HMAC-SHA256 session cookies (e.g. 64-char random hex)
+SESSION_SECRET=example_session_signing_secret_replace_with_random_string

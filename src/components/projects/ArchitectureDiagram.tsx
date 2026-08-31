@@ -116,9 +116,9 @@ function FlowSection({ flow }: { flow: Flow }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {flow.steps.map((step, index) => (
-          <div key={step.title} className="flex items-stretch gap-4">
+          <div key={step.title} className="relative flex flex-col">
             <StepCard
               index={index + 1}
               title={step.title}
@@ -126,17 +126,10 @@ function FlowSection({ flow }: { flow: Flow }) {
               icon={step.icon}
               accent={flow.accent}
             />
-
-            {index !== flow.steps.length - 1 && (
-              <div className="hidden items-center justify-center md:flex">
-                <div className="rounded-full border border-white/10 bg-white/5 p-2 text-slate-400">
-                  <ArrowRight className="h-4 w-4" />
-                </div>
-              </div>
-            )}
           </div>
         ))}
       </div>
+
 
       <div className="mt-6">
         <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-slate-300">

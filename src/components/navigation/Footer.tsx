@@ -1,82 +1,61 @@
-import { NavLink } from "react-router-dom";
-import { navigation } from "../../data/navigation";
-import { profile } from "../../data/profile";
-import GlassPanel from "../ui/GlassPanel";
+import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
+import { FiMail } from "react-icons/fi";
 
 export default function Footer() {
   return (
-    <footer className="px-4 pb-6 sm:px-6 lg:px-8">
-      <GlassPanel
-        className="
-          mx-auto
-          w-full
-          max-w-7xl
-          px-6
-          py-6
-          bg-slate-950/60
-          border-white/10
-          backdrop-blur-xl
-        "
-      >
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-
-          {/* Left Side */}
-          <div className="space-y-3">
-            <p className="font-display text-lg font-semibold tracking-tight text-white">
-              {profile.productName}
-            </p>
-
-            <p className="max-w-xl text-sm leading-6 text-slate-400">
-              {profile.motto}
-            </p>
-
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
-              {profile.name} · Phase 2 Universe
-            </p>
-          </div>
-
-          {/* Right Side */}
-          <div className="space-y-4">
-
-            <nav
-              className="flex flex-wrap gap-4"
-              aria-label="Footer"
-            >
-              {navigation.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.path === "/"}
-                  className="
-                    text-sm
-                    font-medium
-                    text-slate-400
-                    transition-all
-                    duration-300
-                    hover:text-blue-300
-                  "
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-
-              <p className="text-sm text-slate-500">
-                © {new Date().getFullYear()} {profile.name}
-              </p>
-
-              <p className="text-sm text-slate-500">
-                Built for SohailVerse v2.0
-              </p>
-
-            </div>
-
-          </div>
-
+    <footer className="w-full border-t border-white/10 bg-transparent py-8 text-xs text-slate-400">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6 lg:px-8">
+        {/* Left */}
+        <div className="flex items-center gap-2">
+          <span>&copy; {new Date().getFullYear()}</span>
+          <span className="font-display font-bold text-white">
+            sohail<span className="text-lime-400">devops</span>
+          </span>
         </div>
-      </GlassPanel>
+
+        {/* Center */}
+        <div className="text-center font-mono text-[11px] text-slate-400">
+          Built with <span className="text-rose-500">❤️</span> , <span className="text-amber-400">☕</span> and endless curiosity
+        </div>
+
+        {/* Right: Social Links */}
+        <div className="flex items-center gap-4 text-sm text-slate-400">
+          <a
+            href="https://github.com/sohail-24"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-white transition"
+            aria-label="GitHub"
+          >
+            <FaGithub className="h-4 w-4" />
+          </a>
+          <a
+            href="https://www.linkedin.com/in/md-sohail2001"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-sky-400 transition"
+            aria-label="LinkedIn"
+          >
+            <FaLinkedin className="h-4 w-4" />
+          </a>
+          <a
+            href="https://twitter.com"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-sky-400 transition"
+            aria-label="Twitter"
+          >
+            <FaTwitter className="h-4 w-4" />
+          </a>
+          <a
+            href="mailto:mdsohail88008@gmail.com"
+            className="hover:text-emerald-400 transition"
+            aria-label="Email"
+          >
+            <FiMail className="h-4 w-4" />
+          </a>
+        </div>
+      </div>
     </footer>
   );
 }
