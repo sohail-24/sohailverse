@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "../../lib/utils";
 
@@ -6,37 +7,84 @@ interface MobileMenuProps {
   onClose: () => void;
 }
 
+const menuLinks = [
+  { label: "Home", path: "/" },
+  { label: "About", path: "/timeline" },
+  { label: "Journey", path: "/atlas" },
+  { label: "Projects", path: "/devops" },
+  { label: "Blog", path: "/academy" },
+  { label: "Cinema", path: "/cinema" },
+];
+
+/**
+ * Dedicated mobile drawer — slides in from the right with a dimmed
+ * backdrop, focusable close affordance, Escape + scroll lock.
+ * Never a shrunk-down desktop menu.
+ */
 export default function MobileMenu({ open, onClose }: MobileMenuProps) {
-  const navLinks = [
-    { label: "Home", path: "/" },
-    { label: "About", path: "/timeline" },
-    { label: "Journey", path: "/atlas" },
-    { label: "Projects", path: "/devops" },
-    { label: "Academy", path: "/academy" },
-    { label: "Cinema", path: "/cinema" },
-  ];
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open, onClose]);
 
   if (!open) return null;
 
   return (
     <div
       id="mobile-navigation"
-      className="mx-4 mt-2 max-w-7xl md:hidden transition-all duration-300"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Site navigation"
+      className="fixed inset-0 z-[70] md:hidden"
     >
-      <div className="space-y-4 rounded-2xl border border-white/15 bg-slate-950/95 p-5 shadow-2xl backdrop-blur-2xl">
-        <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+      {/* Backdrop — click to dismiss */}
+      <button
+        type="button"
+        aria-label="Close menu"
+        onClick={onClose}
+        className="absolute inset-0 h-full w-full cursor-default bg-slate-950/70 backdrop-blur-sm motion-safe:animate-fade-in"
+      />
+
+      <div className="absolute inset-y-0 right-0 flex w-[min(21rem,88%)] flex-col border-l border-white/[0.08] bg-[#070b15]/[0.97] px-6 pb-8 pt-4 shadow-[0_0_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl motion-safe:animate-drawer-in">
+        {/* Drawer header */}
+        <div className="flex items-center justify-between border-b border-white/[0.07] pb-4">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-base font-bold text-lime-400">&lt;/&gt;</span>
-            <span className="font-display text-base font-bold text-white">sohailverse</span>
+            <span
+              aria-hidden="true"
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-lime-300/25 bg-lime-300/[0.06] font-mono text-[10px] font-bold text-lime-300"
+            >
+              {"</>"}
+            </span>
+            <span className="font-display text-sm font-bold text-white">
+              sohail<span className="text-lime-300">devops</span>
+            </span>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full border border-lime-400/30 bg-lime-500/10 px-2.5 py-0.5 text-xs text-lime-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-lime-400 animate-pulse" />
-            <span>Active</span>
-          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close menu"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.08] text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white"
+          >
+            <span aria-hidden="true" className="text-base leading-none">✕</span>
+          </button>
         </div>
 
-        <nav className="grid grid-cols-1 gap-1.5 sm:grid-cols-2" aria-label="Mobile primary">
-          {navLinks.map((item) => (
+        {/* Real routes, comfortable tap targets */}
+        <nav className="mt-4 flex flex-col" aria-label="Mobile primary">
+          {menuLinks.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -44,27 +92,32 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
               onClick={onClose}
               className={({ isActive }) =>
                 cn(
-                  "flex min-h-[44px] items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition-colors duration-150 active:scale-[0.98]",
+                  "flex min-h-[52px] items-center justify-between rounded-xl px-3 text-[15px] font-medium transition-colors duration-150 active:scale-[0.99]",
                   isActive
-                    ? "border border-lime-400/40 bg-lime-500/15 text-lime-200 font-semibold"
-                    : "border border-white/5 bg-slate-900/60 text-slate-300 hover:border-white/15 hover:bg-slate-800/80 hover:text-white"
+                    ? "bg-lime-300/[0.08] text-lime-100"
+                    : "text-slate-300 hover:bg-white/[0.04] hover:text-white",
                 )
               }
             >
               <span>{item.label}</span>
-              <span className="text-xs text-slate-500">→</span>
+              <span aria-hidden="true" className="font-mono text-xs text-slate-600">
+                →
+              </span>
             </NavLink>
           ))}
         </nav>
 
-        <div className="pt-2 border-t border-white/10">
+        <div className="mt-auto space-y-3 border-t border-white/[0.07] pt-5">
           <a
             href="mailto:mdsohail88008@gmail.com"
             onClick={onClose}
-            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-slate-900 border border-lime-400/40 py-2.5 text-xs font-bold text-lime-300 transition hover:bg-slate-800"
+            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-lime-300 px-5 text-sm font-bold text-slate-950 transition hover:bg-lime-200 active:scale-[0.99]"
           >
-            <span>Let&apos;s Connect 🚀</span>
+            Let&apos;s Connect
           </a>
+          <p className="text-center font-mono text-[10px] uppercase tracking-[0.25em] text-slate-600">
+            Hyderabad · India
+          </p>
         </div>
       </div>
     </div>

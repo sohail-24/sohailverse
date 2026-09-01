@@ -1,33 +1,31 @@
 import CinematicHero from "../components/mission-control/CinematicHero";
 import ConnectCtaBanner from "../components/mission-control/ConnectCtaBanner";
+import EngineeringIdentity from "../components/mission-control/EngineeringIdentity";
 import FeaturedProjectsSection from "../components/mission-control/FeaturedProjectsSection";
-import PhilosophyNexus from "../components/mission-control/PhilosophyNexus";
+import JourneySection from "../components/mission-control/JourneySection";
 import SohailVerseWorldsSection from "../components/mission-control/SohailVerseWorldsSection";
-import TelemetryStrip from "../components/mission-control/TelemetryStrip";
-import WhatILoveToDoSection from "../components/mission-control/WhatILoveToDoSection";
 
+/**
+ * SohailVerse homepage — a cinematic personal-portfolio composition:
+ *
+ * 1. Cinematic hero — personal intro + real workstation photograph
+ * 2. Engineering identity — one workspace frame + three principles
+ * 3. Selected work — featured Sohail-Shop case + supporting roster
+ * 4. SohailVerse worlds — editorial index of the live routes
+ * 5. Journey — three chapters previewing /timeline
+ * 6. Connect CTA
+ *
+ * All copy/data flows from src/data/mission-control.ts. No dashboard
+ * widgets, no fabricated metrics, no legacy neon-card concepts.
+ */
 export default function MissionControlPage() {
   return (
-    <div className="flex flex-col gap-12 sm:gap-16 lg:gap-20 pb-12">
-      {/* 1. Cinematic Hero Section */}
+    <div className="flex flex-col gap-16 pb-6 sm:gap-20 lg:gap-24">
       <CinematicHero />
-
-      {/* 2. Telemetry & Metrics Strip */}
-      <TelemetryStrip />
-
-      {/* 3. Engineering Philosophy & Infinity Loop */}
-      <PhilosophyNexus />
-
-      {/* 4. What I Love To Do (5 Neon Cards) */}
-      <WhatILoveToDoSection />
-
-      {/* 5. Featured Projects Showcase (sohail-shop, sohail-studio, Fresh Flow, wedding) */}
+      <EngineeringIdentity />
       <FeaturedProjectsSection />
-
-      {/* 6. Explore SohailVerse Worlds (DevOps, Atlas, Cinema, Academy, Timeline) */}
       <SohailVerseWorldsSection />
-
-      {/* 7. Curved Planetary Horizon CTA Banner */}
+      <JourneySection />
       <ConnectCtaBanner />
     </div>
   );

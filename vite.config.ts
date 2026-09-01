@@ -138,6 +138,9 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 3000,
+    // Allow the sandbox/live-preview proxy hosts in dev only.
+    // Production deployment (Cloudflare Pages) is unaffected by this.
+    allowedHosts: true,
   },
 });
 
