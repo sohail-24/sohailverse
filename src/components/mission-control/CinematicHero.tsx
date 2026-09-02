@@ -22,9 +22,9 @@ export default function CinematicHero() {
         {/* Top: Dedicated Photographic Developer & Workstation Card */}
         <div className="relative w-full overflow-hidden bg-black aspect-[4/3] sm:aspect-[16/10]">
           <img
-            src="/hero-mobile-master.jpg"
+            src="/hero-master.jpg"
             alt="Sohail - Software Developer Working at Dual-Screen Workstation at Night"
-            className="w-full h-full object-cover object-center filter contrast-105 brightness-100"
+            className="w-full h-full object-cover object-center sm:object-[center_35%] filter contrast-105 brightness-100"
           />
           {/* Subtle bottom fade to blend smoothly into the dark text card */}
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#03050a] to-transparent" />
@@ -123,10 +123,12 @@ export default function CinematicHero() {
         {/* Desktop Photographic Background Scene (Seated Male Developer at Dual Screens) */}
         <div className="absolute inset-0 z-0 pointer-events-none select-none">
           <img
-            src="/hero-desktop-master.jpg"
+            src="/hero-master.jpg"
             alt="Sohail - Software Developer Working at Dual-Screen Workstation at Night"
             className="w-full h-full object-cover object-right"
           />
+          {/* Subtle gradient overlay on left to ensure maximum legibility for text */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#03050a] via-[#03050a]/80 to-transparent" />
         </div>
 
         {/* Foreground Content on Left Side */}
