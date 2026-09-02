@@ -65,21 +65,33 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <a
             href="mailto:mdsohail88008@gmail.com"
-            className="hidden sm:inline-flex items-center gap-2 rounded-full border border-white/15 bg-slate-950/80 px-5 py-2 text-xs font-semibold text-white shadow-sm transition hover:border-lime-400/50 hover:bg-slate-900 hover:text-lime-300 active:scale-[0.98]"
+            className="relative hidden sm:inline-flex items-center gap-2 rounded-full border border-white/15 bg-slate-950/80 px-5 py-2 text-xs font-semibold text-white shadow-sm transition hover:border-lime-400/50 hover:bg-slate-900 hover:text-lime-300 active:scale-[0.98]"
           >
+            {/* Glowing online green dot */}
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-lime-500 shadow-[0_0_8px_rgba(163,230,53,1)]"></span>
+            </span>
             <span>Let&apos;s Connect</span>
             <span className="text-xs">🚀</span>
           </a>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button with Hamburger */}
           <button
             type="button"
             aria-controls="mobile-navigation"
             aria-expanded={menuOpen}
-            className="md:hidden min-h-[40px] px-4 py-1.5 rounded-full font-mono text-xs font-semibold uppercase tracking-wider border border-white/15 bg-slate-950 text-white hover:bg-slate-900 transition"
+            className="md:hidden flex items-center justify-center h-10 w-10 rounded-full border border-white/15 bg-slate-950 text-white hover:bg-slate-900 transition"
             onClick={() => setMenuOpen((open) => !open)}
+            aria-label="Toggle Navigation Menu"
           >
-            {menuOpen ? "Close" : "Menu"}
+            {menuOpen ? (
+              <span className="font-mono text-xs font-bold">✕</span>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
           </button>
         </div>
       </div>
