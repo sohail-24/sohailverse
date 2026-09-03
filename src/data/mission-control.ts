@@ -74,9 +74,9 @@ export const initialProjects: UniverseProject[] = [
   },
   {
     id: "wedding",
-    name: "Wedding",
+    name: "Wedding Page",
     tagline: "Milestone Digital Experience & Curated Storytelling Archive",
-    description: "Project details coming soon.",
+    description: "Milestone digital celebration, photo storytelling and curated memories archive.",
     status: "coming_soon",
     statusLabel: "Coming Soon",
     featured: false,
@@ -84,6 +84,19 @@ export const initialProjects: UniverseProject[] = [
     link: "/timeline",
     complexity: 3,
     highlightMetric: "Coming Soon",
+  },
+  {
+    id: "new-chapter",
+    name: "New Chapter Loading...",
+    tagline: "Next-Gen Cloud & AI Initiative in Continuous Evolution",
+    description: "New platform capabilities, intelligent automation, and production architectures currently in stealth development.",
+    status: "building",
+    statusLabel: "In Progress",
+    featured: false,
+    technologies: ["Next-Gen Cloud", "AI Systems", "Automation"],
+    link: "/devops",
+    complexity: 4,
+    highlightMetric: "Loading 2026",
   },
 ];
 
