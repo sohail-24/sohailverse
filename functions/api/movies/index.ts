@@ -5,11 +5,11 @@
  * Queries Cloudflare D1 database ('sohailverse-db') via Drizzle ORM.
  */
 
-import { createDb, D1Database, movies } from "../../../src/db/index.js";
+import { createDb, movies } from "../../../src/db/index.js";
 import { desc } from "drizzle-orm";
 
 interface Env {
-  DB?: D1Database;
+  DATABASE_URL?: string;
 }
 
 interface PagesContext {
@@ -18,9 +18,9 @@ interface PagesContext {
 }
 
 export async function onRequestGet({ env }: PagesContext): Promise<Response> {
-  if (!env.DB) {
+  if (!env.DATABASE_URL) {
     return new Response(
-      JSON.stringify({ error: "D1 Database binding 'DB' is not configured." }),
+      JSON.stringify({ error: "Neon DATABASE_URL is not configured." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
@@ -29,7 +29,7 @@ export async function onRequestGet({ env }: PagesContext): Promise<Response> {
   }
 
   try {
-    const db = createDb(env.DB);
+    const db = createDb(env.DATABASE_URL!);
     const records = await db.select().from(movies).orderBy(desc(movies.id));
 
     return new Response(
@@ -40,7 +40,7 @@ export async function onRequestGet({ env }: PagesContext): Promise<Response> {
       }
     );
   } catch (error) {
-    console.error("Error querying movies from D1:", error);
+    console.error("Error querying movies from Neon:", error);
     return new Response(
       JSON.stringify({ error: "Unable to retrieve data" }),
       {
@@ -52,9 +52,9 @@ export async function onRequestGet({ env }: PagesContext): Promise<Response> {
 }
 
 export async function onRequestPost({ request, env }: PagesContext): Promise<Response> {
-  if (!env.DB) {
+  if (!env.DATABASE_URL) {
     return new Response(
-      JSON.stringify({ success: false, error: "D1 Database binding 'DB' is not configured." }),
+      JSON.stringify({ success: false, error: "Neon DATABASE_URL is not configured." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
@@ -97,14 +97,14 @@ export async function onRequestPost({ request, env }: PagesContext): Promise<Res
       );
     }
 
-    const db = createDb(env.DB);
+    const db = createDb(env.DATABASE_URL!);
     const inserted = await db
       .insert(movies)
       .values({
         title: title.trim(),
         genre: typeof genre === "string" && genre.trim() ? genre.trim() : null,
         rating: numRating,
-        trailer_url: typeof trailer_url === "string" && trailer_url.trim() ? trailer_url.trim() : null,
+        trailerUrl: typeof trailer_url === "string" && trailer_url.trim() ? trailer_url.trim() : null,
       })
       .returning();
 
@@ -120,7 +120,7 @@ export async function onRequestPost({ request, env }: PagesContext): Promise<Res
       }
     );
   } catch (error: any) {
-    console.error("Error creating movie in D1:", error);
+    console.error("Error creating movie in Neon:", error);
     return new Response(
       JSON.stringify({ success: false, error: error?.message || "Failed to add movie." }),
       {

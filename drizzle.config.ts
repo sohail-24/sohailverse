@@ -1,16 +1,17 @@
 import { defineConfig } from "drizzle-kit";
 
 /**
- * Drizzle Configuration targeting Cloudflare D1 SQLite Engine
+ * SOHAILVERSE v2.0 — Neon PostgreSQL / Drizzle Configuration
+ *
+ * DATABASE_URL is supplied through the local shell environment.
+ * Never commit the actual connection string.
  */
+
 export default defineConfig({
-  schema: "./src/db/schema.ts",
-  out: "./drizzle/migrations",
-  dialect: "sqlite",
-  driver: "d1-http",
+  schema: "./src/db/schema.pg.ts",
+  out: "./drizzle/migrations-pg",
+  dialect: "postgresql",
   dbCredentials: {
-    accountId: process.env.CLOUDFLARE_ACCOUNT_ID || "",
-    databaseId: process.env.CLOUDFLARE_D1_DATABASE_ID || "",
-    token: process.env.CLOUDFLARE_D1_TOKEN || "",
+    url: process.env.DATABASE_URL || "",
   },
 });

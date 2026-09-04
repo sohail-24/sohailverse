@@ -5,11 +5,11 @@
  * Queries Cloudflare D1 database ('sohailverse-db') via Drizzle ORM.
  */
 
-import { createDb, D1Database, atlas } from "../../../src/db/index.js";
+import { createDb, atlas } from "../../../src/db/index.js";
 import { eq } from "drizzle-orm";
 
 interface Env {
-  DB?: D1Database;
+  DATABASE_URL?: string;
 }
 
 interface PagesContext {
@@ -21,9 +21,9 @@ interface PagesContext {
 }
 
 export async function onRequestPut({ request, env, params }: PagesContext): Promise<Response> {
-  if (!env.DB) {
+  if (!env.DATABASE_URL) {
     return new Response(
-      JSON.stringify({ success: false, error: "D1 Database binding 'DB' is not configured." }),
+      JSON.stringify({ success: false, error: "Neon DATABASE_URL is not configured." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
@@ -84,7 +84,7 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
     }
 
     if (created_at !== undefined) {
-      updateValues.created_at = typeof created_at === "string" && created_at.trim() ? created_at.trim() : new Date().toISOString();
+      updateValues.createdAt = typeof created_at === "string" && created_at.trim() ? created_at.trim() : new Date().toISOString();
     }
 
     if (Object.keys(updateValues).length === 0) {
@@ -97,7 +97,7 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
       );
     }
 
-    const db = createDb(env.DB);
+    const db = createDb(env.DATABASE_URL!);
     const updated = await db
       .update(atlas)
       .set(updateValues)
@@ -126,7 +126,7 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
       }
     );
   } catch (error: any) {
-    console.error("Error updating atlas destination in D1:", error);
+    console.error("Error updating atlas destination in Neon:", error);
     return new Response(
       JSON.stringify({ success: false, error: error?.message || "Failed to update atlas destination." }),
       {
@@ -138,9 +138,9 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
 }
 
 export async function onRequestDelete({ env, params }: PagesContext): Promise<Response> {
-  if (!env.DB) {
+  if (!env.DATABASE_URL) {
     return new Response(
-      JSON.stringify({ success: false, error: "D1 Database binding 'DB' is not configured." }),
+      JSON.stringify({ success: false, error: "Neon DATABASE_URL is not configured." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
@@ -160,7 +160,7 @@ export async function onRequestDelete({ env, params }: PagesContext): Promise<Re
   }
 
   try {
-    const db = createDb(env.DB);
+    const db = createDb(env.DATABASE_URL!);
     const deleted = await db.delete(atlas).where(eq(atlas.id, id)).returning();
 
     if (deleted.length === 0) {
@@ -185,9 +185,9 @@ export async function onRequestDelete({ env, params }: PagesContext): Promise<Re
       }
     );
   } catch (error: any) {
-    console.error("Error deleting atlas destination from D1:", error);
+    console.error("Error deleting atlas destination from Neon:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error?.message || "Failed to delete atlas destination from database." }),
+      JSON.stringify({ success: false, error: error?.message || "Failed to delete atlas destination from Neon database." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
