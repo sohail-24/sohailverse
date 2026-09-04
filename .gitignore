@@ -7,3 +7,16 @@ dist
 .env
 .env.local
 
+
+# Generated build artifacts
+*.tsbuildinfo
+
+# Generated JavaScript declarations/build output
+functions/api/**/*.js
+functions/api/**/*.d.ts
+src/db/*.js
+src/db/*.d.ts
+vite.config.js
+
+# Production database export
+d1-export.sql

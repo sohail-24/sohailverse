@@ -65,7 +65,7 @@ export default function CinematicHero() {
       {/* ========================================================================= */}
       {/* 1. HERO SECTION (Unified Single Image + Animated Text Overlay on LEFT)    */}
       {/* ========================================================================= */}
-      <div className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-[#03050a] shadow-2xl">
+      <div className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl bg-[#03050a] shadow-2xl">
         <div className="relative w-full h-[260px] sm:h-[340px] md:h-[420px] lg:h-[480px] xl:h-[540px] bg-black">
           {/* Base Photographic Hero Image */}
           <img
@@ -88,9 +88,9 @@ export default function CinematicHero() {
                 initial={{ opacity: 0, x: -25 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0, ease: "easeOut" }}
-                className="inline-flex items-center gap-1.5"
+                className="absolute top-8 left-4 sm:static sm:top-auto sm:left-auto inline-flex items-center gap-1.5"
               >
-                <span className="font-mono text-[10px] sm:text-xs md:text-sm font-semibold uppercase tracking-[0.2em] text-slate-300 drop-shadow">
+                <span className="font-mono text-[10px] sm:text-xs md:text-sm font-semibold uppercase tracking-[0.28em] sm:tracking-[0.38em] md:tracking-[0.42em] text-slate-300 drop-shadow whitespace-nowrap">
                   HEY, I&apos;M SOHAIL 👋
                 </span>
               </motion.div>

@@ -5,11 +5,11 @@
  * Queries Cloudflare D1 database ('sohailverse-db') via Drizzle ORM.
  */
 
-import { createDb, D1Database, movies } from "../../../src/db/index.js";
+import { createDb, movies } from "../../../src/db/index.js";
 import { eq } from "drizzle-orm";
 
 interface Env {
-  DB?: D1Database;
+  DATABASE_URL?: string;
 }
 
 interface PagesContext {
@@ -21,9 +21,9 @@ interface PagesContext {
 }
 
 export async function onRequestPut({ request, env, params }: PagesContext): Promise<Response> {
-  if (!env.DB) {
+  if (!env.DATABASE_URL) {
     return new Response(
-      JSON.stringify({ success: false, error: "D1 Database binding 'DB' is not configured." }),
+      JSON.stringify({ success: false, error: "Neon DATABASE_URL is not configured." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
@@ -94,7 +94,7 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
     }
 
     if (trailer_url !== undefined) {
-      updateValues.trailer_url = typeof trailer_url === "string" && trailer_url.trim() ? trailer_url.trim() : null;
+      updateValues.trailerUrl = typeof trailer_url === "string" && trailer_url.trim() ? trailer_url.trim() : null;
     }
 
     if (Object.keys(updateValues).length === 0) {
@@ -107,7 +107,7 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
       );
     }
 
-    const db = createDb(env.DB);
+    const db = createDb(env.DATABASE_URL!);
     const updated = await db
       .update(movies)
       .set(updateValues)
@@ -136,7 +136,7 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
       }
     );
   } catch (error: any) {
-    console.error("Error updating movie in D1:", error);
+    console.error("Error updating movie in Neon:", error);
     return new Response(
       JSON.stringify({ success: false, error: error?.message || "Failed to update movie." }),
       {
@@ -148,9 +148,9 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
 }
 
 export async function onRequestDelete({ env, params }: PagesContext): Promise<Response> {
-  if (!env.DB) {
+  if (!env.DATABASE_URL) {
     return new Response(
-      JSON.stringify({ success: false, error: "D1 Database binding 'DB' is not configured." }),
+      JSON.stringify({ success: false, error: "Neon DATABASE_URL is not configured." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
@@ -170,7 +170,7 @@ export async function onRequestDelete({ env, params }: PagesContext): Promise<Re
   }
 
   try {
-    const db = createDb(env.DB);
+    const db = createDb(env.DATABASE_URL!);
     const deleted = await db.delete(movies).where(eq(movies.id, id)).returning();
 
     if (deleted.length === 0) {
@@ -195,9 +195,9 @@ export async function onRequestDelete({ env, params }: PagesContext): Promise<Re
       }
     );
   } catch (error: any) {
-    console.error("Error deleting movie from D1:", error);
+    console.error("Error deleting movie from Neon:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error?.message || "Failed to delete movie from database." }),
+      JSON.stringify({ success: false, error: error?.message || "Failed to delete movie from Neon database." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
