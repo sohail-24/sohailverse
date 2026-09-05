@@ -6,7 +6,7 @@
 
 import {
   AuthEnv,
-  verifyPassword,
+  verifyAdminPassword,
   createSessionToken,
   createSessionCookie,
 } from "./_utils";
@@ -42,26 +42,23 @@ export async function onRequestPost({ request, env }: PagesContext): Promise<Res
       );
     }
 
-    const passwordHash = env.ADMIN_PASSWORD_HASH;
+    const configuredPassword = env.ADMIN_PASSWORD || env.ADMIN_PASSWORD_HASH;
     const sessionSecret = env.SESSION_SECRET;
 
-    if (!passwordHash || !sessionSecret) {
-      console.error(
-        "Missing server authentication secrets: ADMIN_PASSWORD_HASH or SESSION_SECRET not configured in Cloudflare Pages."
-      );
+    if (!configuredPassword || !sessionSecret) {
       return new Response(
         JSON.stringify({
           authenticated: false,
-          error: "Server authentication configuration missing.",
+          error: "Administrator credentials not configured.",
         }),
         {
-          status: 500,
+          status: 401,
           headers: { "Content-Type": "application/json" },
         }
       );
     }
 
-    const isValid = await verifyPassword(password, passwordHash);
+    const isValid = verifyAdminPassword(password, configuredPassword);
 
     if (!isValid) {
       return new Response(

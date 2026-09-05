@@ -57,8 +57,8 @@ export default function MissionHero({
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <RouteLinkButton to="/atlas" className="w-full sm:w-auto text-center">
-              Explore Atlas
+            <RouteLinkButton to="/projects" className="w-full sm:w-auto text-center">
+              Explore Projects
             </RouteLinkButton>
 
             <RouteLinkButton
@@ -71,8 +71,8 @@ export default function MissionHero({
           </div>
 
           <p className="max-w-2xl text-xs leading-5 text-slate-400 sm:text-sm sm:leading-7">
-            A living command surface connecting destinations,
-            learning, cinema, and systems into one premium
+            A living command surface connecting cloud architecture,
+            cinema, projects, and systems into one premium
             personal operating space.
           </p>
         </div>

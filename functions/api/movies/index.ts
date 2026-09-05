@@ -31,9 +31,16 @@ export async function onRequestGet({ env }: PagesContext): Promise<Response> {
   try {
     const db = createDb(env.DATABASE_URL!);
     const records = await db.select().from(movies).orderBy(desc(movies.id));
+    const formatted = records.map((r: any) => ({
+      id: r.id,
+      title: r.title,
+      genre: r.genre || "General",
+      rating: Number(r.rating) || 5,
+      trailer_url: r.trailerUrl || r.trailer_url || "",
+    }));
 
     return new Response(
-      JSON.stringify({ data: records }),
+      JSON.stringify({ data: formatted }),
       {
         status: 200,
         headers: { "Content-Type": "application/json" },

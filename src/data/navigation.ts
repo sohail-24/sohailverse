@@ -1,36 +1,30 @@
 import type { NavigationItem } from "../types/shared";
 
-export const navigation: NavigationItem[] = [
+export const primaryNavItems: NavigationItem[] = [
   {
-    label: "Mission Control",
+    label: "Home",
     path: "/",
   },
   {
-    label: "Atlas",
-    path: "/atlas",
+    label: "About",
+    path: "/timeline",
+  },
+  {
+    label: "Projects",
+    path: "/projects",
   },
   {
     label: "Cinema",
     path: "/cinema",
   },
   {
-    label: "Academy",
-    path: "/academy",
-  },
-  {
     label: "DevOps",
     path: "/devops",
   },
   {
-    label: "Timeline",
-    path: "/timeline",
-  },
-  {
-    label: "Dashboard",
-    path: "/dashboard",
-  },
-  {
-    label: "Admin",
+    label: "Console",
     path: "/admin",
   },
 ];
+
+export const navigation: NavigationItem[] = primaryNavItems;

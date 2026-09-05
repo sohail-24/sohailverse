@@ -1,5 +1,7 @@
-import { NavLink } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "../../lib/utils";
+import { primaryNavItems } from "../../data/navigation";
+import { isNavLinkActive } from "./Navbar";
 
 interface MobileMenuProps {
   open: boolean;
@@ -7,14 +9,8 @@ interface MobileMenuProps {
 }
 
 export default function MobileMenu({ open, onClose }: MobileMenuProps) {
-  const navLinks = [
-    { label: "Home", path: "/" },
-    { label: "About", path: "/timeline" },
-    { label: "Journey", path: "/atlas" },
-    { label: "Projects", path: "/devops" },
-    { label: "Academy", path: "/academy" },
-    { label: "Cinema", path: "/cinema" },
-  ];
+  const location = useLocation();
+  const navLinks = primaryNavItems;
 
   if (!open) return null;
 
@@ -36,25 +32,32 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
         </div>
 
         <nav className="grid grid-cols-1 gap-1.5 sm:grid-cols-2" aria-label="Mobile primary">
-          {navLinks.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === "/"}
-              onClick={onClose}
-              className={({ isActive }) =>
-                cn(
+          {navLinks.map((item) => {
+            const active = isNavLinkActive(location.pathname, item.path);
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={onClose}
+                className={cn(
                   "flex min-h-[44px] items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition-colors duration-150 active:scale-[0.98]",
-                  isActive
-                    ? "border border-lime-400/40 bg-lime-500/15 text-lime-200 font-semibold"
+                  active
+                    ? "border border-lime-400/40 bg-lime-500/15 text-lime-200 font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
                     : "border border-white/5 bg-slate-900/60 text-slate-300 hover:border-white/15 hover:bg-slate-800/80 hover:text-white"
-                )
-              }
-            >
-              <span>{item.label}</span>
-              <span className="text-xs text-slate-500">→</span>
-            </NavLink>
-          ))}
+                )}
+              >
+                <span>{item.label}</span>
+                <span
+                  className={cn(
+                    "text-xs transition-transform",
+                    active ? "text-lime-400 font-bold" : "text-slate-500"
+                  )}
+                >
+                  →
+                </span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="pt-2 border-t border-white/10">

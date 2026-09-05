@@ -2,17 +2,35 @@ import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
+import { neon } from "@neondatabase/serverless";
 import {
-  verifyPassword,
+  verifyAdminPassword,
   createSessionToken,
   verifySessionToken,
   parseCookies,
   SESSION_COOKIE_NAME,
   createSessionCookie,
   createClearSessionCookie,
+  bytesToHex,
 } from "./functions/api/auth/_utils";
 
-function loadDevVars(): { ADMIN_PASSWORD_HASH?: string; SESSION_SECRET?: string } {
+let runtimeSessionSecret: string | undefined = undefined;
+
+function getSecureSessionSecret(): string {
+  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
+  if (!runtimeSessionSecret) {
+    const randomBytes = new Uint8Array(32);
+    crypto.getRandomValues(randomBytes);
+    runtimeSessionSecret = bytesToHex(randomBytes);
+  }
+  return runtimeSessionSecret;
+}
+
+function loadDevVars(): {
+  ADMIN_PASSWORD?: string;
+  SESSION_SECRET: string;
+  DATABASE_URL?: string;
+} {
   const vars: Record<string, string> = {};
   const devVarsPath = path.resolve(process.cwd(), ".dev.vars");
   if (fs.existsSync(devVarsPath)) {
@@ -27,105 +45,21 @@ function loadDevVars(): { ADMIN_PASSWORD_HASH?: string; SESSION_SECRET?: string 
       }
     }
   }
+
+  const sessionSecret = process.env.SESSION_SECRET || vars.SESSION_SECRET || getSecureSessionSecret();
+  // Read ADMIN_PASSWORD, supporting existing configured secret
+  const adminPassword = process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD_HASH || vars.ADMIN_PASSWORD;
+
   return {
-    ADMIN_PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH || vars.ADMIN_PASSWORD_HASH,
-    SESSION_SECRET: process.env.SESSION_SECRET || vars.SESSION_SECRET || "dev-local-session-secret-sohailverse",
+    ADMIN_PASSWORD: adminPassword,
+    SESSION_SECRET: sessionSecret,
+    DATABASE_URL: process.env.DATABASE_URL || vars.DATABASE_URL,
   };
 }
 
-// In-Memory Database Store with Seed Data for Local Development and AI Studio runtime
-const dbStore = {
-  movies: [
-    { id: 1, title: "Interstellar", genre: "Sci-Fi", rating: 9.2, trailer_url: "https://www.youtube.com/watch?v=zSWdZVtXT7E" },
-    { id: 2, title: "Inception", genre: "Sci-Fi", rating: 8.8, trailer_url: "https://www.youtube.com/watch?v=YoHD9XEInc0" },
-    { id: 3, title: "The Dark Knight", genre: "Action", rating: 9.0, trailer_url: "https://www.youtube.com/watch?v=EXeTwQWrcwY" },
-    { id: 4, title: "Oppenheimer", genre: "Drama", rating: 8.9, trailer_url: "https://www.youtube.com/watch?v=uYPbbksJxIg" },
-    { id: 5, title: "Gladiator", genre: "Action", rating: 8.5, trailer_url: "https://www.youtube.com/watch?v=owK1qxDselE" },
-  ],
-  academy: [
-    { id: 1, skill: "Kubernetes Orchestration", category: "DevOps & Cloud", level: "Advanced" },
-    { id: 2, skill: "Terraform Infrastructure as Code", category: "DevOps & Cloud", level: "Advanced" },
-    { id: 3, skill: "Docker & Containerization", category: "Containers", level: "Expert" },
-    { id: 4, skill: "AWS (EKS, EC2, IAM, S3)", category: "Cloud Architecture", level: "Intermediate" },
-    { id: 5, skill: "CI/CD (GitHub Actions, ArgoCD)", category: "Automation", level: "Advanced" },
-    { id: 6, skill: "React & TypeScript", category: "Frontend Engineering", level: "Advanced" },
-    { id: 7, skill: "System Design & Microservices", category: "Architecture", level: "Intermediate" },
-  ],
-  devops: [
-    {
-      id: 1,
-      title: "Sohail-Shop",
-      category: "Production E-Commerce & Multi-Cluster",
-      description: "Production-grade Django ecommerce platform deployed across Docker, EC2, kubeadm Kubernetes, AWS EKS, Terraform, GitHub Actions and ArgoCD.",
-      technologies: "Kubernetes, AWS EKS, Terraform, Docker, GitHub Actions, ArgoCD, PostgreSQL, Django",
-      status: "Production Ready",
-      image_url: "/sohail-hero-master.jpg",
-      ppt_url: "",
-      github_url: "https://github.com/sohail-24",
-      highlights: "Multi-cluster GitOps deployment with zero downtime.",
-    },
-    {
-      id: 2,
-      title: "Sohail-Studio",
-      category: "Creative Interface Engineering",
-      description: "Creative Digital Studio & Interface Engineering Surface with modern reactive architecture.",
-      technologies: "React, TypeScript, Tailwind CSS, Systems Design",
-      status: "In Development",
-      image_url: "/coder-1.jpg",
-      ppt_url: "",
-      github_url: "https://github.com/sohail-24",
-      highlights: "Component-driven design system with dark space aesthetic.",
-    },
-    {
-      id: 3,
-      title: "Fresh Flow",
-      category: "Cloud Automation & Pipeline Engine",
-      description: "Cloud Automation, Streamlined Workflows & Pipeline Engine for automated build deployment.",
-      technologies: "Automation, CI/CD, Cloud Infrastructure, API Design",
-      status: "In Development",
-      image_url: "/photo-code.jpg",
-      ppt_url: "",
-      github_url: "https://github.com/sohail-24",
-      highlights: "Automated workflow triggers and notifications.",
-    },
-    {
-      id: 4,
-      title: "Wedding Digital Experience",
-      category: "Interactive Media & Storytelling",
-      description: "Milestone Digital Experience & Curated Storytelling Archive.",
-      technologies: "Digital Experience, Storytelling, Interactive Media",
-      status: "Coming Soon",
-      image_url: "/dev-desk-1.jpg",
-      ppt_url: "",
-      github_url: "https://github.com/sohail-24",
-      highlights: "Interactive timeline and multimedia gallery.",
-    },
-  ],
-  timeline: [
-    { id: 1, title: "Saudi Arabia Chapter", category: "Life & Travel", description: "A chapter of movement, perspective, and place-based growth across Riyadh and the Middle East.", created_at: "2024-01-15" },
-    { id: 2, title: "DevOps & Cloud Deepening", category: "Career & Learning", description: "Deepening infrastructure, orchestration, Kubernetes, and platform thinking.", created_at: "2025-06-10" },
-    { id: 3, title: "SohailVerse v2.0 Architecture", category: "Milestone Build", description: "Turning a personal universe into a polished digital operating surface and mission control.", created_at: "2026-01-01" },
-  ],
-  atlas: [
-    { id: 1, country: "Saudi Arabia", status: "Visited", year: "2024", highlight: "Riyadh growth, cultural depth, and desert horizons.", created_at: "2024-01-01" },
-    { id: 2, country: "United Arab Emirates", status: "Visited", year: "2024", highlight: "Dubai architectural scale, global nexus, and energy.", created_at: "2024-03-15" },
-    { id: 3, country: "India", status: "Home Base", year: "2026", highlight: "Hyderabad systems forge, engineering foundation, and community.", created_at: "2026-01-01" },
-    { id: 4, country: "United Kingdom", status: "Explored", year: "2025", highlight: "London museums, cinema heritage, and design frames.", created_at: "2025-08-20" },
-    { id: 5, country: "Singapore", status: "Explored", year: "2025", highlight: "Precision urban planning and high-efficiency infrastructure.", created_at: "2025-11-10" },
-  ],
-};
-
-let nextIds = {
-  movies: 10,
-  academy: 10,
-  devops: 10,
-  timeline: 10,
-  atlas: 10,
-};
-
 function devApiPlugin(): Plugin {
   return {
-    name: "dev-api-mock",
+    name: "neon-dev-api",
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         if (!req.url || !req.url.startsWith("/api/")) {
@@ -169,25 +103,26 @@ function devApiPlugin(): Plugin {
           const { password } = body;
 
           if (!password || typeof password !== "string") {
-            return sendJson(401, { authenticated: false, error: "Invalid credentials" });
+            return sendJson(401, { authenticated: false, error: "Invalid credentials." });
           }
 
-          const passwordHash = devEnv.ADMIN_PASSWORD_HASH;
+          const configuredPassword = devEnv.ADMIN_PASSWORD;
           const sessionSecret = devEnv.SESSION_SECRET;
 
-          let isValid = false;
-          if (passwordHash) {
-            isValid = await verifyPassword(password, passwordHash);
-          } else {
-            // Default dev mode fallback: accept "admin", "sohailverse", or any non-empty password
-            isValid = true;
+          if (!configuredPassword) {
+            return sendJson(401, {
+              authenticated: false,
+              error: "Administrator credentials not configured.",
+            });
           }
+
+          const isValid = verifyAdminPassword(password, configuredPassword);
 
           if (!isValid) {
-            return sendJson(401, { authenticated: false, error: "Invalid credentials" });
+            return sendJson(401, { authenticated: false, error: "Invalid credentials." });
           }
 
-          const token = await createSessionToken(sessionSecret || "dev-secret");
+          const token = await createSessionToken(sessionSecret);
           const cookieHeader = createSessionCookie(token);
           return sendJson(200, { authenticated: true }, { "Set-Cookie": cookieHeader });
         }
@@ -200,7 +135,7 @@ function devApiPlugin(): Plugin {
         if (pathname === "/api/auth/session" && method === "GET") {
           const cookies = parseCookies(req.headers.cookie || null);
           const token = cookies[SESSION_COOKIE_NAME];
-          const sessionSecret = devEnv.SESSION_SECRET || "dev-secret";
+          const sessionSecret = devEnv.SESSION_SECRET;
 
           if (!token) {
             return sendJson(200, { authenticated: false });
@@ -210,66 +145,328 @@ function devApiPlugin(): Plugin {
           return sendJson(200, { authenticated: isValid });
         }
 
-        // 2. Resource routes: movies, academy, devops, timeline, atlas
+        // 2. Database validation: Ensure real Neon DATABASE_URL is available
+        const dbUrl = devEnv.DATABASE_URL;
+        if (!dbUrl) {
+          return sendJson(500, {
+            error: "Neon DATABASE_URL is not configured in the environment. Real PostgreSQL connection is required.",
+          });
+        }
+
+        let sql: ReturnType<typeof neon>;
+        try {
+          sql = neon(dbUrl);
+        } catch (initErr: any) {
+          return sendJson(500, {
+            error: `Failed to initialize Neon client: ${initErr?.message || "Unknown error"}`,
+          });
+        }
+
+        const querySql = (strings: TemplateStringsArray, ...values: any[]): Promise<any[]> =>
+          sql(strings, ...values) as Promise<any[]>;
+
+        // 3. Resource routes: movies, academy, devops, timeline, atlas
         const resourceMatch = pathname.match(/^\/api\/(movies|academy|devops|timeline|atlas)(?:\/(\d+))?$/);
         if (resourceMatch) {
-          const resource = resourceMatch[1] as keyof typeof dbStore;
+          const resource = resourceMatch[1];
           const resourceId = resourceMatch[2] ? parseInt(resourceMatch[2], 10) : null;
-          const list = dbStore[resource];
 
-          // GET list or single item
-          if (method === "GET") {
-            if (resourceId !== null) {
-              const item = list.find((it: any) => it.id === resourceId);
-              if (!item) {
-                return sendJson(404, { error: `${resource} item not found` });
+          try {
+            // MOVIES (table: movies)
+            if (resource === "movies") {
+              if (method === "GET") {
+                if (resourceId !== null) {
+                  const rows = await querySql`SELECT id, title, genre, rating, trailer_url FROM movies WHERE id = ${resourceId}`;
+                  if (!rows || rows.length === 0) {
+                    return sendJson(404, { error: "Movie not found" });
+                  }
+                  const r = rows[0];
+                  return sendJson(200, {
+                    data: {
+                      id: r.id,
+                      title: r.title,
+                      genre: r.genre,
+                      rating: Number(r.rating),
+                      trailer_url: r.trailer_url || "",
+                    },
+                  });
+                }
+                const rows = await querySql`SELECT id, title, genre, rating, trailer_url FROM movies ORDER BY id DESC`;
+                return sendJson(200, {
+                  data: rows.map((r: any) => ({
+                    id: r.id,
+                    title: r.title,
+                    genre: r.genre,
+                    rating: Number(r.rating),
+                    trailer_url: r.trailer_url || "",
+                  })),
+                });
               }
-              return sendJson(200, { data: item });
-            }
-            return sendJson(200, { data: [...list] });
-          }
 
-          // POST create item
-          if (method === "POST" && resourceId === null) {
-            const body = await readJsonBody();
-            const newId = nextIds[resource]++;
-            const newItem = { id: newId, ...body };
-            if (resource === "movies" && newItem.rating) {
-              newItem.rating = Number(newItem.rating);
-            }
-            list.unshift(newItem as any);
-            return sendJson(201, {
-              success: true,
-              message: "Created successfully",
-              data: newItem,
-            });
-          }
+              if (method === "POST" && resourceId === null) {
+                const body = await readJsonBody();
+                const title = String(body.title || "").trim();
+                const genre = String(body.genre || "").trim();
+                const rating = Number(body.rating) || 5;
+                const trailerUrl = String(body.trailer_url || body.trailerUrl || "").trim();
 
-          // PUT update item
-          if (method === "PUT" && resourceId !== null) {
-            const body = await readJsonBody();
-            const index = list.findIndex((it: any) => it.id === resourceId);
-            if (index === -1) {
-              return sendJson(404, { error: `${resource} item not found` });
-            }
-            list[index] = { ...list[index], ...body, id: resourceId };
-            return sendJson(200, {
-              success: true,
-              message: "Updated successfully",
-              data: list[index],
-            });
-          }
+                const rows = await querySql`INSERT INTO movies (title, genre, rating, trailer_url) VALUES (${title}, ${genre}, ${rating}, ${trailerUrl}) RETURNING id, title, genre, rating, trailer_url`;
+                const r = rows[0];
+                return sendJson(201, {
+                  success: true,
+                  message: "Created successfully",
+                  data: {
+                    id: r.id,
+                    title: r.title,
+                    genre: r.genre,
+                    rating: Number(r.rating),
+                    trailer_url: r.trailer_url || "",
+                  },
+                });
+              }
 
-          // DELETE item
-          if (method === "DELETE" && resourceId !== null) {
-            const index = list.findIndex((it: any) => it.id === resourceId);
-            if (index === -1) {
-              return sendJson(404, { error: `${resource} item not found` });
+              if (method === "DELETE" && resourceId !== null) {
+                await querySql`DELETE FROM movies WHERE id = ${resourceId}`;
+                return sendJson(200, { success: true, message: "Deleted successfully" });
+              }
             }
-            list.splice(index, 1);
-            return sendJson(200, {
-              success: true,
-              message: "Deleted successfully",
+
+            // ACADEMY (table: academy_posts)
+            if (resource === "academy") {
+              if (method === "GET") {
+                if (resourceId !== null) {
+                  const rows = await querySql`SELECT id, skill, category, level FROM academy_posts WHERE id = ${resourceId}`;
+                  if (!rows || rows.length === 0) {
+                    return sendJson(404, { error: "Academy item not found" });
+                  }
+                  return sendJson(200, { data: rows[0] });
+                }
+                const rows = await querySql`SELECT id, skill, category, level FROM academy_posts ORDER BY id DESC`;
+                return sendJson(200, { data: rows });
+              }
+
+              if (method === "POST" && resourceId === null) {
+                const body = await readJsonBody();
+                const skill = String(body.skill || "").trim();
+                const category = String(body.category || "").trim();
+                const level = String(body.level || "").trim();
+
+                const rows = await querySql`INSERT INTO academy_posts (skill, category, level) VALUES (${skill}, ${category}, ${level}) RETURNING id, skill, category, level`;
+                return sendJson(201, {
+                  success: true,
+                  message: "Created successfully",
+                  data: rows[0],
+                });
+              }
+
+              if (method === "DELETE" && resourceId !== null) {
+                await querySql`DELETE FROM academy_posts WHERE id = ${resourceId}`;
+                return sendJson(200, { success: true, message: "Deleted successfully" });
+              }
+            }
+
+            // DEVOPS (table: devops_projects)
+            if (resource === "devops") {
+              if (method === "GET") {
+                if (resourceId !== null) {
+                  const rows = await querySql`SELECT id, title, category, description, image_url, ppt_url, github_url, technologies, highlights, status FROM devops_projects WHERE id = ${resourceId}`;
+                  if (!rows || rows.length === 0) {
+                    return sendJson(404, { error: "Devops project not found" });
+                  }
+                  const r = rows[0];
+                  return sendJson(200, {
+                    data: {
+                      id: r.id,
+                      title: r.title || "",
+                      category: r.category || "",
+                      description: r.description || "",
+                      image_url: r.image_url || "",
+                      ppt_url: r.ppt_url || "",
+                      github_url: r.github_url || "",
+                      technologies: r.technologies || "",
+                      highlights: r.highlights || "",
+                      status: r.status || "Production Ready",
+                    },
+                  });
+                }
+                const rows = await querySql`SELECT id, title, category, description, image_url, ppt_url, github_url, technologies, highlights, status FROM devops_projects ORDER BY id ASC`;
+                return sendJson(200, {
+                  data: rows.map((r: any) => ({
+                    id: r.id,
+                    title: r.title || "",
+                    category: r.category || "",
+                    description: r.description || "",
+                    image_url: r.image_url || "",
+                    ppt_url: r.ppt_url || "",
+                    github_url: r.github_url || "",
+                    technologies: r.technologies || "",
+                    highlights: r.highlights || "",
+                    status: r.status || "Production Ready",
+                  })),
+                });
+              }
+
+              if (method === "POST" && resourceId === null) {
+                const body = await readJsonBody();
+                const title = String(body.title || "").trim();
+                const category = String(body.category || "").trim();
+                const description = String(body.description || "").trim();
+                const imageUrl = String(body.image_url || body.imageUrl || "").trim();
+                const pptUrl = String(body.ppt_url || body.pptUrl || "").trim();
+                const githubUrl = String(body.github_url || body.githubUrl || "").trim();
+                const technologies = String(body.technologies || "").trim();
+                const highlights = String(body.highlights || "").trim();
+                const status = String(body.status || "Production Ready").trim();
+
+                const rows = await querySql`INSERT INTO devops_projects (title, category, description, image_url, ppt_url, github_url, technologies, highlights, status) VALUES (${title}, ${category}, ${description}, ${imageUrl}, ${pptUrl}, ${githubUrl}, ${technologies}, ${highlights}, ${status}) RETURNING *`;
+                const r = rows[0];
+                return sendJson(201, {
+                  success: true,
+                  message: "Created successfully",
+                  data: {
+                    id: r.id,
+                    title: r.title || "",
+                    category: r.category || "",
+                    description: r.description || "",
+                    image_url: r.image_url || "",
+                    ppt_url: r.ppt_url || "",
+                    github_url: r.github_url || "",
+                    technologies: r.technologies || "",
+                    highlights: r.highlights || "",
+                    status: r.status || "Production Ready",
+                  },
+                });
+              }
+
+              if (method === "DELETE" && resourceId !== null) {
+                await querySql`DELETE FROM devops_projects WHERE id = ${resourceId}`;
+                return sendJson(200, { success: true, message: "Deleted successfully" });
+              }
+            }
+
+            // TIMELINE (table: timeline_posts)
+            if (resource === "timeline") {
+              if (method === "GET") {
+                if (resourceId !== null) {
+                  const rows = await querySql`SELECT id, title, category, description, created_at FROM timeline_posts WHERE id = ${resourceId}`;
+                  if (!rows || rows.length === 0) {
+                    return sendJson(404, { error: "Timeline item not found" });
+                  }
+                  const r = rows[0];
+                  return sendJson(200, {
+                    data: {
+                      id: r.id,
+                      title: r.title || "",
+                      category: r.category || "",
+                      description: r.description || "",
+                      created_at: r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+                    },
+                  });
+                }
+                const rows = await querySql`SELECT id, title, category, description, created_at FROM timeline_posts ORDER BY id DESC`;
+                return sendJson(200, {
+                  data: rows.map((r: any) => ({
+                    id: r.id,
+                    title: r.title || "",
+                    category: r.category || "",
+                    description: r.description || "",
+                    created_at: r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+                  })),
+                });
+              }
+
+              if (method === "POST" && resourceId === null) {
+                const body = await readJsonBody();
+                const title = String(body.title || "").trim();
+                const category = String(body.category || "").trim();
+                const description = String(body.description || "").trim();
+
+                const rows = await querySql`INSERT INTO timeline_posts (title, category, description) VALUES (${title}, ${category}, ${description}) RETURNING *`;
+                const r = rows[0];
+                return sendJson(201, {
+                  success: true,
+                  message: "Created successfully",
+                  data: {
+                    id: r.id,
+                    title: r.title || "",
+                    category: r.category || "",
+                    description: r.description || "",
+                    created_at: r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+                  },
+                });
+              }
+
+              if (method === "DELETE" && resourceId !== null) {
+                await querySql`DELETE FROM timeline_posts WHERE id = ${resourceId}`;
+                return sendJson(200, { success: true, message: "Deleted successfully" });
+              }
+            }
+
+            // ATLAS (table: atlas_posts)
+            if (resource === "atlas") {
+              if (method === "GET") {
+                if (resourceId !== null) {
+                  const rows = await querySql`SELECT id, country, status, year, highlight, created_at FROM atlas_posts WHERE id = ${resourceId}`;
+                  if (!rows || rows.length === 0) {
+                    return sendJson(404, { error: "Atlas item not found" });
+                  }
+                  const r = rows[0];
+                  return sendJson(200, {
+                    data: {
+                      id: r.id,
+                      country: r.country || "",
+                      status: r.status || "",
+                      year: r.year || "",
+                      highlight: r.highlight || "",
+                      created_at: r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+                    },
+                  });
+                }
+                const rows = await querySql`SELECT id, country, status, year, highlight, created_at FROM atlas_posts ORDER BY id DESC`;
+                return sendJson(200, {
+                  data: rows.map((r: any) => ({
+                    id: r.id,
+                    country: r.country || "",
+                    status: r.status || "",
+                    year: r.year || "",
+                    highlight: r.highlight || "",
+                    created_at: r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+                  })),
+                });
+              }
+
+              if (method === "POST" && resourceId === null) {
+                const body = await readJsonBody();
+                const country = String(body.country || "").trim();
+                const status = String(body.status || "").trim();
+                const year = String(body.year || "").trim();
+                const highlight = String(body.highlight || "").trim();
+
+                const rows = await querySql`INSERT INTO atlas_posts (country, status, year, highlight) VALUES (${country}, ${status}, ${year}, ${highlight}) RETURNING *`;
+                const r = rows[0];
+                return sendJson(201, {
+                  success: true,
+                  message: "Created successfully",
+                  data: {
+                    id: r.id,
+                    country: r.country || "",
+                    status: r.status || "",
+                    year: r.year || "",
+                    highlight: r.highlight || "",
+                    created_at: r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+                  },
+                });
+              }
+
+              if (method === "DELETE" && resourceId !== null) {
+                await querySql`DELETE FROM atlas_posts WHERE id = ${resourceId}`;
+                return sendJson(200, { success: true, message: "Deleted successfully" });
+              }
+            }
+          } catch (dbError: any) {
+            console.error(`[Neon API Error] ${method} ${pathname}:`, dbError);
+            return sendJson(500, {
+              error: `Database query failed: ${dbError?.message || "Unknown database error"}`,
             });
           }
         }

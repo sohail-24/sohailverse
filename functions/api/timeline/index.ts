@@ -31,9 +31,16 @@ export async function onRequestGet({ env }: PagesContext): Promise<Response> {
   try {
     const db = createDb(env.DATABASE_URL!);
     const records = await db.select().from(timeline).orderBy(desc(timeline.id));
+    const formatted = records.map((r: any) => ({
+      id: r.id,
+      title: r.title || "",
+      category: r.category || "",
+      description: r.description || "",
+      created_at: r.createdAt ? new Date(r.createdAt).toISOString().split("T")[0] : (r.created_at || new Date().toISOString().split("T")[0]),
+    }));
 
     return new Response(
-      JSON.stringify({ data: records }),
+      JSON.stringify({ data: formatted }),
       {
         status: 200,
         headers: { "Content-Type": "application/json" },

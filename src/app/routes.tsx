@@ -1,8 +1,6 @@
 import type { RouteObject } from "react-router-dom";
 import AdminPage from "../pages/AdminPage";
 import RootLayout from "../components/layout/RootLayout";
-import AcademyPage from "../pages/AcademyPage";
-import AtlasPage from "../pages/AtlasPage";
 import CinemaPage from "../pages/CinemaPage";
 import DashboardPage from "../pages/DashboardPage";
 import DevOpsPage from "../pages/DevOpsPage";
@@ -20,16 +18,8 @@ export const routes: RouteObject[] = [
         element: <MissionControlPage />,
       },
       {
-        path: "atlas",
-        element: <AtlasPage />,
-      },
-      {
         path: "cinema",
         element: <CinemaPage />,
-      },
-      {
-        path: "academy",
-        element: <AcademyPage />,
       },
       {
         path: "devops",
@@ -44,11 +34,27 @@ export const routes: RouteObject[] = [
         element: <TimelinePage />,
       },
       {
+        path: "about",
+        element: <TimelinePage />,
+      },
+      {
+        path: "projects",
+        element: <DevOpsPage />,
+      },
+      {
+        path: "projects/:id",
+        element: <ProjectDetailPage />,
+      },
+      {
         path: "dashboard",
         element: <DashboardPage />,
       },
       { 
         path: "admin",
+        element: <AdminPage />,
+      },
+      {
+        path: "console",
         element: <AdminPage />,
       },
     ],

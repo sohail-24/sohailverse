@@ -1,7 +1,30 @@
 import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import MobileMenu from "./MobileMenu";
+import { primaryNavItems } from "../../data/navigation";
+
+export function isNavLinkActive(pathname: string, targetPath: string): boolean {
+  if (targetPath === "/") {
+    return pathname === "/";
+  }
+  if (targetPath === "/timeline") {
+    return pathname === "/timeline" || pathname === "/about";
+  }
+  if (targetPath === "/projects") {
+    return pathname === "/projects" || pathname.startsWith("/projects/");
+  }
+  if (targetPath === "/cinema") {
+    return pathname === "/cinema" || pathname.startsWith("/cinema/");
+  }
+  if (targetPath === "/devops") {
+    return pathname === "/devops" || pathname.startsWith("/devops/");
+  }
+  if (targetPath === "/admin") {
+    return pathname === "/admin" || pathname === "/console" || pathname.startsWith("/admin/") || pathname.startsWith("/console/");
+  }
+  return pathname === targetPath;
+}
 
 export default function Navbar() {
   const location = useLocation();
@@ -11,61 +34,45 @@ export default function Navbar() {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  const navLinks = [
-    { label: "Home", path: "/" },
-    { label: "About", path: "/timeline" },
-    { label: "Journey", path: "/atlas" },
-    { label: "Blog", path: "/academy" },
-    { label: "Contact", path: "mailto:mdsohail88008@gmail.com", external: true },
-  ];
+  const navLinks = primaryNavItems;
 
   return (
-    <header className="sticky top-0 z-50 w-full transition-all duration-200">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full transition-all duration-200 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
         {/* Left: Brand logo treatment </> sohaildevops */}
-        <NavLink to="/" end className="flex items-center gap-2 group">
+        <NavLink to="/" end className="flex items-center gap-2 group flex-shrink-0">
           <span className="font-mono text-base font-bold text-lime-400">&lt;/&gt;</span>
           <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-white group-hover:text-lime-300 transition-colors">
             sohail<span className="text-lime-400">devops</span>
           </span>
         </NavLink>
 
-        {/* Center: Editorial navigation */}
-        <nav className="hidden items-center gap-7 lg:gap-9 md:flex" aria-label="Primary">
-          {navLinks.map((item) =>
-            item.external ? (
-              <a
-                key={item.label}
-                href={item.path}
-                className="relative py-1 text-sm font-medium text-slate-300 hover:text-white transition-colors"
-              >
-                {item.label}
-              </a>
-            ) : (
-              <NavLink
+        {/* Center: Editorial navigation with exact 6 destinations */}
+        <nav className="hidden items-center gap-5 lg:gap-8 md:flex" aria-label="Primary">
+          {navLinks.map((item) => {
+            const active = isNavLinkActive(location.pathname, item.path);
+            return (
+              <Link
                 key={item.path}
                 to={item.path}
-                end={item.path === "/"}
-                className={({ isActive }) =>
-                  cn(
-                    "relative py-1 text-sm font-medium transition-colors duration-200",
-                    isActive
-                      ? "text-white font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-lime-400 after:rounded-full after:shadow-[0_0_8px_rgba(163,230,53,0.8)]"
-                      : "text-slate-300 hover:text-white"
-                  )
-                }
+                className={cn(
+                  "relative py-1 text-sm font-medium transition-colors duration-200 whitespace-nowrap",
+                  active
+                    ? "text-white font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-lime-400 after:rounded-full after:shadow-[0_0_8px_rgba(163,230,53,0.8)]"
+                    : "text-slate-300 hover:text-white"
+                )}
               >
                 {item.label}
-              </NavLink>
-            )
-          )}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Right: Let's Connect CTA Button & Mobile Trigger */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-shrink-0">
           <a
             href="mailto:mdsohail88008@gmail.com"
-            className="relative hidden sm:inline-flex items-center gap-2 rounded-full border border-white/15 bg-slate-950/80 px-5 py-2 text-xs font-semibold text-white shadow-sm transition hover:border-lime-400/50 hover:bg-slate-900 hover:text-lime-300 active:scale-[0.98]"
+            className="relative hidden sm:inline-flex items-center gap-2 rounded-full border border-white/15 bg-slate-950/80 px-4 py-1.5 lg:px-5 lg:py-2 text-xs font-semibold text-white shadow-sm transition hover:border-lime-400/50 hover:bg-slate-900 hover:text-lime-300 active:scale-[0.98]"
           >
             {/* Glowing online green dot */}
             <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">

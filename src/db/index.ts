@@ -20,15 +20,14 @@ export interface NeonEnv {
   DATABASE_URL?: string;
 }
 
-export function createDb(databaseUrl: string) {
+export function createDb(databaseUrl?: string) {
   if (!databaseUrl) {
     throw new Error(
-      "Neon DATABASE_URL is missing. Configure DATABASE_URL in the runtime environment."
+      "Neon DATABASE_URL is not configured. Real PostgreSQL database connection is required."
     );
   }
 
   const sql = neon(databaseUrl);
-
   return drizzle(sql, { schema });
 }
 

@@ -8,6 +8,7 @@ import {
   AuthEnv,
   getSessionTokenFromRequest,
   verifySessionToken,
+  isValidHashFormat,
 } from "./_utils";
 
 interface PagesContext {
@@ -17,9 +18,10 @@ interface PagesContext {
 
 export async function onRequestGet({ request, env }: PagesContext): Promise<Response> {
   const sessionSecret = env.SESSION_SECRET;
+  const requiresSetup = !isValidHashFormat(env.ADMIN_PASSWORD_HASH);
 
   if (!sessionSecret) {
-    return new Response(JSON.stringify({ authenticated: false }), {
+    return new Response(JSON.stringify({ authenticated: false, requiresSetup }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
@@ -27,7 +29,7 @@ export async function onRequestGet({ request, env }: PagesContext): Promise<Resp
 
   const token = getSessionTokenFromRequest(request);
   if (!token) {
-    return new Response(JSON.stringify({ authenticated: false }), {
+    return new Response(JSON.stringify({ authenticated: false, requiresSetup }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
@@ -35,7 +37,7 @@ export async function onRequestGet({ request, env }: PagesContext): Promise<Resp
 
   const isValid = await verifySessionToken(token, sessionSecret);
 
-  return new Response(JSON.stringify({ authenticated: isValid }), {
+  return new Response(JSON.stringify({ authenticated: isValid, requiresSetup }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });

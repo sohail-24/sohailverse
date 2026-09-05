@@ -5,12 +5,51 @@
  */
 
 export interface AuthEnv {
+  ADMIN_PASSWORD?: string;
   ADMIN_PASSWORD_HASH?: string;
   SESSION_SECRET?: string;
 }
 
 export const SESSION_COOKIE_NAME = "sv_admin_session";
 export const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60; // 7 days
+
+/**
+ * Constant-time comparison between two plaintext passwords.
+ */
+export function verifyAdminPassword(input: string, configured: string): boolean {
+  if (!input || !configured || typeof input !== "string" || typeof configured !== "string") {
+    return false;
+  }
+  const enc = new TextEncoder();
+  const inputBytes = enc.encode(input);
+  const confBytes = enc.encode(configured);
+  return constantTimeEqual(inputBytes, confBytes);
+}
+
+/**
+ * Checks whether a hash string has valid PBKDF2 format: `pbkdf2:<iterations>:<saltHex>:<hashHex>`
+ */
+export function isValidHashFormat(hash: string | undefined): boolean {
+  if (!hash || typeof hash !== "string") return false;
+  const parts = hash.split(":");
+  return parts.length === 4 && parts[0] === "pbkdf2" && !isNaN(parseInt(parts[1], 10)) && parseInt(parts[1], 10) >= 1000;
+}
+
+/**
+ * Validates password strength (minimum 8 characters, must contain letters and numbers).
+ */
+export function validatePasswordStrength(password: string): { valid: boolean; error?: string } {
+  if (!password || typeof password !== "string") {
+    return { valid: false, error: "Password is required." };
+  }
+  if (password.length < 8) {
+    return { valid: false, error: "Password must be at least 8 characters long." };
+  }
+  if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+    return { valid: false, error: "Password must contain both letters and numbers." };
+  }
+  return { valid: true };
+}
 
 /**
  * Constant-time comparison between two Uint8Array buffers to prevent timing attacks.
@@ -126,6 +165,46 @@ export async function verifyPassword(
 
   const derivedBytes = new Uint8Array(derivedBits);
   return constantTimeEqual(derivedBytes, expectedHashBytes);
+}
+
+/**
+ * Hashes a plaintext password using modern PBKDF2 with SHA-256 and a random 16-byte salt.
+ * Returns formatted hash string: `pbkdf2:<iterations>:<saltHex>:<hashHex>`
+ */
+export async function hashPassword(
+  password: string,
+  iterations = 100000
+): Promise<string> {
+  const saltBytes = new Uint8Array(16);
+  crypto.getRandomValues(saltBytes);
+
+  const encoder = new TextEncoder();
+  const passwordBuffer = encoder.encode(password);
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    passwordBuffer,
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits"]
+  );
+
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: saltBytes as unknown as BufferSource,
+      iterations: iterations,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    256 // 32 bytes (256 bits)
+  );
+
+  const derivedBytes = new Uint8Array(derivedBits);
+  const saltHex = bytesToHex(saltBytes);
+  const hashHex = bytesToHex(derivedBytes);
+
+  return `pbkdf2:${iterations}:${saltHex}:${hashHex}`;
 }
 
 /**

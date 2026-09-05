@@ -5,37 +5,31 @@ import Badge from "../components/ui/Badge";
 import {
   fetchApi,
   isValidMovie,
-  isValidAcademyPost,
   isValidDevOpsProject,
   isValidTimelinePost,
-  isValidAtlasPost,
   type Movie,
-  type AcademyPost,
   type DevOpsProject,
   type TimelinePost,
-  type AtlasPost,
 } from "../lib/api";
 import { ErrorState, LoadingSkeleton } from "../components/ui/StatusStates";
 
 const missions = [
   "SohailVerse V2",
   "Kubernetes Lab",
-  "School Management System",
+  "Cloud Architecture Forge",
 ];
 
 const focusAreas = [
   "React",
-  "Cloudflare",
-  "GitOps",
+  "Neon PostgreSQL",
+  "DevOps & GitOps",
   "Kubernetes",
 ];
 
 export default function DashboardPage() {
   const [movieCount, setMovieCount] = useState(0);
-  const [academyCount, setAcademyCount] = useState(0);
   const [devopsCount, setDevopsCount] = useState(0);
   const [timelineCount, setTimelineCount] = useState(0);
-  const [atlasCount, setAtlasCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,23 +39,17 @@ export default function DashboardPage() {
     try {
       const [
         movies,
-        academy,
         devops,
         timeline,
-        atlas,
       ] = await Promise.all([
         fetchApi<Movie>("/api/movies", isValidMovie),
-        fetchApi<AcademyPost>("/api/academy", isValidAcademyPost),
         fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject),
         fetchApi<TimelinePost>("/api/timeline", isValidTimelinePost),
-        fetchApi<AtlasPost>("/api/atlas", isValidAtlasPost),
       ]);
 
       setMovieCount(movies.length);
-      setAcademyCount(academy.length);
       setDevopsCount(devops.length);
       setTimelineCount(timeline.length);
-      setAtlasCount(atlas.length);
     } catch (err: any) {
       console.error("Failed to load universe metrics:", err);
       setError(err?.message || "Unable to load data. Please try again.");
@@ -93,23 +81,22 @@ export default function DashboardPage() {
               </h2>
 
               <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted">
-                Live data flowing from
-                Cloudflare Pages Functions and D1
+                Live production data flowing from Neon PostgreSQL database
                 powering the personal universe.
               </p>
             </div>
 
             <div className="min-w-[140px] sm:min-w-[180px] lg:text-right">
               <div className="text-3xl sm:text-5xl font-bold">
-                92%
+                98%
               </div>
 
               <div className="mt-2 sm:mt-3 h-2 overflow-hidden rounded-full bg-white/20">
-                <div className="h-full w-[92%] rounded-full bg-accent" />
+                <div className="h-full w-[98%] rounded-full bg-accent" />
               </div>
 
               <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted">
-                Project Completion
+                Architecture Stability
               </p>
             </div>
           </div>
@@ -162,17 +149,16 @@ export default function DashboardPage() {
             <div className="flex justify-between items-start border-b border-white/10 pb-3 gap-2">
               <div>
                 <h4 className="font-semibold text-xs sm:text-sm">
-                  Atlas Connected
+                  Neon PostgreSQL Connected
                 </h4>
 
                 <p className="text-[11px] sm:text-xs text-muted">
-                  Countries now load directly
-                  from D1 database.
+                  Live connection verified with Drizzle ORM and serverless driver.
                 </p>
               </div>
 
               <span className="text-[10px] sm:text-xs text-emerald-400 font-medium shrink-0">
-                Complete
+                Active
               </span>
             </div>
 
@@ -183,8 +169,7 @@ export default function DashboardPage() {
                 </h4>
 
                 <p className="text-[11px] sm:text-xs text-muted">
-                  Timeline events now managed
-                  through Admin CMS.
+                  Timeline events actively managed through Admin CMS.
                 </p>
               </div>
 
@@ -196,11 +181,11 @@ export default function DashboardPage() {
             <div className="flex justify-between items-start gap-2">
               <div>
                 <h4 className="font-semibold text-xs sm:text-sm">
-                  Secure Cloudflare Auth
+                  PBKDF2 Administrator Security
                 </h4>
 
                 <p className="text-[11px] sm:text-xs text-muted">
-                  HttpOnly cookie JWT session boundary.
+                  HttpOnly session cookies with cryptographic PBKDF2 hashing.
                 </p>
               </div>
 
@@ -218,61 +203,41 @@ export default function DashboardPage() {
 
           {loading ? (
             <div className="mt-4 sm:mt-5">
-              <LoadingSkeleton label="Loading metrics from D1 database..." />
+              <LoadingSkeleton label="Loading metrics from Neon PostgreSQL database..." />
             </div>
           ) : error ? (
             <div className="mt-4 sm:mt-5">
               <ErrorState message={error} onRetry={loadStats} />
             </div>
           ) : (
-            <div className="mt-4 sm:mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4">
-              <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
-                <h3 className="text-xl sm:text-3xl font-bold">
-                  {atlasCount}
-                </h3>
-
-                <p className="mt-0.5 text-xs text-muted">
-                  Countries
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
-                <h3 className="text-xl sm:text-3xl font-bold">
-                  {academyCount}
-                </h3>
-
-                <p className="mt-0.5 text-xs text-muted">
-                  Skills
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
-                <h3 className="text-xl sm:text-3xl font-bold">
+            <div className="mt-4 sm:mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="rounded-xl border border-white/5 bg-slate-950/40 p-4">
+                <h3 className="text-2xl sm:text-3xl font-bold text-cyan-400">
                   {devopsCount}
                 </h3>
 
-                <p className="mt-0.5 text-xs text-muted">
-                  Projects
+                <p className="mt-1 text-xs text-muted">
+                  DevOps Projects
                 </p>
               </div>
 
-              <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
-                <h3 className="text-xl sm:text-3xl font-bold">
-                  {timelineCount}
-                </h3>
-
-                <p className="mt-0.5 text-xs text-muted">
-                  Timeline Events
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-white/5 bg-slate-950/40 p-3 col-span-2 sm:col-span-1">
-                <h3 className="text-xl sm:text-3xl font-bold">
+              <div className="rounded-xl border border-white/5 bg-slate-950/40 p-4">
+                <h3 className="text-2xl sm:text-3xl font-bold text-rose-400">
                   {movieCount}
                 </h3>
 
-                <p className="mt-0.5 text-xs text-muted">
-                  Movies
+                <p className="mt-1 text-xs text-muted">
+                  Curated Films
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-white/5 bg-slate-950/40 p-4">
+                <h3 className="text-2xl sm:text-3xl font-bold text-indigo-400">
+                  {timelineCount}
+                </h3>
+
+                <p className="mt-1 text-xs text-muted">
+                  Milestone Events
                 </p>
               </div>
             </div>
@@ -286,13 +251,13 @@ export default function DashboardPage() {
             </Badge>
 
             <h2 className="mt-3 sm:mt-4 text-xl sm:text-2xl font-bold">
-              SohailVerse v3
+              SohailVerse v2.1
             </h2>
 
             <p className="mt-2 text-xs sm:text-sm text-muted leading-relaxed">
-              Authentication • Blog CMS •
-              Resume Manager • Analytics •
-              Public API • R2 Storage
+              Cloud Native Architecture • DevOps Forge •
+              Microservices Labs • Cinematic Library •
+              Interactive Command Console
             </p>
           </GlassPanel>
 
@@ -303,27 +268,27 @@ export default function DashboardPage() {
 
             <div className="mt-3 sm:mt-5 space-y-2.5 text-xs sm:text-sm">
               <div className="flex justify-between">
-                <span>Frontend</span>
+                <span>Frontend Client</span>
                 <span className="text-emerald-400">🟢 ONLINE</span>
               </div>
 
               <div className="flex justify-between">
-                <span>Cloudflare Pages</span>
+                <span>Vite / Pages API</span>
                 <span className="text-emerald-400">🟢 ACTIVE</span>
               </div>
 
               <div className="flex justify-between">
-                <span>Functions API</span>
-                <span className="text-emerald-400">🟢 ACTIVE</span>
+                <span>Neon PostgreSQL Database</span>
+                <span className="text-emerald-400">🟢 CONNECTED</span>
               </div>
 
               <div className="flex justify-between">
-                <span>D1 Database</span>
-                <span className="text-emerald-400">🟢 ACTIVE</span>
+                <span>Drizzle ORM</span>
+                <span className="text-emerald-400">🟢 READY</span>
               </div>
 
               <div className="flex justify-between">
-                <span>Admin CMS</span>
+                <span>Admin CMS Console</span>
                 <span className="text-emerald-400">🟢 ACTIVE</span>
               </div>
             </div>
@@ -331,6 +296,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </PageShell>
-
   );
 }

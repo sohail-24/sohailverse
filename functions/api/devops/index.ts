@@ -38,7 +38,20 @@ export async function onRequestGet({ env }: PagesContext): Promise<Response> {
       .from(devops)
       .orderBy(desc(devops.id));
 
-    return new Response(JSON.stringify({ data: records }), {
+    const formatted = records.map((r: any) => ({
+      id: r.id,
+      title: r.title || "",
+      category: r.category || "",
+      description: r.description || "",
+      image_url: r.imageUrl || r.image_url || "",
+      ppt_url: r.pptUrl || r.ppt_url || "",
+      github_url: r.githubUrl || r.github_url || "",
+      technologies: r.technologies || "",
+      highlights: r.highlights || "",
+      status: r.status || "Production Ready",
+    }));
+
+    return new Response(JSON.stringify({ data: formatted }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
