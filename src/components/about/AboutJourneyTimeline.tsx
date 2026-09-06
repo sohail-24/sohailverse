@@ -1,163 +1,187 @@
 import { motion } from "framer-motion";
-import { GraduationCap, Plane, Building2, ShoppingCart, Sparkles } from "lucide-react";
+import {
+  GraduationCap,
+  Plane,
+  Building2,
+  ShoppingCart,
+  Sparkles,
+  CheckCircle2,
+} from "lucide-react";
 import type { TimelinePost } from "../../lib/api";
 
 interface AboutJourneyTimelineProps {
   dbTimeline?: TimelinePost[];
 }
 
-interface Milestone {
+interface JourneyMilestone {
   year: string;
-  icon: typeof GraduationCap;
+  stage: string;
   title: string;
   description: string;
-  tone: {
+  icon: typeof GraduationCap;
+  isSpecialHighlight?: boolean;
+  isContinuing?: boolean;
+  specialBadges?: string[];
+  note?: string;
+  theme: {
     text: string;
-    ring: string;
-    bg: string;
-    border: string;
-    glow: string;
-    bar: string;
+    stageBg: string;
+    stageBorder: string;
+    stageText: string;
+    nodeBg: string;
+    nodeBorder: string;
+    nodeRing: string;
+    nodeGlow: string;
+    cardBorder: string;
+    cardBg: string;
+    lineColor: string;
   };
 }
 
-export default function AboutJourneyTimeline({ dbTimeline }: AboutJourneyTimelineProps) {
-  // Authentic repository-backed milestones
-  const defaultMilestones: Milestone[] = [
+export default function AboutJourneyTimeline({ dbTimeline: _dbTimeline }: AboutJourneyTimelineProps) {
+  // Source of truth: The 2023 → 2026 chronological journey
+  const milestones: JourneyMilestone[] = [
     {
       year: "2023",
-      icon: GraduationCap,
+      stage: "Foundation",
       title: "Completed Engineering",
       description:
-        "I completed my Engineering degree in 2023, building a strong foundation in technology and problem solving.",
-      tone: {
+        "Completed my engineering journey and built the foundation for everything that came next.",
+      icon: GraduationCap,
+      theme: {
         text: "text-emerald-400",
-        ring: "ring-emerald-400/40",
-        bg: "bg-emerald-500/15",
-        border: "border-emerald-400",
-        glow: "shadow-[0_0_18px_rgba(52,211,153,0.35)]",
-        bar: "bg-emerald-400",
+        stageBg: "bg-emerald-500/10",
+        stageBorder: "border-emerald-500/30",
+        stageText: "text-emerald-400",
+        nodeBg: "bg-emerald-500/15",
+        nodeBorder: "border-emerald-400",
+        nodeRing: "ring-emerald-400/30",
+        nodeGlow: "shadow-[0_0_20px_rgba(52,211,153,0.35)]",
+        cardBorder: "border-white/10 hover:border-emerald-500/35",
+        cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
+        lineColor: "from-emerald-400",
       },
     },
     {
       year: "2024",
-      icon: Plane,
-      title: "Traveled to Saudi Arabia & Started AWS and DevOps",
+      stage: "Exploration → Cloud & DevOps",
+      title: "Saudi Arabia & A New Direction",
       description:
-        "In 2024, I traveled to Saudi Arabia and began my journey into AWS and DevOps, exploring cloud technologies and real-world infrastructure.",
-      tone: {
+        "Visited Saudi Arabia, gaining new real-world perspective and experiences. After returning, I started learning AWS and DevOps seriously.",
+      icon: Plane,
+      theme: {
         text: "text-cyan-400",
-        ring: "ring-cyan-400/40",
-        bg: "bg-cyan-500/15",
-        border: "border-cyan-400",
-        glow: "shadow-[0_0_18px_rgba(34,211,238,0.35)]",
-        bar: "bg-cyan-400",
+        stageBg: "bg-cyan-500/10",
+        stageBorder: "border-cyan-500/30",
+        stageText: "text-cyan-400",
+        nodeBg: "bg-cyan-500/15",
+        nodeBorder: "border-cyan-400",
+        nodeRing: "ring-cyan-400/30",
+        nodeGlow: "shadow-[0_0_20px_rgba(34,211,238,0.35)]",
+        cardBorder: "border-white/10 hover:border-cyan-500/35",
+        cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
+        lineColor: "from-cyan-400",
       },
     },
     {
       year: "2025",
-      icon: Building2,
-      title: "Internship at Visas Company",
+      stage: "Professional Experience",
+      title: "Internship at Visys Cloud Technology",
       description:
-        "In 2025, I started an internship at a visas company, gaining industry experience, working in a professional environment, and learning real-world processes.",
-      tone: {
+        "Started my internship at Visys Cloud Technology and moved from learning concepts toward practical professional experience.",
+      icon: Building2,
+      theme: {
         text: "text-purple-400",
-        ring: "ring-purple-400/40",
-        bg: "bg-purple-500/15",
-        border: "border-purple-400",
-        glow: "shadow-[0_0_18px_rgba(192,132,252,0.35)]",
-        bar: "bg-purple-400",
+        stageBg: "bg-purple-500/10",
+        stageBorder: "border-purple-500/30",
+        stageText: "text-purple-400",
+        nodeBg: "bg-purple-500/15",
+        nodeBorder: "border-purple-400",
+        nodeRing: "ring-purple-400/30",
+        nodeGlow: "shadow-[0_0_20px_rgba(192,132,252,0.35)]",
+        cardBorder: "border-white/10 hover:border-purple-500/35",
+        cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
+        lineColor: "from-purple-400",
       },
     },
     {
       year: "2026",
-      icon: ShoppingCart,
-      title: "Built a Live B2B Wholesale Website",
+      stage: "Real-World Impact",
+      title: "Live B2B Fruit Wholesale Platform",
       description:
-        "In 2026, I created a live B2B wholesale website for a real customer with live payments. Now I'm using this portfolio to showcase my journey, projects, and skills.",
-      tone: {
+        "Started a live B2B wholesale website for fruits, serving real users with real payments and real-world business requirements.",
+      icon: ShoppingCart,
+      isSpecialHighlight: true,
+      specialBadges: ["REAL USERS", "REAL PAYMENTS"],
+      note: "This is where projects became real-world systems.",
+      theme: {
         text: "text-lime-400",
-        ring: "ring-lime-400/50",
-        bg: "bg-lime-500/20",
-        border: "border-lime-400",
-        glow: "shadow-[0_0_22px_rgba(163,230,53,0.45)]",
-        bar: "bg-lime-400",
+        stageBg: "bg-lime-500/15",
+        stageBorder: "border-lime-400/40",
+        stageText: "text-lime-400",
+        nodeBg: "bg-lime-500/20",
+        nodeBorder: "border-lime-400",
+        nodeRing: "ring-lime-400/40",
+        nodeGlow: "shadow-[0_0_26px_rgba(163,230,53,0.45)]",
+        cardBorder: "border-lime-400/40 hover:border-lime-400/70",
+        cardBg: "bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-lime-950/30 hover:to-lime-950/40",
+        lineColor: "from-lime-400",
+      },
+    },
+    {
+      year: "2026",
+      stage: "Continuous Building",
+      title: "Building & Creating",
+      description:
+        "Continued building multiple websites for different real-world works while learning, experimenting, and turning ideas into working solutions.",
+      icon: Sparkles,
+      isContinuing: true,
+      specialBadges: ["STILL BUILDING · ONGOING"],
+      note: "The journey continues with new ideas, projects, and solutions.",
+      theme: {
+        text: "text-sky-400",
+        stageBg: "bg-sky-500/10",
+        stageBorder: "border-sky-500/30",
+        stageText: "text-sky-400",
+        nodeBg: "bg-sky-500/15",
+        nodeBorder: "border-sky-400",
+        nodeRing: "ring-sky-400/30",
+        nodeGlow: "shadow-[0_0_20px_rgba(56,189,248,0.35)]",
+        cardBorder: "border-sky-500/25 hover:border-sky-400/50",
+        cardBg: "bg-slate-900/65 hover:bg-slate-900/85",
+        lineColor: "from-sky-400",
       },
     },
   ];
 
-  // If dbTimeline contains posts, merge or present them seamlessly
-  const milestones: Milestone[] =
-    dbTimeline && dbTimeline.length > 0
-      ? dbTimeline.map((item, idx) => {
-          const tones = [
-            {
-              text: "text-emerald-400",
-              ring: "ring-emerald-400/40",
-              bg: "bg-emerald-500/15",
-              border: "border-emerald-400",
-              glow: "shadow-[0_0_18px_rgba(52,211,153,0.35)]",
-              bar: "bg-emerald-400",
-            },
-            {
-              text: "text-cyan-400",
-              ring: "ring-cyan-400/40",
-              bg: "bg-cyan-500/15",
-              border: "border-cyan-400",
-              glow: "shadow-[0_0_18px_rgba(34,211,238,0.35)]",
-              bar: "bg-cyan-400",
-            },
-            {
-              text: "text-purple-400",
-              ring: "ring-purple-400/40",
-              bg: "bg-purple-500/15",
-              border: "border-purple-400",
-              glow: "shadow-[0_0_18px_rgba(192,132,252,0.35)]",
-              bar: "bg-purple-400",
-            },
-            {
-              text: "text-lime-400",
-              ring: "ring-lime-400/50",
-              bg: "bg-lime-500/20",
-              border: "border-lime-400",
-              glow: "shadow-[0_0_22px_rgba(163,230,53,0.45)]",
-              bar: "bg-lime-400",
-            },
-          ];
-          const tone = tones[idx % tones.length];
-          const icons = [GraduationCap, Plane, Building2, ShoppingCart, Sparkles];
-          const Icon = icons[idx % icons.length];
-          const year = item.created_at ? new Date(item.created_at).getFullYear().toString() : `202${3 + idx}`;
-
-          return {
-            year,
-            icon: Icon,
-            title: item.title,
-            description: item.description,
-            tone,
-          };
-        })
-      : defaultMilestones;
-
   return (
-    <section className="py-6 sm:py-10">
-      {/* Section Header */}
-      <div className="mb-6 sm:mb-10">
-        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
-          My Journey
-        </h2>
-        <div className="w-8 h-1 bg-lime-400 rounded-full mt-1.5 sm:mt-2" />
+    <section id="about-my-journey" className="py-8 sm:py-14">
+      {/* Section Header with progression narrative */}
+      <div className="mb-8 sm:mb-12">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div>
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
+              My Journey
+            </h2>
+            <div className="w-8 h-1 bg-lime-400 rounded-full mt-2" />
+          </div>
+          <p className="font-mono text-xs uppercase tracking-widest text-slate-400">
+            Chronology · 2023 — 2026
+          </p>
+        </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* DESKTOP TIMELINE (lg: and up): 2023 ───── 2024 ───── 2025 ───── 2026    */}
+      {/* DESKTOP TIMELINE (md: and up): Spacious Vertical Spine with Left Metadata */}
       {/* ========================================================================= */}
-      <div className="hidden lg:block relative pb-4">
-        {/* Horizontal Connecting Rail Line running between the milestone nodes */}
-        <div className="absolute top-[52px] left-[12%] right-[12%] h-[2px] bg-gradient-to-r from-emerald-400 via-cyan-400 via-purple-400 to-lime-400 opacity-60 pointer-events-none" />
+      <div className="hidden md:block relative">
+        {/* Continuous Central-Left Spine Rail */}
+        <div className="absolute top-6 bottom-8 left-[180px] lg:left-[210px] w-[2px] bg-gradient-to-b from-emerald-400 via-cyan-400 via-purple-400 via-lime-400 to-sky-400 opacity-40 pointer-events-none" />
 
-        {/* 4-Column Horizontal Layout */}
-        <div className="grid grid-cols-4 gap-5 xl:gap-6">
+        {/* Fading Tail indicating open-ended continuation */}
+        <div className="absolute -bottom-2 left-[180px] lg:left-[210px] w-[2px] h-10 bg-gradient-to-b from-sky-400 to-transparent opacity-40 pointer-events-none" />
+
+        <div className="space-y-8 lg:space-y-10">
           {milestones.map((m, idx) => {
             const Icon = m.icon;
             return (
@@ -166,38 +190,94 @@ export default function AboutJourneyTimeline({ dbTimeline }: AboutJourneyTimelin
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.5, delay: idx * 0.12 }}
-                className="flex flex-col items-center group"
+                transition={{ duration: 0.45, delay: idx * 0.08 }}
+                className="relative flex items-start group"
               >
-                {/* Year Label */}
-                <div className="font-mono text-sm font-black tracking-wider uppercase mb-2 text-center">
-                  <span className={m.tone.text}>{m.year}</span>
-                </div>
-
-                {/* Milestone Node on the Rail */}
-                <div className="relative z-10 my-1">
-                  <div
-                    className={`w-12 h-12 rounded-full ${m.tone.bg} border-2 ${m.tone.border} ${m.tone.glow} ring-4 ${m.tone.ring} flex items-center justify-center bg-slate-950 transition-transform duration-300 group-hover:scale-110 shadow-lg`}
-                  >
-                    <Icon className={`w-5 h-5 ${m.tone.text}`} />
+                {/* 1. Left Column: Year & Stage Classification */}
+                <div className="w-[180px] lg:w-[210px] pr-8 text-right shrink-0 pt-2">
+                  <div className="font-mono text-xl lg:text-2xl font-black tracking-tight">
+                    <span className={m.theme.text}>{m.year}</span>
+                  </div>
+                  <div className="mt-1.5 inline-flex items-center">
+                    <span
+                      className={`text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-full border ${m.theme.stageBg} ${m.theme.stageBorder} ${m.theme.stageText}`}
+                    >
+                      {m.stage}
+                    </span>
                   </div>
                 </div>
 
-                {/* Vertical Stem connecting node to the card */}
-                <div className={`w-[2px] h-4 ${m.tone.bar} opacity-40`} />
+                {/* 2. Center Node on the Spine Rail */}
+                <div className="relative z-10 shrink-0 -ml-[22px] lg:-ml-[24px]">
+                  <div
+                    className={`w-11 h-11 lg:w-12 lg:h-12 rounded-full ${m.theme.nodeBg} border-2 ${m.theme.nodeBorder} ${m.theme.nodeGlow} ring-4 ${m.theme.nodeRing} flex items-center justify-center bg-slate-950 transition-all duration-300 group-hover:scale-110 shadow-lg`}
+                  >
+                    <Icon className={`w-5 h-5 ${m.theme.text}`} />
+                  </div>
+                </div>
 
-                {/* Milestone Card with Top Triangular Pointer Notch */}
-                <div className="relative w-full rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-md p-5 transition-all duration-300 hover:border-white/25 hover:bg-slate-900/90 shadow-xl flex-1 flex flex-col justify-between">
-                  {/* Triangular Notch pointing up to the node */}
-                  <div className="absolute -top-[6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-t border-l border-white/10 rotate-45 pointer-events-none" />
+                {/* 3. Right Column: Milestone Card */}
+                <div className="flex-1 pl-6 lg:pl-8">
+                  <div
+                    className={`relative rounded-2xl border ${m.theme.cardBorder} ${m.theme.cardBg} backdrop-blur-md p-6 transition-all duration-300 shadow-xl`}
+                  >
+                    {/* Left triangular pointer notch towards the node */}
+                    <div
+                      className={`absolute -left-[7px] top-4 w-3.5 h-3.5 bg-slate-900 border-l border-b ${m.theme.cardBorder} rotate-45 pointer-events-none`}
+                    />
 
-                  <div>
-                    <h3 className="font-display text-base font-bold text-white mb-2 leading-snug">
-                      {m.title}
-                    </h3>
-                    <p className="text-xs text-slate-300/85 leading-relaxed">
+                    {/* Card Content */}
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-display text-lg lg:text-xl font-bold text-white tracking-tight leading-snug">
+                          {m.title}
+                        </h3>
+                      </div>
+
+                      {/* Special Badges (e.g. REAL USERS & REAL PAYMENTS) */}
+                      {m.specialBadges && (
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
+                          {m.specialBadges.map((badge) => (
+                            <span
+                              key={badge}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-bold tracking-wider uppercase border shadow-sm ${
+                                m.isSpecialHighlight
+                                  ? "bg-lime-400/15 border-lime-400/40 text-lime-400"
+                                  : "bg-sky-400/15 border-sky-400/40 text-sky-400"
+                              }`}
+                            >
+                              {m.isSpecialHighlight && (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-lime-400" />
+                              )}
+                              {m.isContinuing && (
+                                <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+                              )}
+                              {badge}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-sm lg:text-base text-slate-300/90 leading-relaxed font-normal mt-2.5">
                       {m.description}
                     </p>
+
+                    {/* Milestone Context Note */}
+                    {m.note && (
+                      <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-2 text-xs font-mono text-slate-400">
+                        {m.isSpecialHighlight && (
+                          <span className="text-lime-400 font-semibold italic">
+                            &bull; {m.note}
+                          </span>
+                        )}
+                        {m.isContinuing && (
+                          <span className="text-sky-300 italic font-medium">
+                            &bull; {m.note}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -207,13 +287,16 @@ export default function AboutJourneyTimeline({ dbTimeline }: AboutJourneyTimelin
       </div>
 
       {/* ========================================================================= */}
-      {/* MOBILE TIMELINE (< lg:): Vertical Sequence with Connecting Rail           */}
+      {/* MOBILE TIMELINE (< md:): Compact Single Vertical Timeline                 */}
       {/* ========================================================================= */}
-      <div className="lg:hidden relative">
-        {/* Continuous Connecting Line */}
-        <div className="absolute top-6 bottom-6 left-[68px] sm:left-[82px] w-[2px] bg-gradient-to-b from-emerald-400 via-cyan-400 via-purple-400 to-lime-400 opacity-50 pointer-events-none" />
+      <div className="md:hidden relative pl-2">
+        {/* Continuous Left Spine Rail */}
+        <div className="absolute top-5 bottom-6 left-[18px] w-[2px] bg-gradient-to-b from-emerald-400 via-cyan-400 via-purple-400 via-lime-400 to-sky-400 opacity-40 pointer-events-none" />
 
-        <div className="space-y-4 sm:space-y-6">
+        {/* Fading Tail for Mobile */}
+        <div className="absolute -bottom-1 left-[18px] w-[2px] h-8 bg-gradient-to-b from-sky-400 to-transparent opacity-40 pointer-events-none" />
+
+        <div className="space-y-6">
           {milestones.map((m, idx) => {
             const Icon = m.icon;
             return (
@@ -221,37 +304,80 @@ export default function AboutJourneyTimeline({ dbTimeline }: AboutJourneyTimelin
                 key={m.year + idx}
                 initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-30px" }}
-                transition={{ duration: 0.45, delay: idx * 0.1 }}
-                className="relative flex items-start gap-3 sm:gap-4 group"
+                viewport={{ once: true, margin: "-25px" }}
+                transition={{ duration: 0.4, delay: idx * 0.06 }}
+                className="relative flex items-start gap-3.5 group"
               >
-                {/* Year Label */}
-                <div className="w-10 sm:w-12 pt-2 text-right shrink-0">
-                  <span className={`font-mono text-xs sm:text-sm font-bold tracking-tight ${m.tone.text}`}>
-                    {m.year}
-                  </span>
-                </div>
-
-                {/* Milestone Double-Ring Circular Badge */}
+                {/* Milestone Circular Node on Rail */}
                 <div className="relative z-10 shrink-0 mt-0.5">
                   <div
-                    className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full ${m.tone.bg} border-2 ${m.tone.border} ${m.tone.glow} ring-2 ${m.tone.ring} flex items-center justify-center bg-slate-950 transition-transform duration-300 group-hover:scale-105`}
+                    className={`w-9 h-9 rounded-full ${m.theme.nodeBg} border-2 ${m.theme.nodeBorder} ${m.theme.nodeGlow} ring-2 ${m.theme.nodeRing} flex items-center justify-center bg-slate-950`}
                   >
-                    <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${m.tone.text}`} />
+                    <Icon className={`w-4 h-4 ${m.theme.text}`} />
                   </div>
                 </div>
 
-                {/* Milestone Content Card with Left Pointer Notch */}
-                <div className="relative flex-1 rounded-xl sm:rounded-2xl border border-white/10 bg-slate-900/65 backdrop-blur-md p-3.5 sm:p-4 transition-all duration-300 hover:border-white/20 hover:bg-slate-900/85 shadow-lg">
-                  {/* Triangular Notch pointing towards the node */}
-                  <div className="absolute -left-[6px] top-3 sm:top-4 w-3 h-3 bg-slate-900 border-l border-b border-white/10 rotate-45 pointer-events-none" />
+                {/* Milestone Mobile Card */}
+                <div
+                  className={`relative flex-1 rounded-xl border ${m.theme.cardBorder} ${m.theme.cardBg} backdrop-blur-md p-4 transition-all duration-300 shadow-md`}
+                >
+                  {/* Left triangular pointer notch towards the node */}
+                  <div
+                    className={`absolute -left-[5px] top-3.5 w-2.5 h-2.5 bg-slate-900 border-l border-b ${m.theme.cardBorder} rotate-45 pointer-events-none`}
+                  />
 
-                  <h3 className="font-display text-xs sm:text-sm font-bold text-white mb-1 leading-snug">
+                  {/* Year & Stage Header */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
+                    <span className={`font-mono text-xs font-bold tracking-wider ${m.theme.text}`}>
+                      {m.year}
+                    </span>
+                    <span
+                      className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border ${m.theme.stageBg} ${m.theme.stageBorder} ${m.theme.stageText}`}
+                    >
+                      {m.stage}
+                    </span>
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="font-display text-sm font-bold text-white mb-1 leading-snug">
                     {m.title}
                   </h3>
-                  <p className="text-[11px] sm:text-xs text-slate-300/85 leading-relaxed">
+
+                  {/* Description */}
+                  <p className="text-xs text-slate-300/85 leading-relaxed font-normal">
                     {m.description}
                   </p>
+
+                  {/* Special Badges on Mobile */}
+                  {m.specialBadges && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2.5 pt-2 border-t border-white/10">
+                      {m.specialBadges.map((badge) => (
+                        <span
+                          key={badge}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase border ${
+                            m.isSpecialHighlight
+                              ? "bg-lime-400/15 border-lime-400/40 text-lime-400"
+                              : "bg-sky-400/15 border-sky-400/40 text-sky-400"
+                          }`}
+                        >
+                          {m.isSpecialHighlight && (
+                            <CheckCircle2 className="w-3 h-3 text-lime-400" />
+                          )}
+                          {m.isContinuing && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+                          )}
+                          {badge}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Mobile note */}
+                  {m.note && m.isSpecialHighlight && (
+                    <p className="text-[11px] font-mono text-lime-400/90 italic mt-1.5">
+                      {m.note}
+                    </p>
+                  )}
                 </div>
               </motion.div>
             );

@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
 import { fetchApi, isValidTimelinePost, type TimelinePost } from "../lib/api";
 import AboutHero from "../components/about/AboutHero";
-import AboutStatsStrip from "../components/about/AboutStatsStrip";
 import AboutWhoIAm from "../components/about/AboutWhoIAm";
 import AboutJourneyTimeline from "../components/about/AboutJourneyTimeline";
-import AboutFocusAreas from "../components/about/AboutFocusAreas";
+import AboutBuilderMindset from "../components/about/AboutBuilderMindset";
 import AboutWhatsNextBanner from "../components/about/AboutWhatsNextBanner";
 
 export default function TimelinePage() {
   const [timeline, setTimeline] = useState<TimelinePost[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     const loadTimeline = async () => {
-      setLoading(true);
       try {
         const data = await fetchApi<TimelinePost>("/api/timeline", isValidTimelinePost);
         if (isMounted) {
@@ -22,10 +19,6 @@ export default function TimelinePage() {
         }
       } catch (err: any) {
         console.warn("Notice: Using authentic local timeline events fallback.", err?.message);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
       }
     };
 
@@ -37,22 +30,19 @@ export default function TimelinePage() {
 
   return (
     <div className="w-full flex flex-col">
-      {/* 1. Full-Width Unified Panoramic About Hero */}
+      {/* 1. Full-Width Unified Panoramic About Hero with Text Overlay */}
       <AboutHero />
 
-      {/* 2. Sleek Metrics Strip (positioned directly below hero) */}
-      <AboutStatsStrip timelineCount={timeline.length > 0 ? timeline.length : 3} loading={loading} />
-
-      {/* 3. Who I Am: Core Identity & Principles */}
+      {/* 2. Who I Am: Core Identity & Principles */}
       <AboutWhoIAm />
 
-      {/* 4. My Journey: Desktop Horizontal (2023 ── 2024 ── 2025 ── 2026) / Mobile Vertical */}
+      {/* 3. My Journey: 2023 → 2026 Chronology */}
       <AboutJourneyTimeline dbTimeline={timeline} />
 
-      {/* 5. What I'm Focused On: 4 Capability Cards */}
-      <AboutFocusAreas />
+      {/* 4. Builder Mindset: 4 Principles & Philosophical Quote */}
+      <AboutBuilderMindset />
 
-      {/* 6. What's Next: Cinematic Closing Chapter */}
+      {/* 5. Now I'm Ready For What's Next: Final Closing Section & Call to Action */}
       <AboutWhatsNextBanner />
     </div>
   );

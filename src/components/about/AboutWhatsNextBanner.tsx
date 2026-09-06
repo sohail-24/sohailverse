@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 export default function AboutWhatsNextBanner() {
   return (
-    <section className="py-6 sm:py-10">
+    <section id="about-whats-next" className="pt-2 sm:pt-4 pb-12 sm:pb-16">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
