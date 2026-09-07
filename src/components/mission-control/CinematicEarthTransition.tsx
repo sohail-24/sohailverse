@@ -4,6 +4,46 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, User, FolderGit2, Film, Cloud } from "lucide-react";
 import * as THREE from "three";
 
+/**
+ * Earth Atmospheric Limb Scatter Shader
+ * Recreates the razor-thin luminous blue limb of Earth as seen in NASA photography.
+ * The Fresnel glow responds physically to the Sun position:
+ * glowing delicately on the sunward crescent and vanishing into the darkness of the night hemisphere.
+ */
+const atmosphereVertexShader = `
+  varying vec3 vNormal;
+  varying vec3 vWorldPosition;
+  void main() {
+    vNormal = normalize(normalMatrix * normal);
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    vWorldPosition = worldPosition.xyz;
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+  }
+`;
+
+const atmosphereFragmentShader = `
+  varying vec3 vNormal;
+  varying vec3 vWorldPosition;
+  uniform vec3 uSunPosition;
+  void main() {
+    vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+    vec3 lightDir = normalize(uSunPosition - vWorldPosition);
+
+    // Fresnel rim intensity (thin, subtle limb without excessive glow)
+    float fresnel = pow(1.0 - max(0.0, dot(viewDir, vNormal)), 3.8);
+
+    // Sunlit hemisphere masking: atmosphere illuminates on the day side
+    float sunDot = dot(vNormal, lightDir);
+    float sunFactor = smoothstep(-0.25, 0.45, sunDot);
+
+    // Realistic electric cyan-blue atmosphere color gradient
+    vec3 atmoColor = mix(vec3(0.12, 0.55, 0.95), vec3(0.42, 0.82, 1.0), fresnel);
+
+    float alpha = fresnel * sunFactor * 0.65;
+    gl_FragColor = vec4(atmoColor, alpha);
+  }
+`;
+
 interface NavDestination {
   id: string;
   number: string;
@@ -51,7 +91,6 @@ const NAV_DESTINATIONS: NavDestination[] = [
 export default function CinematicEarthTransition() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const shouldReduceMotion = useReducedMotion();
 
@@ -359,25 +398,48 @@ export default function CinematicEarthTransition() {
     };
   }, [stageSize, activeIndex]);
 
-  // Three.js Photorealistic 3D Globe with fixed center position & longitude rotation
+  // Three.js Photorealistic 3D Globe with cinematic deep-space solar system environment
   useEffect(() => {
     const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
+    const stage = stageRef.current;
+    if (!canvas || !stage) return;
 
-    // Dimensions
-    const width = container.clientWidth || 360;
-    const height = container.clientHeight || 360;
+    // Stage dimensions
+    const width = stage.clientWidth || 900;
+    const height = stage.clientHeight || 580;
+    const isMobile = width < 768;
 
-    // Scene
+    // 1. Scene
     const scene = new THREE.Scene();
 
-    // Camera: fixed viewport looking directly at the center (0, 0, 0)
-    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
-    camera.position.set(0, 0, 3.25);
-    camera.lookAt(0, 0, 0);
+    // 2. Camera: fixed perspective looking at the center (0, 0, 0)
+    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 250);
 
-    // Renderer with transparent canvas
+    // Calculate camera distance so Earth diameter perfectly matches geometry.earthRadius on screen
+    const updateCameraPosition = (w: number, h: number) => {
+      const mobile = w < 768;
+      const tablet = w >= 768 && w < 1024;
+      const lg = w >= 1024 && w < 1280;
+
+      const earthDiam = mobile
+        ? Math.min(256, w * 0.68)
+        : tablet
+        ? 440
+        : lg
+        ? 520
+        : Math.min(620, Math.round(w * 0.44));
+      const earthRad = (earthDiam / 2) * 0.80;
+      const desiredDiam = earthRad * 2;
+
+      const halfFovRad = THREE.MathUtils.degToRad(camera.fov / 2);
+      const camZ = h / (desiredDiam * Math.tan(halfFovRad));
+      camera.position.set(0, 0, camZ);
+      camera.lookAt(0, 0, 0);
+    };
+
+    updateCameraPosition(width, height);
+
+    // 3. Renderer with transparent background
     const renderer = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
@@ -389,18 +451,24 @@ export default function CinematicEarthTransition() {
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-    // Earth Group (strictly locked at 0, 0, 0 in space)
+    // 4. Lighting: Natural astronomical sunlight illuminating Earth from upper-left
+    const sunLight = new THREE.DirectionalLight(0xfffaee, 2.85);
+    sunLight.position.set(-7.0, 4.2, 3.2);
+    scene.add(sunLight);
+
+    // Deep space ambient fill (preserves pitch-black astronomical night shadows)
+    const ambientLight = new THREE.AmbientLight(0x070c18, 0.20);
+    scene.add(ambientLight);
+
+    // 5. Earth Group (Strictly locked at 0, 0, 0 in space)
     const earthGroup = new THREE.Group();
     earthGroup.position.set(0, 0, 0);
-    // Subtle realistic axial tilt of 23.4 degrees
     earthGroup.rotation.z = THREE.MathUtils.degToRad(23.4);
     earthGroup.rotation.x = THREE.MathUtils.degToRad(8);
     scene.add(earthGroup);
 
-    // Texture Loader
+    // Primary Earth Surface Mesh
     const textureLoader = new THREE.TextureLoader();
-
-    // 1. Primary Earth Surface Mesh
     const earthTexture = textureLoader.load("/earth-texture-2048.jpg");
     earthTexture.colorSpace = THREE.SRGBColorSpace;
 
@@ -414,14 +482,13 @@ export default function CinematicEarthTransition() {
     earthGroup.add(earthMesh);
     earthMeshRef.current = earthMesh;
 
-    // 2. Translucent Clouds Layer
+    // Translucent Clouds Layer
     const cloudsTexture = textureLoader.load("/earth-clouds-1024.png");
-    // Cloud layer closely hugging the planet surface naturally
     const cloudsGeometry = new THREE.SphereGeometry(1.008, 64, 64);
     const cloudsMaterial = new THREE.MeshStandardMaterial({
       map: cloudsTexture,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.42,
       blending: THREE.AdditiveBlending,
       roughness: 0.9,
     });
@@ -429,48 +496,47 @@ export default function CinematicEarthTransition() {
     earthGroup.add(cloudsMesh);
     cloudsMeshRef.current = cloudsMesh;
 
-    // Note: All artificial blue outline meshes, glowing rings, and fake atmospheric borders
-    // are completely removed. The Earth's natural limb and clouds define the edge against space.
+    // Realistic Atmospheric Limb Scattering (Subtle, photographic blue rim, no excessive glow)
+    const atmosphereGeo = new THREE.SphereGeometry(1.018, 64, 64);
+    const atmosphereMat = new THREE.ShaderMaterial({
+      vertexShader: atmosphereVertexShader,
+      fragmentShader: atmosphereFragmentShader,
+      uniforms: {
+        uSunPosition: { value: sunLight.position },
+      },
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.FrontSide,
+    });
+    const atmosphereMesh = new THREE.Mesh(atmosphereGeo, atmosphereMat);
+    earthGroup.add(atmosphereMesh);
 
-    // Realistic Planetary Lighting:
-    // Main Sun directional light (illuminates the daylit hemisphere with a sharp, natural terminator)
-    const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
-    sunLight.position.set(4.6, 1.8, 3.4);
-    scene.add(sunLight);
-
-    // Deep space dark ambient fill (keeps night hemisphere in authentic, deep astronomical shadow)
-    const ambientLight = new THREE.AmbientLight(0x0a101f, 0.16);
-    scene.add(ambientLight);
-
-    // Resize Observer
+    // Resize Observer: adjusts camera aspect, recalculates cameraZ, updates canvas
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width: newWidth, height: newHeight } = entry.contentRect;
         if (newWidth > 0 && newHeight > 0) {
           camera.aspect = newWidth / newHeight;
+          updateCameraPosition(newWidth, newHeight);
           camera.updateProjectionMatrix();
           renderer.setSize(newWidth, newHeight);
         }
       }
     });
-    resizeObserver.observe(container);
+    resizeObserver.observe(stage);
 
-    // Animation Loop: STRICTLY FIXED POSITION, ONLY SURFACE ROTATES
+    // Animation Loop: Earth fixed at 0, 0, 0; subtle rotation and drag friction decay
     let animationFrameId: number;
-    // Automatic rotation slowed down (~47% slower than previous) for a calm, cinematic planetary feel
     const autoSpeed = shouldReduceMotion ? 0 : 0.00085;
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
-      // Invariant checks: The globe center never moves!
+      // Invariant: Earth center strictly at (0, 0, 0)
       earthGroup.position.set(0, 0, 0);
-      camera.position.set(0, 0, 3.25);
 
-      if (isDraggingRef.current) {
-        // User manual drag is active: auto-rotation is paused
-      } else {
-        // Momentum decay or calm automatic rotation in place
+      if (!isDraggingRef.current) {
         if (Math.abs(velocityRef.current) > 0.0001) {
           if (earthMeshRef.current) {
             earthMeshRef.current.rotation.y += velocityRef.current;
@@ -478,16 +544,13 @@ export default function CinematicEarthTransition() {
           if (cloudsMeshRef.current) {
             cloudsMeshRef.current.rotation.y += velocityRef.current * 1.02;
           }
-          // Smooth physical friction decay
           velocityRef.current *= 0.93;
         } else {
           velocityRef.current = 0;
-          // Calm, slow automatic rotation in place
           if (earthMeshRef.current) {
             earthMeshRef.current.rotation.y += autoSpeed;
           }
           if (cloudsMeshRef.current) {
-            // Clouds slowly drift at a realistic differential speed
             cloudsMeshRef.current.rotation.y += autoSpeed * 1.08;
           }
         }
@@ -502,10 +565,18 @@ export default function CinematicEarthTransition() {
       cancelAnimationFrame(animationFrameId);
       resizeObserver.disconnect();
       renderer.dispose();
+
+      // Dispose geometries
       earthGeometry.dispose();
-      earthMaterial.dispose();
       cloudsGeometry.dispose();
+      atmosphereGeo.dispose();
+
+      // Dispose materials
+      earthMaterial.dispose();
       cloudsMaterial.dispose();
+      atmosphereMat.dispose();
+
+      // Dispose textures
       earthTexture.dispose();
       cloudsTexture.dispose();
     };
@@ -576,75 +647,6 @@ export default function CinematicEarthTransition() {
     setIsHoveredOrDragging(false);
   };
 
-  // Multi-depth astronomical star field:
-  // Layered into deep-field micro pinpoints, mid-field stars, and prominent anchor stars.
-  // Natural variation in size (0.75px–1.8px), opacity (0.1–0.85), and stellar color temperatures.
-  // Mostly static (only ~7% have slow, subtle astronomical shimmer) to avoid distraction.
-  const stars = useMemo(() => {
-    const starList = [];
-    const count = 112;
-
-    for (let i = 0; i < count; i++) {
-      // Deterministic non-uniform pseudo-random distribution
-      const rawX = (i * 37 + 13) % 100;
-      const rawY = (i * 59 + 29) % 100;
-
-      // Keep the immediate center behind the Earth slightly clearer
-      const distFromCenter = Math.hypot(rawX - 50, (rawY - 38) * 1.3);
-      if (distFromCenter < 12 && i % 3 !== 0) {
-        continue;
-      }
-
-      let size = 1.0;
-      let opacity = 0.25;
-      let color = "#cbd5e1"; // Neutral cool starlight
-      let glow: string | undefined = undefined;
-      let hasTwinkle = false;
-      let twinkleDuration = "6.5";
-      let twinkleDelay = "0";
-
-      if (i % 11 === 0) {
-        // Prominent navigation stars (1.5px - 1.8px)
-        size = 1.5 + (i % 4) * 0.1;
-        opacity = 0.72 + (i % 5) * 0.03;
-        color = i % 22 === 0 ? "#e0f2fe" : "#ffffff";
-        glow = "0 0 2.5px 0.5px rgba(224, 242, 254, 0.4)";
-        hasTwinkle = i % 33 === 0;
-        twinkleDuration = (6.0 + (i % 3)).toFixed(1);
-        twinkleDelay = ((i * 0.9) % 4).toFixed(1);
-      } else if (i % 3 === 0) {
-        // Mid-field stars (1.1px - 1.4px)
-        size = 1.1 + (i % 3) * 0.1;
-        opacity = 0.38 + (i % 6) * 0.05;
-        color = i % 6 === 0 ? "#e0f2fe" : i % 9 === 0 ? "#fef3c7" : "#f1f5f9";
-        hasTwinkle = i % 18 === 0;
-        twinkleDuration = (5.5 + (i % 4)).toFixed(1);
-        twinkleDelay = ((i * 1.1) % 3).toFixed(1);
-      } else {
-        // Distant deep-field micro pinpoints (0.75px - 1.0px)
-        size = 0.8 + (i % 3) * 0.1;
-        opacity = 0.12 + (i % 7) * 0.03;
-        color = "#94a3b8";
-        hasTwinkle = false; // Strictly static
-      }
-
-      starList.push({
-        id: i,
-        x: rawX.toFixed(1),
-        y: rawY.toFixed(1),
-        size,
-        opacity,
-        color,
-        glow,
-        hasTwinkle,
-        twinkleDuration,
-        twinkleDelay,
-      });
-    }
-
-    return starList;
-  }, []);
-
   const activeDest = NAV_DESTINATIONS[activeIndex];
   const ActiveIcon = activeDest.icon;
 
@@ -653,78 +655,37 @@ export default function CinematicEarthTransition() {
       ref={sectionRef}
       id="cinematic-earth-transition"
       aria-label="Earth and Navigation Transition"
-      className="relative w-full overflow-hidden bg-transparent text-white pt-2 sm:pt-4 pb-10 sm:pb-14 mt-1 sm:mt-2 mb-8 sm:mb-12"
+      className="relative w-full overflow-hidden bg-[#020409] isolate text-white pt-2 sm:pt-4 pb-10 sm:pb-14 mt-1 sm:mt-2 mb-8 sm:mb-12"
     >
-      {/* Inline styles for subtle, slow astronomical shimmer */}
-      <style>{`
-        @keyframes deepSpaceShimmer {
-          0%, 100% { opacity: 0.25; }
-          50% { opacity: 0.75; }
-        }
-      `}</style>
-
       {/* ========================================================================= */}
-      {/* REALISTIC CINEMATIC DEEP-SPACE & GALAXY ENVIRONMENT                      */}
-      {/* Restrained astronomical dust lane, cosmic haze, and multi-depth stars     */}
-      {/* Dark, subtle, seamlessly blending into the page with zero visible box      */}
+      {/* 1. PHOTOREALISTIC DEEP-SPACE UNIVERSE BACKGROUND (Z-INDEX: 0)             */}
+      {/* High-quality astronomy space scene: distant galaxies, star clusters,      */}
+      {/* cosmic dust lanes, and deep void. Positioned in front of base background.  */}
       {/* ========================================================================= */}
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden select-none">
-        
-        {/* 1. Deep Space Galactic Plane (Tilted astronomical Milky Way dust band) */}
-        <div
-          className="absolute -inset-x-24 -inset-y-32 opacity-70"
-          style={{
-            transform: "rotate(-21deg)",
-            transformOrigin: "center center",
-          }}
-        >
-          {/* Faint unresolved starlight lane */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_85%_36%_at_50%_50%,rgba(148,163,184,0.038)_0%,rgba(56,189,248,0.016)_38%,rgba(99,102,241,0.012)_62%,transparent_82%)]" />
-
-          {/* Interstellar dust rifts (dark molecular clouds splitting the starlight) */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_18%_at_48%_52%,rgba(2,6,23,0.5)_0%,transparent_75%)]" />
-        </div>
-
-        {/* 2. Asymmetrical Deep Space Nebula Clouds (Very faint astronomical emission & dust) */}
-        {/* Upper-left quadrant: cold cosmic indigo dust */}
-        <div className="absolute -top-12 -left-12 w-96 h-96 sm:w-[520px] sm:h-[520px] rounded-full bg-[radial-gradient(circle,rgba(30,58,138,0.045)_0%,rgba(14,116,144,0.02)_42%,transparent_72%)] blur-2xl" />
-
-        {/* Lower-right quadrant: deep interstellar slate-violet dust */}
-        <div className="absolute -bottom-16 -right-16 w-96 h-96 sm:w-[560px] sm:h-[560px] rounded-full bg-[radial-gradient(circle,rgba(67,56,202,0.032)_0%,rgba(15,23,42,0.02)_46%,transparent_75%)] blur-2xl" />
-
-        {/* Distant celestial haze patch in upper right */}
-        <div className="absolute top-8 right-[10%] w-72 h-72 rounded-full bg-[radial-gradient(circle,rgba(14,165,233,0.022)_0%,transparent_65%)] blur-xl" />
-
-        {/* 3. Calm Central Dark Zone: Ensures Earth is the undisputed hero with high contrast */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_260px_at_50%_38%,rgba(2,6,23,0.92)_0%,rgba(2,6,23,0.55)_50%,transparent_85%)]" />
-
-        {/* 4. Astronomical Multi-Depth Star Field */}
-        {stars.map((s) => (
-          <span
-            key={s.id}
-            className="absolute rounded-full pointer-events-none"
-            style={{
-              left: `${s.x}%`,
-              top: `${s.y}%`,
-              width: `${s.size}px`,
-              height: `${s.size}px`,
-              backgroundColor: s.color,
-              opacity: s.opacity,
-              boxShadow: s.glow,
-              animation: s.hasTwinkle && !shouldReduceMotion
-                ? `deepSpaceShimmer ${s.twinkleDuration}s ease-in-out infinite ${s.twinkleDelay}s`
-                : undefined,
-            }}
+      <div
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden select-none bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('/earth-space-background.webp'), url('/earth-space-background.jpg')",
+        }}
+      >
+        <picture className="w-full h-full block">
+          <source srcSet="/earth-space-background.webp" type="image/webp" />
+          <img
+            src="/earth-space-background.jpg"
+            alt=""
+            aria-hidden="true"
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover object-center max-sm:object-center"
           />
-        ))}
+        </picture>
 
-        {/* 5. Smooth Top & Bottom Page Edge Blending (Zero hard boundaries) */}
-        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#020409]/90 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#020409]/90 to-transparent" />
+        {/* Soft, minimal top & bottom edge transition into adjacent sections */}
+        <div className="absolute inset-x-0 top-0 h-6 sm:h-8 bg-gradient-to-b from-[#020409] to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-6 sm:h-8 bg-gradient-to-t from-[#020409] to-transparent pointer-events-none" />
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. FIXED CENTERED REALISTIC EARTH + FLOATING NAVIGATION OVERLAY           */}
+      {/* 2. FIXED CENTERED REALISTIC EARTH + FLOATING NAVIGATION OVERLAY (Z-10)    */}
       {/* Earth remains completely fixed in center. Single card emerges via glowing */}
       {/* connection line from Earth anchor point, holds, and smoothly retracts.     */}
       {/* Sequence: About -> Projects -> Cinema -> DevOps -> repeat                */}
@@ -732,33 +693,26 @@ export default function CinematicEarthTransition() {
       <div
         ref={stageRef}
         id="earth-floating-navigation-stage"
-        className="relative w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto min-h-[480px] sm:min-h-[520px] md:min-h-[580px] lg:min-h-[680px] xl:min-h-[740px] flex items-center justify-center select-none px-4 sm:px-6 lg:px-8"
+        className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto min-h-[480px] sm:min-h-[520px] md:min-h-[580px] lg:min-h-[680px] xl:min-h-[740px] flex items-center justify-center select-none px-4 sm:px-6 lg:px-8"
       >
-        {/* Stationary Earth Viewport (Completely fixed, centered, draggable/swipeable) */}
-        {/* Mobile Earth diameter is preserved exactly; Desktop Earth is substantially enlarged & cinematic */}
-        <div
-          ref={containerRef}
-          id="fixed-earth-container"
-          className="relative shrink-0 w-60 h-60 sm:w-76 sm:h-76 md:w-[440px] md:h-[440px] lg:w-[520px] lg:h-[520px] xl:w-[580px] xl:h-[580px] 2xl:w-[620px] 2xl:h-[620px] flex items-center justify-center mx-auto select-none z-10"
-        >
-          {/* Transparent WebGL Canvas: captures pointer drag & touch swipe with touch-action: none */}
-          <canvas
-            ref={canvasRef}
-            id="earth-webgl-canvas"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-            className={`w-full h-full block select-none ${
-              isHoveredOrDragging ? "cursor-grabbing" : "cursor-grab"
-            }`}
-            style={{
-              touchAction: "none",
-            }}
-            title="Drag left or right to rotate the Earth"
-            aria-label="Interactive 3D realistic globe. Drag left or right to rotate planetary longitude."
-          />
-        </div>
+        {/* Full-Stage WebGL Canvas: captures pointer drag & touch swipe with touch-action: none */}
+        {/* Renders Earth centered at (0, 0, 0) inside vast cosmic deep-space environment         */}
+        <canvas
+          ref={canvasRef}
+          id="earth-webgl-canvas"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          className={`absolute inset-0 w-full h-full block select-none z-10 ${
+            isHoveredOrDragging ? "cursor-grabbing" : "cursor-grab"
+          }`}
+          style={{
+            touchAction: "none",
+          }}
+          title="Drag left or right to rotate the Earth"
+          aria-label="Interactive 3D realistic Earth floating inside an expansive deep-space universe. Drag left or right to rotate."
+        />
 
         {/* ===================================================================== */}
         {/* 2. DYNAMIC CONNECTION LINE & ANCHOR POINT (SVG LAYER)                 */}

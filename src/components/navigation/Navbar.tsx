@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import MobileMenu from "./MobileMenu";
 import { primaryNavItems } from "../../data/navigation";
@@ -37,7 +38,7 @@ export default function Navbar() {
   const navLinks = primaryNavItems;
 
   return (
-    <header className="sticky top-0 z-50 w-full transition-all duration-200 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
+    <header className="sticky top-0 z-50 w-full relative transition-all duration-200 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
         {/* Left: Brand logo treatment </> sohaildevops */}
         <NavLink to="/" end className="flex items-center gap-2 group flex-shrink-0">
@@ -86,18 +87,22 @@ export default function Navbar() {
           {/* Mobile Menu Button with Hamburger */}
           <button
             type="button"
+            id="mobile-nav-trigger"
             aria-controls="mobile-navigation"
             aria-expanded={menuOpen}
-            className="md:hidden flex items-center justify-center h-10 w-10 rounded-full border border-white/15 bg-slate-950 text-white hover:bg-slate-900 transition"
+            className={cn(
+              "md:hidden flex items-center justify-center h-10 w-10 rounded-xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 active:scale-95",
+              menuOpen
+                ? "border-lime-400/40 bg-lime-400/10 text-lime-400 shadow-[0_0_12px_rgba(163,230,53,0.2)]"
+                : "border-white/10 bg-slate-950/80 text-slate-300 hover:border-white/20 hover:bg-slate-900 hover:text-white"
+            )}
             onClick={() => setMenuOpen((open) => !open)}
-            aria-label="Toggle Navigation Menu"
+            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
           >
             {menuOpen ? (
-              <span className="font-mono text-xs font-bold">✕</span>
+              <X className="h-5 w-5 transition-transform duration-200 rotate-90 scale-100" />
             ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Menu className="h-5 w-5 transition-transform duration-200" />
             )}
           </button>
         </div>
