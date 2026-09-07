@@ -13,6 +13,7 @@ export interface UniverseProject {
   externalUrl?: string;
   complexity?: number;
   highlightMetric?: string;
+  image?: string;
 }
 
 export interface HeroContent {

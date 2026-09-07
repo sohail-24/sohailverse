@@ -1,5 +1,6 @@
 import CinematicHero from "../components/mission-control/CinematicHero";
 import ProjectsShowcase from "../components/mission-control/ProjectsShowcase";
+import CinematicEarthTransition from "../components/mission-control/CinematicEarthTransition";
 import ConnectCtaBanner from "../components/mission-control/ConnectCtaBanner";
 import PhilosophyNexus from "../components/mission-control/PhilosophyNexus";
 import TelemetryStrip from "../components/mission-control/TelemetryStrip";
@@ -14,16 +15,19 @@ export default function MissionControlPage() {
       {/* 2. Projects I'm Building (Horizontal Carousel Rail) */}
       <ProjectsShowcase />
 
-      {/* 3. Telemetry & Metrics Strip */}
+      {/* 3. Cinematic Earth / Journey Transition */}
+      <CinematicEarthTransition />
+
+      {/* 4. Telemetry & Metrics Strip */}
       <TelemetryStrip />
 
-      {/* 4. Engineering Philosophy & Infinity Loop */}
+      {/* 5. Engineering Philosophy & Infinity Loop */}
       <PhilosophyNexus />
 
-      {/* 5. What I Love To Do (5 Neon Cards) */}
+      {/* 6. What I Love To Do (5 Neon Cards) */}
       <WhatILoveToDoSection />
 
-      {/* 6. Curved Planetary Horizon CTA Banner */}
+      {/* 7. Curved Planetary Horizon CTA Banner */}
       <ConnectCtaBanner />
     </div>
   );

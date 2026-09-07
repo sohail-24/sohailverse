@@ -45,6 +45,7 @@ export const initialProjects: UniverseProject[] = [
     link: "/devops/1",
     complexity: 5,
     highlightMetric: "Production Deployed",
+    image: "/projects/temporary/sohail-shop-placeholder.jpg",
   },
   {
     id: "sohail-studio",
@@ -59,6 +60,7 @@ export const initialProjects: UniverseProject[] = [
     link: "/devops",
     complexity: 4,
     highlightMetric: "Active Engine",
+    image: "/projects/temporary/sohail-studio-placeholder.jpg",
   },
   {
     id: "fresh-flow",
@@ -73,6 +75,7 @@ export const initialProjects: UniverseProject[] = [
     link: "/devops",
     complexity: 3,
     highlightMetric: "In Development",
+    image: "/projects/temporary/fresh-flow-placeholder.jpg",
   },
   {
     id: "wedding",
@@ -86,6 +89,7 @@ export const initialProjects: UniverseProject[] = [
     link: "/timeline",
     complexity: 3,
     highlightMetric: "Coming Soon",
+    image: "/projects/temporary/wedding-placeholder.jpg",
   },
   {
     id: "new-chapter",
@@ -99,6 +103,7 @@ export const initialProjects: UniverseProject[] = [
     link: "/devops",
     complexity: 4,
     highlightMetric: "Loading 2026",
+    image: "/projects/temporary/new-chapter-placeholder.jpg",
   },
 ];
 
