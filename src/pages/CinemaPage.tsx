@@ -1,23 +1,27 @@
-import { useEffect, useState } from "react";
-import PageShell from "../components/layout/PageShell";
-import GlassPanel from "../components/ui/GlassPanel";
-import Badge from "../components/ui/Badge";
+import { useEffect, useState, useMemo } from "react";
 import { fetchApi, isValidMovie, type Movie } from "../lib/api";
-import { ErrorState, EmptyState, LoadingSkeleton } from "../components/ui/StatusStates";
-
-const genres = [
-  "Action",
-  "Sci-Fi",
-  "Adventure",
-  "Thriller",
-  "Comedy",
-  "Drama",
-];
+import { ErrorState } from "../components/ui/StatusStates";
+import CinemaHero from "../components/cinema/CinemaHero";
+import CinemaStats from "../components/cinema/CinemaStats";
+import CinemaGenreExplorer from "../components/cinema/CinemaGenreExplorer";
+import CinemaFeaturedMovie from "../components/cinema/CinemaFeaturedMovie";
+import CinemaMovieCarousel from "../components/cinema/CinemaMovieCarousel";
+import CinemaEditorialFooter from "../components/cinema/CinemaEditorialFooter";
+import CinemaTrailerModal from "../components/cinema/CinemaTrailerModal";
+import { CURATED_GENRES } from "../components/cinema/cinemaData";
 
 export default function CinemaPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Genre filtering state
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+
+  // Modal interaction state
+  const [modalMovie, setModalMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"trailer" | "details">("trailer");
 
   const loadMovies = async () => {
     setLoading(true);
@@ -27,7 +31,7 @@ export default function CinemaPage() {
       setMovies(data);
     } catch (err: any) {
       console.error("Failed to load movies:", err);
-      setError(err?.message || "Unable to load data. Please try again.");
+      setError(err?.message || "Unable to load cinema observatory data.");
     } finally {
       setLoading(false);
     }
@@ -37,216 +41,92 @@ export default function CinemaPage() {
     loadMovies();
   }, []);
 
-  const topMovie = loading
-    ? "Loading..."
-    : error
-    ? "Unavailable"
-    : movies.length > 0
-    ? movies[0].title
-    : "None";
+  // Compute stats
+  const movieCount = movies.length;
+  const trailerCount = useMemo(() => {
+    return movies.filter((m) => Boolean(m.trailer_url && m.trailer_url.trim())).length;
+  }, [movies]);
+
+  // Identify featured movie (prefer Harry Potter or top rated)
+  const featuredMovie = useMemo(() => {
+    if (movies.length === 0) return null;
+    const hp = movies.find((m) =>
+      m.title.toLowerCase().includes("harry potter")
+    );
+    if (hp) return hp;
+    // Otherwise highest rating
+    return [...movies].sort((a, b) => (b.rating || 0) - (a.rating || 0))[0];
+  }, [movies]);
+
+  const handleOpenTrailer = (movie: Movie) => {
+    setModalMovie(movie);
+    setModalMode("trailer");
+    setIsModalOpen(true);
+  };
+
+  const handleOpenDetails = (movie: Movie) => {
+    setModalMovie(movie);
+    setModalMode("details");
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
 
   return (
-    <PageShell
-      eyebrow="Movie Observatory"
-      title="Stories That Inspire Exploration"
-      description="A collection of movies, genres, and cinematic experiences that shaped my imagination, curiosity, and perspective."
-    >
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        <GlassPanel className="p-4 sm:p-6">
-          <p className="text-xs sm:text-sm text-muted">
-            Favorite Movies
-          </p>
+    <div className="relative w-full max-w-7xl mx-auto py-2 sm:py-6">
+      {/* 1. CINEMATIC HERO */}
+      <CinemaHero />
 
-          <p className="mt-1 sm:mt-2 text-2xl sm:text-4xl font-bold">
-            {loading ? "..." : error ? "-" : movies.length}
-          </p>
-        </GlassPanel>
+      {/* 2. STATS / PERSONAL CINEMA PROFILE */}
+      <CinemaStats
+        movieCount={movieCount}
+        genreCount={CURATED_GENRES.length}
+        trailerCount={trailerCount}
+        loading={loading}
+      />
 
-        <GlassPanel className="p-4 sm:p-6">
-          <p className="text-xs sm:text-sm text-muted">
-            Genres Explored
-          </p>
-
-          <p className="mt-1 sm:mt-2 text-2xl sm:text-4xl font-bold">
-            {genres.length}
-          </p>
-        </GlassPanel>
-
-        <GlassPanel className="p-4 sm:p-6">
-          <p className="text-xs sm:text-sm text-muted">
-            Current Favorite
-          </p>
-
-          <p className="mt-1 sm:mt-2 truncate text-base sm:text-xl font-bold">
-            {topMovie}
-          </p>
-        </GlassPanel>
-
-        <GlassPanel className="p-4 sm:p-6">
-          <p className="text-xs sm:text-sm text-muted">
-            Trailer Library
-          </p>
-
-          <p className="mt-1 sm:mt-2 text-2xl sm:text-4xl font-bold">
-            {loading ? "..." : error ? "-" : movies.length}
-          </p>
-        </GlassPanel>
-      </div>
-
-      {/* Genres */}
-      <GlassPanel className="p-5 sm:p-8">
-        <h2 className="mb-4 text-xl sm:text-2xl font-semibold">
-          Favorite Genres
-        </h2>
-
-        <div className="flex flex-wrap gap-2 sm:gap-3">
-          {genres.map((genre) => (
-            <Badge
-              key={genre}
-              variant="accent"
-              className="text-xs"
-            >
-              {genre}
-            </Badge>
-          ))}
-        </div>
-      </GlassPanel>
-
-      {/* Movies */}
-      <div>
-        <h2 className="mb-3 text-xl sm:text-2xl font-semibold">
-          Featured Collection
-        </h2>
-
-        {loading ? (
-          <LoadingSkeleton label="Loading movies from D1 database..." />
-        ) : error ? (
+      {error ? (
+        <div className="mt-12">
           <ErrorState message={error} onRetry={loadMovies} />
-        ) : movies.length === 0 ? (
-          <EmptyState message="No movies found in the collection." />
-        ) : (
-          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
-            {movies.map((movie) => (
-              <GlassPanel
-                key={movie.id}
-                className="flex flex-col justify-between p-4 sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <a
-                      href={movie.trailer_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-lg sm:text-xl font-semibold hover:text-accent transition-colors break-words leading-tight"
-                    >
-                      {movie.title}
-                    </a>
-
-                    <span className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs text-slate-300">
-                      {movie.genre}
-                    </span>
-                  </div>
-
-                  <p className="mt-3 text-xs sm:text-sm text-amber-300/90 font-medium">
-                    Rating: ⭐ {movie.rating} / 10
-                  </p>
-                </div>
-
-                <div className="mt-5">
-                  <a
-                    href={movie.trailer_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center rounded-xl border border-white/20 bg-slate-900/90 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white transition hover:bg-slate-800 hover:border-cyan-400/40 active:scale-[0.98]"
-                  >
-                    ▶ Watch Trailer
-                  </a>
-                </div>
-              </GlassPanel>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Current Favorite */}
-      <GlassPanel className="p-5 sm:p-8">
-        <Badge variant="accent">
-          Current Favorite
-        </Badge>
-
-        <h2 className="mt-3 mb-3 text-xl sm:text-2xl font-semibold">
-          Interstellar
-        </h2>
-
-        <p className="text-xs sm:text-base leading-6 sm:leading-8 text-muted">
-          Interstellar stands out because it
-          combines science, exploration,
-          emotion, and ambition. It reflects
-          the same curiosity that drives
-          learning, travel, engineering, and
-          building new systems.
-        </p>
-      </GlassPanel>
-
-      {/* Cinema Journey */}
-      <GlassPanel className="p-5 sm:p-8">
-        <h2 className="mb-4 sm:mb-6 text-xl sm:text-2xl font-semibold">
-          Cinema Journey
-        </h2>
-
-        <div className="border-l-2 border-accent pl-4 sm:pl-6 space-y-6 sm:space-y-8">
-          <div>
-            <h3 className="text-base sm:text-lg font-semibold">
-              Early Years
-            </h3>
-
-            <p className="mt-1 text-xs sm:text-sm text-muted">
-              Entertainment and action movies.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-base sm:text-lg font-semibold">
-              English Learning
-            </h3>
-
-            <p className="mt-1 text-xs sm:text-sm text-muted">
-              Movies helped improve listening
-              and vocabulary.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-base sm:text-lg font-semibold">
-              Today
-            </h3>
-
-            <p className="mt-1 text-xs sm:text-sm text-muted">
-              Movies inspire creativity,
-              learning, and imagination.
-            </p>
-          </div>
         </div>
-      </GlassPanel>
+      ) : (
+        <>
+          {/* 3. EXPLORE GENRES */}
+          <CinemaGenreExplorer
+            selectedGenre={selectedGenre}
+            onSelectGenre={setSelectedGenre}
+          />
 
-      {/* Why Cinema */}
-      <GlassPanel className="p-5 sm:p-8">
-        <h2 className="mb-3 text-xl sm:text-2xl font-semibold">
-          Why Cinema Matters
-        </h2>
+          {/* 4. CURRENT FAVORITE / FEATURED MOVIE CENTERPIECE */}
+          <CinemaFeaturedMovie
+            movie={featuredMovie}
+            onOpenTrailer={handleOpenTrailer}
+            onOpenDetails={handleOpenDetails}
+          />
 
-        <p className="text-xs sm:text-base leading-6 sm:leading-8 text-muted">
-          Great movies are more than
-          entertainment. They inspire
-          curiosity, improve language skills,
-          teach new perspectives, and
-          encourage imagination. Cinema
-          remains one of the worlds that power
-          SohailVerse.
-        </p>
-      </GlassPanel>
-    </PageShell>
+          {/* 5. CONTINUE EXPLORING (2:3 Vertical Posters Discovery Row) */}
+          <CinemaMovieCarousel
+            movies={movies}
+            activeGenre={selectedGenre}
+            onSelectMovie={handleOpenDetails}
+            onOpenTrailer={handleOpenTrailer}
+            onClearGenre={() => setSelectedGenre(null)}
+          />
+        </>
+      )}
 
+      {/* 6. CINEMATIC CLOSING / EDITORIAL FOOTER */}
+      <CinemaEditorialFooter />
+
+      {/* 7. CINEMATIC TRAILER & DETAILS MODAL */}
+      <CinemaTrailerModal
+        movie={modalMovie}
+        isOpen={isModalOpen}
+        initialMode={modalMode}
+        onClose={handleCloseModal}
+      />
+    </div>
   );
 }
