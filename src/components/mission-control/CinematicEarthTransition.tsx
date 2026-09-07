@@ -183,16 +183,22 @@ export default function CinematicEarthTransition() {
   const geometry = useMemo(() => {
     const { width, height } = stageSize;
     const isMobile = width < 768;
+    const isTablet = width >= 768 && width < 1024;
+    const isLg = width >= 1024 && width < 1280;
+
     const centerX = width / 2;
     const centerY = height / 2;
 
     // Real Earth sphere pixel radius in stage coordinates
+    // Mobile Earth size is preserved; desktop Earth size is substantially enlarged
     const earthDiameter = isMobile
       ? Math.min(256, width * 0.68)
-      : width >= 1024
-      ? 380
-      : 340;
-    const earthRadius = (earthDiameter / 2) * 0.82;
+      : isTablet
+      ? 440
+      : isLg
+      ? 520
+      : Math.min(620, Math.round(width * 0.44));
+    const earthRadius = (earthDiameter / 2) * 0.80;
 
     // Compact floating card dimensions
     const cardW = isMobile ? Math.min(236, width - 36) : 244;
@@ -246,7 +252,7 @@ export default function CinematicEarthTransition() {
         // 01 About: Upper-Left
         anchorX = centerX - earthRadius * 0.48;
         anchorY = centerY - earthRadius * 0.58;
-        cardX = Math.max(20, centerX - earthRadius - cardW - 25);
+        cardX = Math.max(20, centerX - earthRadius - cardW - 24);
         cardY = Math.max(20, centerY - earthRadius - 20);
         targetX = cardX + cardW;
         targetY = cardY + cardH * 0.68;
@@ -254,15 +260,15 @@ export default function CinematicEarthTransition() {
         // 02 Projects: Upper-Right
         anchorX = centerX + earthRadius * 0.62;
         anchorY = centerY - earthRadius * 0.48;
-        cardX = Math.min(width - cardW - 20, centerX + earthRadius + 25);
+        cardX = Math.min(width - cardW - 20, centerX + earthRadius + 24);
         cardY = Math.max(20, centerY - earthRadius - 20);
         targetX = cardX;
         targetY = cardY + cardH * 0.68;
       } else if (activeIndex === 2) {
         // 03 Cinema: Left / Lower-Left
-        anchorX = centerX - earthRadius * 0.82;
-        anchorY = centerY + earthRadius * 0.18;
-        cardX = Math.max(20, centerX - earthRadius - cardW - 35);
+        anchorX = centerX - earthRadius * 0.80;
+        anchorY = centerY + earthRadius * 0.16;
+        cardX = Math.max(20, centerX - earthRadius - cardW - 26);
         cardY = Math.min(height - cardH - 24, centerY - 10);
         targetX = cardX + cardW;
         targetY = cardY + cardH * 0.50;
@@ -270,23 +276,84 @@ export default function CinematicEarthTransition() {
         // 04 DevOps: Lower-Right
         anchorX = centerX + earthRadius * 0.66;
         anchorY = centerY + earthRadius * 0.48;
-        cardX = Math.min(width - cardW - 20, centerX + earthRadius + 30);
-        cardY = Math.min(height - cardH - 24, centerY + 30);
+        cardX = Math.min(width - cardW - 20, centerX + earthRadius + 24);
+        cardY = Math.min(height - cardH - 24, centerY + 24);
         targetX = cardX;
         targetY = cardY + cardH * 0.50;
       }
     }
 
-    // Vector from target to anchor (for physical emergence along connection line)
-    const dx = anchorX - targetX;
-    const dy = anchorY - targetY;
-    const dist = Math.hypot(dx, dy);
-    const normX = dist > 0 ? dx / dist : 0;
-    const normY = dist > 0 ? dy / dist : 0;
+    // 3-Segment Geometric Technical Zig-Zag calculation (2–3 clean straight angled segments joined together)
+    // Earth anchor -> Segment 1 -> Segment 2 (subtle angled/horizontal jog) -> Segment 3 -> Card Target
+    let p1 = { x: anchorX, y: anchorY };
+    let p2 = { x: targetX, y: targetY };
+
+    const dx = targetX - anchorX;
+    const dy = targetY - anchorY;
+
+    if (activeIndex === 0) {
+      // 01 About: Upper-Left (dx < 0, dy < 0)
+      // Diagonally up-left from anchor -> horizontal jog left -> into card target
+      p1 = {
+        x: anchorX + dx * 0.35,
+        y: anchorY + dy * 0.52,
+      };
+      p2 = {
+        x: anchorX + dx * 0.72,
+        y: p1.y + dy * 0.08,
+      };
+    } else if (activeIndex === 1) {
+      // 02 Projects: Upper-Right (dx > 0, dy < 0)
+      // Diagonally up-right from anchor -> horizontal jog right -> into card target
+      p1 = {
+        x: anchorX + dx * 0.35,
+        y: anchorY + dy * 0.52,
+      };
+      p2 = {
+        x: anchorX + dx * 0.72,
+        y: p1.y + dy * 0.08,
+      };
+    } else if (activeIndex === 2) {
+      // 03 Cinema: Left / Lower-Left (dx < 0)
+      // Diagonally down-left from anchor -> horizontal jog left -> into card target
+      const effectiveDy = Math.abs(dy) < 6 ? 16 : dy;
+      p1 = {
+        x: anchorX + dx * 0.35,
+        y: anchorY + effectiveDy * 0.52,
+      };
+      p2 = {
+        x: anchorX + dx * 0.72,
+        y: p1.y + effectiveDy * 0.08,
+      };
+    } else {
+      // 04 DevOps: Lower-Right (dx > 0, dy > 0)
+      // Diagonally down-right from anchor -> horizontal jog right -> into card target
+      p1 = {
+        x: anchorX + dx * 0.35,
+        y: anchorY + dy * 0.52,
+      };
+      p2 = {
+        x: anchorX + dx * 0.72,
+        y: p1.y + dy * 0.08,
+      };
+    }
+
+    // Path string for SVG: 3 clean connected straight segments
+    const pathD = `M ${anchorX} ${anchorY} L ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${targetX} ${targetY}`;
+
+    // Vector from arrival segment (p2 -> target) for physical card emergence
+    const segDx = targetX - p2.x;
+    const segDy = targetY - p2.y;
+    const segDist = Math.hypot(segDx, segDy);
+    const normX = segDist > 0 ? (p2.x - targetX) / segDist : 0;
+    const normY = segDist > 0 ? (p2.y - targetY) / segDist : 0;
 
     return {
       anchor: { x: anchorX, y: anchorY },
+      p1,
+      p2,
       target: { x: targetX, y: targetY },
+      pathD,
       card: { x: cardX, y: cardY, width: cardW, height: cardH },
       norm: { x: normX, y: normY },
     };
@@ -665,13 +732,14 @@ export default function CinematicEarthTransition() {
       <div
         ref={stageRef}
         id="earth-floating-navigation-stage"
-        className="relative w-full max-w-5xl mx-auto min-h-[480px] sm:min-h-[520px] md:min-h-[560px] lg:min-h-[600px] flex items-center justify-center select-none"
+        className="relative w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto min-h-[480px] sm:min-h-[520px] md:min-h-[580px] lg:min-h-[680px] xl:min-h-[740px] flex items-center justify-center select-none px-4 sm:px-6 lg:px-8"
       >
         {/* Stationary Earth Viewport (Completely fixed, centered, draggable/swipeable) */}
+        {/* Mobile Earth diameter is preserved exactly; Desktop Earth is substantially enlarged & cinematic */}
         <div
           ref={containerRef}
           id="fixed-earth-container"
-          className="relative shrink-0 w-60 h-60 sm:w-76 sm:h-76 md:w-88 md:h-88 lg:w-96 lg:h-96 flex items-center justify-center mx-auto select-none z-10"
+          className="relative shrink-0 w-60 h-60 sm:w-76 sm:h-76 md:w-[440px] md:h-[440px] lg:w-[520px] lg:h-[520px] xl:w-[580px] xl:h-[580px] 2xl:w-[620px] 2xl:h-[620px] flex items-center justify-center mx-auto select-none z-10"
         >
           {/* Transparent WebGL Canvas: captures pointer drag & touch swipe with touch-action: none */}
           <canvas
@@ -721,18 +789,20 @@ export default function CinematicEarthTransition() {
           {/* Connection line from Earth anchor point to the card */}
           {hasTriggered && (
             <g>
-              {/* Outer soft glow line */}
+              {/* Outer soft glow line along the 3-segment zig-zag */}
               <motion.path
-                d={`M ${geometry.anchor.x} ${geometry.anchor.y} L ${geometry.target.x} ${geometry.target.y}`}
+                d={geometry.pathD}
                 stroke="#38bdf8"
-                strokeWidth="3.5"
-                strokeOpacity="0.3"
+                strokeWidth="2.75"
+                strokeOpacity="0.28"
+                strokeLinejoin="round"
+                strokeLinecap="round"
                 fill="none"
                 filter="url(#cyan-beam-glow)"
-                initial={shouldReduceMotion ? { pathLength: 1, opacity: 0.3 } : { pathLength: 0, opacity: 0 }}
+                initial={shouldReduceMotion ? { pathLength: 1, opacity: 0.28 } : { pathLength: 0, opacity: 0 }}
                 animate={{
                   pathLength: animPhase === "retract" ? 0 : 1,
-                  opacity: animPhase === "retract" ? 0 : 0.35,
+                  opacity: animPhase === "retract" ? 0 : 0.32,
                 }}
                 transition={{
                   duration: animPhase === "retract" ? 0.32 : 0.45,
@@ -740,12 +810,13 @@ export default function CinematicEarthTransition() {
                 }}
               />
 
-              {/* Crisp central beam line */}
+              {/* Crisp central beam line (thin, elegant, luminous blue-white/cyan technical zig-zag) */}
               <motion.path
-                d={`M ${geometry.anchor.x} ${geometry.anchor.y} L ${geometry.target.x} ${geometry.target.y}`}
-                stroke="#7dd3fc"
+                d={geometry.pathD}
+                stroke="#bae6fd"
                 strokeWidth="1.25"
-                strokeDasharray="4 2"
+                strokeLinejoin="round"
+                strokeLinecap="round"
                 strokeOpacity="0.95"
                 fill="none"
                 initial={shouldReduceMotion ? { pathLength: 1, opacity: 0.95 } : { pathLength: 0, opacity: 0 }}
