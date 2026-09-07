@@ -2,21 +2,20 @@ import { useEffect, useState, useMemo } from "react";
 import { fetchApi, isValidMovie, type Movie } from "../lib/api";
 import { ErrorState } from "../components/ui/StatusStates";
 import CinemaHero from "../components/cinema/CinemaHero";
-import CinemaStats from "../components/cinema/CinemaStats";
-import CinemaGenreExplorer from "../components/cinema/CinemaGenreExplorer";
+import CinemaStatusFilter, {
+  type MovieStatusFilter,
+  matchMovieStatus,
+} from "../components/cinema/CinemaStatusFilter";
 import CinemaFeaturedMovie from "../components/cinema/CinemaFeaturedMovie";
 import CinemaMovieCarousel from "../components/cinema/CinemaMovieCarousel";
 import CinemaEditorialFooter from "../components/cinema/CinemaEditorialFooter";
 import CinemaTrailerModal from "../components/cinema/CinemaTrailerModal";
-import { CURATED_GENRES } from "../components/cinema/cinemaData";
 
 export default function CinemaPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Genre filtering state
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<MovieStatusFilter>("ALL");
 
   // Modal interaction state
   const [modalMovie, setModalMovie] = useState<Movie | null>(null);
@@ -41,13 +40,12 @@ export default function CinemaPage() {
     loadMovies();
   }, []);
 
-  // Compute stats
-  const movieCount = movies.length;
-  const trailerCount = useMemo(() => {
-    return movies.filter((m) => Boolean(m.trailer_url && m.trailer_url.trim())).length;
-  }, [movies]);
+  // Filtered movies derived directly from real movie collection based on statusFilter
+  const filteredMovies = useMemo(() => {
+    return movies.filter((m) => matchMovieStatus(m, statusFilter));
+  }, [movies, statusFilter]);
 
-  // Identify featured movie (prefer Harry Potter or top rated)
+  // Identify featured movie (prefer Harry Potter or top rated) - kept completely independent
   const featuredMovie = useMemo(() => {
     if (movies.length === 0) return null;
     const hp = movies.find((m) =>
@@ -79,40 +77,32 @@ export default function CinemaPage() {
       {/* 1. CINEMATIC HERO */}
       <CinemaHero />
 
-      {/* 2. STATS / PERSONAL CINEMA PROFILE */}
-      <CinemaStats
-        movieCount={movieCount}
-        genreCount={CURATED_GENRES.length}
-        trailerCount={trailerCount}
-        loading={loading}
-      />
-
       {error ? (
         <div className="mt-12">
           <ErrorState message={error} onRetry={loadMovies} />
         </div>
       ) : (
         <>
-          {/* 3. EXPLORE GENRES */}
-          <CinemaGenreExplorer
-            selectedGenre={selectedGenre}
-            onSelectGenre={setSelectedGenre}
+          {/* 2. COMPACT ONE-LINE MOVIE STATUS FILTER */}
+          <CinemaStatusFilter
+            activeStatus={statusFilter}
+            onStatusChange={setStatusFilter}
           />
 
-          {/* 4. CURRENT FAVORITE / FEATURED MOVIE CENTERPIECE */}
+          {/* 3. CURRENT FAVORITE (Compact recommendation) */}
           <CinemaFeaturedMovie
             movie={featuredMovie}
             onOpenTrailer={handleOpenTrailer}
             onOpenDetails={handleOpenDetails}
           />
 
-          {/* 5. CONTINUE EXPLORING (2:3 Vertical Posters Discovery Row) */}
+          {/* 4. CONTINUE EXPLORING (2:3 Vertical Posters Discovery Row) */}
           <CinemaMovieCarousel
-            movies={movies}
-            activeGenre={selectedGenre}
+            movies={filteredMovies}
+            activeStatus={statusFilter}
             onSelectMovie={handleOpenDetails}
             onOpenTrailer={handleOpenTrailer}
-            onClearGenre={() => setSelectedGenre(null)}
+            onClearStatus={() => setStatusFilter("ALL")}
           />
         </>
       )}

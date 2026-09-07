@@ -1,66 +1,43 @@
-import { useRef } from "react";
-import { ChevronLeft, ChevronRight, Play, Star, ArrowRight } from "lucide-react";
+import { Play, Star } from "lucide-react";
 import type { Movie } from "../../lib/api";
 import { getMovieEditorial } from "./cinemaData";
 
 interface CinemaMovieCarouselProps {
   movies: Movie[];
-  activeGenre: string | null;
+  activeStatus?: string | null;
   onSelectMovie: (movie: Movie) => void;
   onOpenTrailer: (movie: Movie) => void;
-  onClearGenre: () => void;
+  onClearStatus: () => void;
 }
 
 export default function CinemaMovieCarousel({
   movies,
-  activeGenre,
+  activeStatus,
   onSelectMovie,
   onOpenTrailer,
-  onClearGenre,
+  onClearStatus,
 }: CinemaMovieCarouselProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Filter movies if a genre is selected
-  const filteredMovies = activeGenre
-    ? movies.filter((m) => {
-        const editorial = getMovieEditorial(m);
-        return (
-          m.genre.toLowerCase().includes(activeGenre.toLowerCase()) ||
-          editorial.genre.toLowerCase().includes(activeGenre.toLowerCase())
-        );
-      })
-    : movies;
-
-  const handleScroll = (direction: "left" | "right") => {
-    if (!scrollContainerRef.current) return;
-    const scrollAmount = direction === "left" ? -320 : 320;
-    scrollContainerRef.current.scrollBy({
-      left: scrollAmount,
-      behavior: "smooth",
-    });
-  };
-
   return (
     <section
       id="cinema-continue-exploring-section"
       aria-label="Continue Exploring Movies"
-      className="mt-14 sm:mt-20"
+      className="mt-14 sm:mt-20 md:-mx-2.5 lg:-mx-3.5"
     >
-      {/* Header with Navigation Controls */}
+      {/* Header */}
       <div className="flex items-end justify-between mb-6">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-white">
               Continue Exploring
             </h2>
-            {activeGenre && (
+            {activeStatus && activeStatus !== "ALL" && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-950/40 px-3 py-0.5 text-xs text-cyan-300">
-                <span>{activeGenre}</span>
+                <span>{activeStatus}</span>
                 <button
                   type="button"
-                  onClick={onClearGenre}
+                  onClick={onClearStatus}
                   className="hover:text-white font-bold ml-1"
-                  title="Clear genre filter"
+                  title="Clear status filter"
                 >
                   ×
                 </button>
@@ -68,71 +45,37 @@ export default function CinemaMovieCarousel({
             )}
           </div>
           <p className="mt-1 text-xs sm:text-sm text-slate-400">
-            {filteredMovies.length} {filteredMovies.length === 1 ? "film" : "films"} curated in the observatory collection.
+            {movies.length} {movies.length === 1 ? "film" : "films"} curated in the observatory collection.
           </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Scroll Prev / Next Buttons */}
-          <div className="hidden sm:flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => handleScroll("left")}
-              aria-label="Scroll left"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-900/80 text-slate-300 transition-colors hover:border-cyan-400/40 hover:text-white active:scale-95"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => handleScroll("right")}
-              aria-label="Scroll right"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-900/80 text-slate-300 transition-colors hover:border-cyan-400/40 hover:text-white active:scale-95"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClearGenre}
-            className="group hidden sm:inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-slate-400 hover:text-white transition-colors"
-          >
-            <span>View all movies</span>
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-          </button>
         </div>
       </div>
 
-      {/* Horizontal Posters Track (2:3 Aspect Ratio) */}
-      {filteredMovies.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-8 text-center">
+      {/* Fixed Stable Two-Column Movie Grid: Row 1 [1][2], Row 2 [3][4], Row 3 [5][6]... */}
+      {movies.length === 0 ? (
+        <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-8 text-center max-w-[500px]">
           <p className="text-slate-400 text-sm">
-            No movies found in "{activeGenre}".
+            No movies found for this status.
           </p>
           <button
             type="button"
-            onClick={onClearGenre}
+            onClick={onClearStatus}
             className="mt-3 text-xs text-cyan-400 hover:underline"
           >
             Clear filter and view all movies
           </button>
         </div>
       ) : (
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 pt-2 scrollbar-none snap-x snap-mandatory"
-        >
-          {filteredMovies.map((movie, idx) => {
+        <div className="cinema-desktop-movie-grid grid grid-cols-2 md:grid-cols-[repeat(4,230px)] gap-3.5 md:gap-x-2.5 md:gap-y-6 w-full max-w-[490px] md:max-w-none md:w-fit">
+          {movies.map((movie, idx) => {
             const editorial = getMovieEditorial(movie, idx);
 
             return (
               <div
                 key={movie.id}
                 id={`movie-poster-card-${movie.id}`}
-                className="group relative flex-shrink-0 w-[185px] sm:w-[210px] md:w-[230px] snap-start flex flex-col"
+                className="group relative w-full sm:w-[210px] md:w-[230px] flex flex-col"
               >
-                {/* 2:3 Vertical Poster Container */}
+                {/* 2:3 Vertical Poster Container - Unchanged Dimensions */}
                 <div
                   onClick={() => onSelectMovie(movie)}
                   role="button"
@@ -182,7 +125,7 @@ export default function CinemaMovieCarousel({
                   </div>
                 </div>
 
-                {/* Typography Below Card (Matching Reference) */}
+                {/* Typography Below Card */}
                 <div className="mt-3 flex flex-col">
                   <h3
                     onClick={() => onSelectMovie(movie)}

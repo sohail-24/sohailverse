@@ -209,16 +209,12 @@ const mockStore = {
   ],
 };
 
-function devApiPlugin(): Plugin {
-  return {
-    name: "neon-dev-api",
-    configureServer(server) {
-      server.middlewares.use(async (req, res, next) => {
-        if (!req.url || !req.url.startsWith("/api/")) {
-          return next();
-        }
+const apiMiddleware = async (req: any, res: any, next: any) => {
+  if (!req.url || !req.url.startsWith("/api/")) {
+    return next();
+  }
 
-        const devEnv = loadDevVars();
+  const devEnv = loadDevVars();
         const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
         const pathname = url.pathname;
         const method = req.method?.toUpperCase() || "GET";
@@ -804,7 +800,16 @@ function devApiPlugin(): Plugin {
         }
 
         next();
-      });
+};
+
+function devApiPlugin(): Plugin {
+  return {
+    name: "neon-dev-api",
+    configureServer(server) {
+      server.middlewares.use(apiMiddleware);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(apiMiddleware);
     },
   };
 }
@@ -812,6 +817,10 @@ function devApiPlugin(): Plugin {
 export default defineConfig({
   plugins: [react(), devApiPlugin()],
   server: {
+    host: "0.0.0.0",
+    port: 3000,
+  },
+  preview: {
     host: "0.0.0.0",
     port: 3000,
   },
