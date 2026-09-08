@@ -2,8 +2,61 @@ import type { LearningPathStage, FeaturedVideo, DevOpsNote } from "../types/devo
 
 export const learningPathStages: LearningPathStage[] = [
   {
-    id: "networking",
+    id: "notes",
     stepNumber: 1,
+    title: "Notes",
+    subtitle: "Key concepts, commands and diagrams",
+    accentColor: "purple",
+    chips: [
+      { label: "Quick Notes", iconName: "book" },
+      { label: "Cheat Sheets", iconName: "terminal" },
+      { label: "Diagrams", iconName: "file" },
+    ],
+    summary:
+      "Sohail's personal engineering notebook and curated quick-reference guides. High-yield cheat sheets, CLI syntax, network diagrams, and cloud architectures.",
+    mentalModel: "PROBLEM → QUICK CHEAT SHEET → COPY COMMAND → RUNBOOK",
+    architectureDiagram: `
+┌─────────────────────────────────────────────────────────────┐
+│                 ENGINEERING NOTEBOOK                         │
+├───────────────────┬───────────────────┬─────────────────────┤
+│ Networking Notes  │ AWS Cloud Notes   │ DevOps & Linux      │
+│ CIDR, DNS, Ports  │ IAM, VPC, S3, EC2 │ Containers, Git, CI │
+└───────────────────┴───────────────────┴─────────────────────┘
+    `,
+    coreConcepts: [
+      {
+        topic: "Quick Notes & Architecture",
+        description: "Direct summaries of networking, cloud topologies, and container lifecycles.",
+        details: [
+          "Curated notes explaining complex systems without academic jargon",
+          "Visual ASCII and architecture diagrams of zero-trust networks",
+          "Production checklists for deploying workloads reliably",
+        ],
+      },
+      {
+        topic: "Commands & Cheat Sheets",
+        description: "Field-tested CLI commands for fast terminal diagnostics and day-to-day operations.",
+        details: [
+          "Network troubleshooting: curl, dig, netstat, tcpdump",
+          "Docker runtime: build, inspect, exec, networks, volumes",
+          "Kubernetes cluster inspection: kubectl get, logs, exec, rollout",
+        ],
+      },
+    ],
+    essentialCommands: [
+      {
+        command: "curl -Iv https://sohailverse.dev",
+        explanation: "Quick test of TLS handshake, server response codes, and HTTP response headers.",
+      },
+      {
+        command: "kubectl get events --sort-by='.metadata.creationTimestamp'",
+        explanation: "Troubleshoot cluster issues and container crashes in real-time chronological order.",
+      },
+    ],
+  },
+  {
+    id: "networking",
+    stepNumber: 2,
     title: "Networking",
     subtitle: "Understand how the internet works",
     accentColor: "cyan",
@@ -84,7 +137,7 @@ export const learningPathStages: LearningPathStage[] = [
   },
   {
     id: "aws",
-    stepNumber: 2,
+    stepNumber: 3,
     title: "AWS",
     subtitle: "Explore cloud and core services",
     accentColor: "orange",
@@ -170,7 +223,7 @@ export const learningPathStages: LearningPathStage[] = [
   },
   {
     id: "devops",
-    stepNumber: 3,
+    stepNumber: 4,
     title: "DevOps",
     subtitle: "Bring it all together",
     accentColor: "lime",
@@ -253,59 +306,6 @@ export const learningPathStages: LearningPathStage[] = [
       {
         command: "terraform plan && terraform apply",
         explanation: "Declaratively reviews proposed cloud infrastructure changes and reconciles actual state with code.",
-      },
-    ],
-  },
-  {
-    id: "notes",
-    stepNumber: 4,
-    title: "Notes",
-    subtitle: "Key concepts, commands and diagrams",
-    accentColor: "purple",
-    chips: [
-      { label: "Quick Notes", iconName: "book" },
-      { label: "Cheat Sheets", iconName: "terminal" },
-      { label: "Diagrams", iconName: "file" },
-    ],
-    summary:
-      "Sohail's personal engineering notebook and curated quick-reference guides. High-yield cheat sheets, CLI syntax, network diagrams, and cloud architectures.",
-    mentalModel: "PROBLEM → QUICK CHEAT SHEET → COPY COMMAND → RUNBOOK",
-    architectureDiagram: `
-┌─────────────────────────────────────────────────────────────┐
-│                 ENGINEERING NOTEBOOK                         │
-├───────────────────┬───────────────────┬─────────────────────┤
-│ Networking Notes  │ AWS Cloud Notes   │ DevOps & Linux      │
-│ CIDR, DNS, Ports  │ IAM, VPC, S3, EC2 │ Containers, Git, CI │
-└───────────────────┴───────────────────┴─────────────────────┘
-    `,
-    coreConcepts: [
-      {
-        topic: "Quick Notes & Architecture",
-        description: "Direct summaries of networking, cloud topologies, and container lifecycles.",
-        details: [
-          "Curated notes explaining complex systems without academic jargon",
-          "Visual ASCII and architecture diagrams of zero-trust networks",
-          "Production checklists for deploying workloads reliably",
-        ],
-      },
-      {
-        topic: "Commands & Cheat Sheets",
-        description: "Field-tested CLI commands for fast terminal diagnostics and day-to-day operations.",
-        details: [
-          "Network troubleshooting: curl, dig, netstat, tcpdump",
-          "Docker runtime: build, inspect, exec, networks, volumes",
-          "Kubernetes cluster inspection: kubectl get, logs, exec, rollout",
-        ],
-      },
-    ],
-    essentialCommands: [
-      {
-        command: "curl -Iv https://sohailverse.dev",
-        explanation: "Quick test of TLS handshake, server response codes, and HTTP response headers.",
-      },
-      {
-        command: "kubectl get events --sort-by='.metadata.creationTimestamp'",
-        explanation: "Troubleshoot cluster issues and container crashes in real-time chronological order.",
       },
     ],
   },

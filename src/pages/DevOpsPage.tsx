@@ -36,7 +36,7 @@ export default function DevOpsPage() {
       {/* 1. Hero Section + Aesthetic Desk Visual + Stats Strip */}
       <DevOpsHero projectsCount={projects.length} />
 
-      {/* 2. Your Learning Journey (Networking -> AWS -> DevOps) */}
+      {/* 2. Your Learning Journey (Notes -> Networking -> AWS -> DevOps -> Learn & Test Projects) */}
       <DevOpsLearningJourney />
 
       {/* 3. Featured Learning Videos */}

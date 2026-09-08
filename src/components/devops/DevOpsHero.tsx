@@ -10,28 +10,28 @@ export default function DevOpsHero({ projectsCount }: DevOpsHeroProps) {
       className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl pt-7 sm:pt-10 md:pt-12 lg:pt-14 pb-7 sm:pb-9 md:pb-11 lg:pb-12 px-4 min-[390px]:px-5 sm:px-8 md:px-12 lg:px-14 border border-white/10"
       aria-labelledby="devops-hero-heading"
     >
-      {/* 1. Technical Library Background with Books Spines & Warm Lamplight (~50% visual presence) */}
+      {/* 1. Realistic Technical Library Background with Book Spines (Linux, AWS, Docker, Kubernetes, DevOps, System Design, Clean Code) */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
       >
         <img
-          src="/devops-library-technical-hero.jpg"
-          alt="Technical books on desk in library study"
+          src="/devops-hero-bookshelf-library.jpg"
+          alt="Technical library bookshelf study with Linux, AWS, Docker, Kubernetes, DevOps, System Design and Clean Code books"
           loading="eager"
           referrerPolicy="no-referrer"
-          className="h-full w-full object-cover object-[78%_center] sm:object-[center_35%] scale-100"
+          className="h-full w-full object-cover object-[75%_center] sm:object-[center_35%] scale-100"
         />
       </div>
 
-      {/* 2. Cinematic Gradient Overlays: preserves ~50% image presence, keeps book spines & lamp clearly visible on right while ensuring left text contrast */}
+      {/* 2. Soft Ambient Lighting */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-r from-[#050811]/92 via-[#050811]/65 to-[#050811]/20 sm:from-[#050811]/88 sm:via-[#050811]/50 sm:to-transparent"
+        className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-r from-[#050811]/90 via-[#050811]/50 to-transparent sm:from-[#050811]/85 sm:via-[#050811]/35 sm:to-transparent"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-[#050811]/40 via-transparent to-[#050811]/85"
+        className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-[#050811]/30 via-transparent to-[#050811]/80"
       />
 
       {/* 3. Subtle Atmospheric Accent Glows */}

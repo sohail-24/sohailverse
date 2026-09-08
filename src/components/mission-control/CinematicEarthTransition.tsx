@@ -605,12 +605,14 @@ export default function CinematicEarthTransition() {
   // User Drag Handlers: Click + Drag (Desktop) & Touch + Drag / Swipe (Mobile)
   // Isolated specifically to the circular Earth hit area; protects normal vertical page scroll.
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Check if the click/touch falls strictly within the circular Earth sphere
+    // Check if the click/touch falls within the circular Earth sphere
     const rect = e.currentTarget.getBoundingClientRect();
     const radius = rect.width / 2;
     const clickX = e.clientX - (rect.left + radius);
     const clickY = e.clientY - (rect.top + radius);
-    if (Math.hypot(clickX, clickY) > radius) {
+    // Include a comfortable buffer for mobile touch contact
+    const maxRadius = e.pointerType === "mouse" ? radius : radius + 6;
+    if (Math.hypot(clickX, clickY) > maxRadius) {
       return;
     }
 
@@ -628,7 +630,7 @@ export default function CinematicEarthTransition() {
       velocityRef.current = 0;
       setIsHoveredOrDragging(true);
     } else {
-      // Touch/pen: do not capture or rotate yet. Wait for gesture direction.
+      // Touch/pen: record start coordinates and wait for quick gesture disambiguation
       touchStateRef.current = {
         pointerId: e.pointerId,
         startX: e.clientX,
@@ -642,8 +644,7 @@ export default function CinematicEarthTransition() {
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const stage = stageRef.current;
-    const width = stage ? stage.clientWidth : 360;
+    const radius = geometry.earthRadius || 120;
 
     // Desktop Mouse Drag
     if (e.pointerType === "mouse") {
@@ -654,7 +655,8 @@ export default function CinematicEarthTransition() {
       const now = performance.now();
       const dt = Math.max(now - lastTimeRef.current, 1);
 
-      const rotDelta = (deltaX / width) * Math.PI * 1.5;
+      // Natural, tangible 1:1 globe rotation scaled to Earth sphere radius
+      const rotDelta = (deltaX / radius) * 1.05;
 
       if (earthMeshRef.current) {
         earthMeshRef.current.rotation.y += rotDelta;
@@ -663,8 +665,9 @@ export default function CinematicEarthTransition() {
         cloudsMeshRef.current.rotation.y += rotDelta * 1.02;
       }
 
-      velocityRef.current = (rotDelta / dt) * 16;
-      velocityRef.current = Math.max(-0.06, Math.min(0.06, velocityRef.current));
+      const instantVel = (rotDelta / dt) * 16;
+      velocityRef.current = velocityRef.current * 0.4 + instantVel * 0.6;
+      velocityRef.current = Math.max(-0.035, Math.min(0.035, velocityRef.current));
 
       lastXRef.current = currentX;
       lastTimeRef.current = now;
@@ -681,8 +684,8 @@ export default function CinematicEarthTransition() {
       const absDx = Math.abs(dx);
       const absDy = Math.abs(dy);
 
-      // Wait until gesture exceeds threshold of 6px to disambiguate intent
-      if (absDx < 6 && absDy < 6) return;
+      // Immediate 4px threshold for quick, seamless responsiveness without false triggers
+      if (absDx < 4 && absDy < 4) return;
 
       if (absDy > absDx) {
         // Vertical movement: user wants to scroll the page!
@@ -694,15 +697,33 @@ export default function CinematicEarthTransition() {
       } else {
         // Horizontal movement: intentional Earth rotation!
         touch.locked = "horizontal";
-        touch.lastX = e.clientX;
-        touch.lastTime = performance.now();
         isDraggingRef.current = true;
         setIsHoveredOrDragging(true);
         try {
           e.currentTarget.setPointerCapture(e.pointerId);
         } catch {
-          // Ignored
+          // Ignored if capture unsupported
         }
+
+        // Apply initial delta immediately so no finger movement is lost
+        const now = performance.now();
+        const initialDeltaX = e.clientX - touch.lastX;
+        const dt = Math.max(now - touch.lastTime, 1);
+        const rotDelta = (initialDeltaX / radius) * 1.05;
+
+        if (earthMeshRef.current) {
+          earthMeshRef.current.rotation.y += rotDelta;
+        }
+        if (cloudsMeshRef.current) {
+          cloudsMeshRef.current.rotation.y += rotDelta * 1.02;
+        }
+
+        const instantVel = (rotDelta / dt) * 16;
+        velocityRef.current = Math.max(-0.035, Math.min(0.035, instantVel));
+
+        touch.lastX = e.clientX;
+        touch.lastTime = now;
+        return;
       }
     }
 
@@ -712,7 +733,7 @@ export default function CinematicEarthTransition() {
       const now = performance.now();
       const dt = Math.max(now - touch.lastTime, 1);
 
-      const rotDelta = (deltaX / width) * Math.PI * 1.5;
+      const rotDelta = (deltaX / radius) * 1.05;
 
       if (earthMeshRef.current) {
         earthMeshRef.current.rotation.y += rotDelta;
@@ -721,8 +742,9 @@ export default function CinematicEarthTransition() {
         cloudsMeshRef.current.rotation.y += rotDelta * 1.02;
       }
 
-      velocityRef.current = (rotDelta / dt) * 16;
-      velocityRef.current = Math.max(-0.06, Math.min(0.06, velocityRef.current));
+      const instantVel = (rotDelta / dt) * 16;
+      velocityRef.current = velocityRef.current * 0.4 + instantVel * 0.6;
+      velocityRef.current = Math.max(-0.035, Math.min(0.035, velocityRef.current));
 
       touch.lastX = currentX;
       touch.lastTime = now;
@@ -737,6 +759,19 @@ export default function CinematicEarthTransition() {
     } catch {
       // Ignored
     }
+
+    const now = performance.now();
+    // If the user dragged and paused before lifting, release cleanly without momentum jump
+    if (e.pointerType === "mouse") {
+      if (now - lastTimeRef.current > 70) {
+        velocityRef.current = 0;
+      }
+    } else if (touchStateRef.current) {
+      if (now - touchStateRef.current.lastTime > 70 || touchStateRef.current.locked !== "horizontal") {
+        velocityRef.current = 0;
+      }
+    }
+
     touchStateRef.current = null;
     isDraggingRef.current = false;
     setIsHoveredOrDragging(false);
