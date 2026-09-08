@@ -8,7 +8,13 @@ export interface Movie {
   title: string;
   genre: string;
   rating: number;
-  trailer_url: string;
+  trailer_url?: string;
+  movie_url?: string;
+}
+
+export function getMovieUrl(movie?: Movie | null): string {
+  if (!movie) return "";
+  return movie.movie_url || movie.trailer_url || "";
 }
 
 export interface AcademyPost {
@@ -50,7 +56,7 @@ export function isValidMovie(item: any): item is Movie {
     typeof item.title === "string" &&
     typeof item.genre === "string" &&
     typeof item.rating === "number" &&
-    typeof item.trailer_url === "string"
+    (typeof item.trailer_url === "string" || typeof item.movie_url === "string")
   );
 }
 
@@ -105,6 +111,7 @@ const FALLBACK_DATA: Record<string, any[]> = {
       genre: "Sci-Fi",
       rating: 9.5,
       trailer_url: "https://www.youtube.com/watch?v=zSWdZVtXT7E",
+      movie_url: "https://www.youtube.com/watch?v=zSWdZVtXT7E",
     },
     {
       id: 2,
@@ -112,6 +119,7 @@ const FALLBACK_DATA: Record<string, any[]> = {
       genre: "Sci-Fi",
       rating: 9.2,
       trailer_url: "https://www.youtube.com/watch?v=YoHD9XEInc0",
+      movie_url: "https://www.youtube.com/watch?v=YoHD9XEInc0",
     },
     {
       id: 3,
@@ -119,6 +127,7 @@ const FALLBACK_DATA: Record<string, any[]> = {
       genre: "Sci-Fi",
       rating: 9.0,
       trailer_url: "https://www.youtube.com/watch?v=vKQi3bBA1y8",
+      movie_url: "https://www.youtube.com/watch?v=vKQi3bBA1y8",
     },
     {
       id: 4,
@@ -126,6 +135,7 @@ const FALLBACK_DATA: Record<string, any[]> = {
       genre: "Action",
       rating: 9.4,
       trailer_url: "https://www.youtube.com/watch?v=EXeTwQWrcwY",
+      movie_url: "https://www.youtube.com/watch?v=EXeTwQWrcwY",
     },
     {
       id: 5,
@@ -133,6 +143,7 @@ const FALLBACK_DATA: Record<string, any[]> = {
       genre: "Drama",
       rating: 8.9,
       trailer_url: "https://www.youtube.com/watch?v=uYPbbksJxIg",
+      movie_url: "https://www.youtube.com/watch?v=uYPbbksJxIg",
     },
     {
       id: 6,
@@ -140,6 +151,7 @@ const FALLBACK_DATA: Record<string, any[]> = {
       genre: "Sci-Fi",
       rating: 8.8,
       trailer_url: "https://www.youtube.com/watch?v=gCcx85zbxz4",
+      movie_url: "https://www.youtube.com/watch?v=gCcx85zbxz4",
     },
   ],
   academy: [

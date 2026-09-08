@@ -14,7 +14,7 @@ const atmosphereVertexShader = `
   varying vec3 vNormal;
   varying vec3 vWorldPosition;
   void main() {
-    vNormal = normalize(normalMatrix * normal);
+    vNormal = normalize(mat3(modelMatrix) * normal);
     vec4 worldPosition = modelMatrix * vec4(position, 1.0);
     vWorldPosition = worldPosition.xyz;
     gl_Position = projectionMatrix * viewMatrix * worldPosition;
@@ -29,17 +29,24 @@ const atmosphereFragmentShader = `
     vec3 viewDir = normalize(cameraPosition - vWorldPosition);
     vec3 lightDir = normalize(uSunPosition - vWorldPosition);
 
+    float nDotV = max(0.0, dot(vNormal, viewDir));
+
     // Fresnel rim intensity (thin, subtle limb without excessive glow)
-    float fresnel = pow(1.0 - max(0.0, dot(viewDir, vNormal)), 3.8);
+    float fresnel = pow(1.0 - nDotV, 3.2);
+
+    // Smooth edge fade: ensures the atmospheric glow smoothly tapers to absolute ZERO
+    // at the geometry silhouette (nDotV -> 0), completely eliminating faceted polygonal chord
+    // line artifacts, bright slivers, and harsh geometric boundaries against cosmic space
+    float edgeFade = smoothstep(0.0, 0.08, nDotV);
 
     // Sunlit hemisphere masking: atmosphere illuminates on the day side
     float sunDot = dot(vNormal, lightDir);
-    float sunFactor = smoothstep(-0.25, 0.45, sunDot);
+    float sunFactor = smoothstep(-0.20, 0.40, sunDot);
 
     // Realistic electric cyan-blue atmosphere color gradient
     vec3 atmoColor = mix(vec3(0.12, 0.55, 0.95), vec3(0.42, 0.82, 1.0), fresnel);
 
-    float alpha = fresnel * sunFactor * 0.65;
+    float alpha = fresnel * edgeFade * sunFactor * 0.65;
     gl_FragColor = vec4(atmoColor, alpha);
   }
 `;
@@ -115,6 +122,14 @@ export default function CinematicEarthTransition() {
   const velocityRef = useRef(0);
   const earthMeshRef = useRef<THREE.Mesh | null>(null);
   const cloudsMeshRef = useRef<THREE.Mesh | null>(null);
+  const touchStateRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    lastX: number;
+    lastTime: number;
+    locked: "horizontal" | "vertical" | null;
+  } | null>(null);
 
   // If user prefers reduced motion, trigger immediately
   useEffect(() => {
@@ -387,7 +402,11 @@ export default function CinematicEarthTransition() {
     const normX = segDist > 0 ? (p2.x - targetX) / segDist : 0;
     const normY = segDist > 0 ? (p2.y - targetY) / segDist : 0;
 
+    const visualEarthDiameter = Math.round(earthRadius * 2);
+
     return {
+      earthRadius,
+      earthDiameter: visualEarthDiameter,
       anchor: { x: anchorX, y: anchorY },
       p1,
       p2,
@@ -472,7 +491,7 @@ export default function CinematicEarthTransition() {
     const earthTexture = textureLoader.load("/earth-texture-2048.jpg");
     earthTexture.colorSpace = THREE.SRGBColorSpace;
 
-    const earthGeometry = new THREE.SphereGeometry(1.0, 64, 64);
+    const earthGeometry = new THREE.SphereGeometry(1.0, 96, 96);
     const earthMaterial = new THREE.MeshStandardMaterial({
       map: earthTexture,
       roughness: 0.65,
@@ -484,11 +503,12 @@ export default function CinematicEarthTransition() {
 
     // Translucent Clouds Layer
     const cloudsTexture = textureLoader.load("/earth-clouds-1024.png");
-    const cloudsGeometry = new THREE.SphereGeometry(1.008, 64, 64);
+    const cloudsGeometry = new THREE.SphereGeometry(1.008, 96, 96);
     const cloudsMaterial = new THREE.MeshStandardMaterial({
       map: cloudsTexture,
       transparent: true,
       opacity: 0.42,
+      depthWrite: false,
       blending: THREE.AdditiveBlending,
       roughness: 0.9,
     });
@@ -497,7 +517,7 @@ export default function CinematicEarthTransition() {
     cloudsMeshRef.current = cloudsMesh;
 
     // Realistic Atmospheric Limb Scattering (Subtle, photographic blue rim, no excessive glow)
-    const atmosphereGeo = new THREE.SphereGeometry(1.018, 64, 64);
+    const atmosphereGeo = new THREE.SphereGeometry(1.015, 96, 96);
     const atmosphereMat = new THREE.ShaderMaterial({
       vertexShader: atmosphereVertexShader,
       fragmentShader: atmosphereFragmentShader,
@@ -583,68 +603,147 @@ export default function CinematicEarthTransition() {
   }, [shouldReduceMotion]);
 
   // User Drag Handlers: Click + Drag (Desktop) & Touch + Drag / Swipe (Mobile)
-  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    try {
-      canvas.setPointerCapture(e.pointerId);
-    } catch {
-      // Ignored if capture unsupported
+  // Isolated specifically to the circular Earth hit area; protects normal vertical page scroll.
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Check if the click/touch falls strictly within the circular Earth sphere
+    const rect = e.currentTarget.getBoundingClientRect();
+    const radius = rect.width / 2;
+    const clickX = e.clientX - (rect.left + radius);
+    const clickY = e.clientY - (rect.top + radius);
+    if (Math.hypot(clickX, clickY) > radius) {
+      return;
     }
 
-    isDraggingRef.current = true;
-    lastXRef.current = e.clientX;
-    lastTimeRef.current = performance.now();
-    velocityRef.current = 0;
-    setIsHoveredOrDragging(true);
-
-    // Any user interaction immediately ensures navigation animation is triggered
     setHasTriggered(true);
-  };
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDraggingRef.current) return;
-
-    const currentX = e.clientX;
-    const deltaX = currentX - lastXRef.current;
-    const now = performance.now();
-    const dt = Math.max(now - lastTimeRef.current, 1);
-
-    const canvas = canvasRef.current;
-    const width = canvas ? canvas.clientWidth : 360;
-
-    // Responsive and direct:
-    // Dragging LEFT (deltaX < 0) rotates surface toward the left
-    // Dragging RIGHT (deltaX > 0) rotates surface toward the right
-    const rotDelta = (deltaX / width) * Math.PI * 1.5;
-
-    if (earthMeshRef.current) {
-      earthMeshRef.current.rotation.y += rotDelta;
-    }
-    if (cloudsMeshRef.current) {
-      cloudsMeshRef.current.rotation.y += rotDelta * 1.02;
-    }
-
-    // Velocity calculation for release momentum (normalized to ~16ms frame)
-    velocityRef.current = (rotDelta / dt) * 16;
-    velocityRef.current = Math.max(-0.06, Math.min(0.06, velocityRef.current));
-
-    lastXRef.current = currentX;
-    lastTimeRef.current = now;
-  };
-
-  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (canvas && canvas.hasPointerCapture(e.pointerId)) {
+    if (e.pointerType === "mouse") {
       try {
-        canvas.releasePointerCapture(e.pointerId);
+        e.currentTarget.setPointerCapture(e.pointerId);
       } catch {
-        // Ignored
+        // Ignored if capture unsupported
+      }
+      isDraggingRef.current = true;
+      lastXRef.current = e.clientX;
+      lastTimeRef.current = performance.now();
+      velocityRef.current = 0;
+      setIsHoveredOrDragging(true);
+    } else {
+      // Touch/pen: do not capture or rotate yet. Wait for gesture direction.
+      touchStateRef.current = {
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY,
+        lastX: e.clientX,
+        lastTime: performance.now(),
+        locked: null,
+      };
+      velocityRef.current = 0;
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const stage = stageRef.current;
+    const width = stage ? stage.clientWidth : 360;
+
+    // Desktop Mouse Drag
+    if (e.pointerType === "mouse") {
+      if (!isDraggingRef.current) return;
+
+      const currentX = e.clientX;
+      const deltaX = currentX - lastXRef.current;
+      const now = performance.now();
+      const dt = Math.max(now - lastTimeRef.current, 1);
+
+      const rotDelta = (deltaX / width) * Math.PI * 1.5;
+
+      if (earthMeshRef.current) {
+        earthMeshRef.current.rotation.y += rotDelta;
+      }
+      if (cloudsMeshRef.current) {
+        cloudsMeshRef.current.rotation.y += rotDelta * 1.02;
+      }
+
+      velocityRef.current = (rotDelta / dt) * 16;
+      velocityRef.current = Math.max(-0.06, Math.min(0.06, velocityRef.current));
+
+      lastXRef.current = currentX;
+      lastTimeRef.current = now;
+      return;
+    }
+
+    // Mobile / Touch Drag
+    const touch = touchStateRef.current;
+    if (!touch || touch.pointerId !== e.pointerId) return;
+
+    if (touch.locked === null) {
+      const dx = e.clientX - touch.startX;
+      const dy = e.clientY - touch.startY;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+
+      // Wait until gesture exceeds threshold of 6px to disambiguate intent
+      if (absDx < 6 && absDy < 6) return;
+
+      if (absDy > absDx) {
+        // Vertical movement: user wants to scroll the page!
+        // Lock vertical mode, do NOT rotate Earth, let browser handle normal page scroll
+        touch.locked = "vertical";
+        isDraggingRef.current = false;
+        setIsHoveredOrDragging(false);
+        return;
+      } else {
+        // Horizontal movement: intentional Earth rotation!
+        touch.locked = "horizontal";
+        touch.lastX = e.clientX;
+        touch.lastTime = performance.now();
+        isDraggingRef.current = true;
+        setIsHoveredOrDragging(true);
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+          // Ignored
+        }
       }
     }
+
+    if (touch.locked === "horizontal" && isDraggingRef.current) {
+      const currentX = e.clientX;
+      const deltaX = currentX - touch.lastX;
+      const now = performance.now();
+      const dt = Math.max(now - touch.lastTime, 1);
+
+      const rotDelta = (deltaX / width) * Math.PI * 1.5;
+
+      if (earthMeshRef.current) {
+        earthMeshRef.current.rotation.y += rotDelta;
+      }
+      if (cloudsMeshRef.current) {
+        cloudsMeshRef.current.rotation.y += rotDelta * 1.02;
+      }
+
+      velocityRef.current = (rotDelta / dt) * 16;
+      velocityRef.current = Math.max(-0.06, Math.min(0.06, velocityRef.current));
+
+      touch.lastX = currentX;
+      touch.lastTime = now;
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // Ignored
+    }
+    touchStateRef.current = null;
     isDraggingRef.current = false;
     setIsHoveredOrDragging(false);
+  };
+
+  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    handlePointerUp(e);
   };
 
   const activeDest = NAV_DESTINATIONS[activeIndex];
@@ -695,23 +794,38 @@ export default function CinematicEarthTransition() {
         id="earth-floating-navigation-stage"
         className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto min-h-[480px] sm:min-h-[520px] md:min-h-[580px] lg:min-h-[680px] xl:min-h-[740px] flex items-center justify-center select-none px-4 sm:px-6 lg:px-8"
       >
-        {/* Full-Stage WebGL Canvas: captures pointer drag & touch swipe with touch-action: none */}
-        {/* Renders Earth centered at (0, 0, 0) inside vast cosmic deep-space environment         */}
+        {/* Full-Stage WebGL Canvas: purely visual 3D render layer (pointer-events-none) */}
+        {/* Renders Earth centered at (0, 0, 0) inside vast cosmic deep-space environment  */}
         <canvas
           ref={canvasRef}
           id="earth-webgl-canvas"
+          className="absolute inset-0 w-full h-full block select-none pointer-events-none z-10"
+          aria-hidden="true"
+        />
+
+        {/* Isolated Interactive Earth Hit Surface: strictly bounds interaction to Earth sphere */}
+        {/* Preserves normal page scrolling outside the Earth and on vertical swipe gestures    */}
+        <div
+          id="earth-interactive-surface"
+          role="region"
+          aria-label="Interactive 3D realistic Earth. Drag left or right to rotate."
+          title="Drag left or right to rotate the Earth"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          className={`absolute inset-0 w-full h-full block select-none z-10 ${
+          onPointerCancel={handlePointerCancel}
+          className={`absolute rounded-full z-20 select-none outline-none focus:outline-none focus-visible:outline-none ${
             isHoveredOrDragging ? "cursor-grabbing" : "cursor-grab"
           }`}
           style={{
-            touchAction: "none",
+            width: `${geometry.earthDiameter}px`,
+            height: `${geometry.earthDiameter}px`,
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            touchAction: "pan-y",
+            WebkitTapHighlightColor: "transparent",
           }}
-          title="Drag left or right to rotate the Earth"
-          aria-label="Interactive 3D realistic Earth floating inside an expansive deep-space universe. Drag left or right to rotate."
         />
 
         {/* ===================================================================== */}

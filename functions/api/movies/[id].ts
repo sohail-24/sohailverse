@@ -54,7 +54,7 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
       );
     }
 
-    const { title, genre, rating, trailer_url } = body as Record<string, any>;
+    const { title, genre, rating, trailer_url, movie_url } = body as Record<string, any>;
 
     const updateValues: Partial<typeof movies.$inferInsert> = {};
 
@@ -93,8 +93,9 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
       }
     }
 
-    if (trailer_url !== undefined) {
-      updateValues.trailerUrl = typeof trailer_url === "string" && trailer_url.trim() ? trailer_url.trim() : null;
+    const movieUrlInput = movie_url !== undefined ? movie_url : trailer_url;
+    if (movieUrlInput !== undefined) {
+      updateValues.trailerUrl = typeof movieUrlInput === "string" && movieUrlInput.trim() ? movieUrlInput.trim() : null;
     }
 
     if (Object.keys(updateValues).length === 0) {

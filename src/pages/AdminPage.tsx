@@ -8,6 +8,7 @@ type Movie = {
   genre: string;
   rating: number;
   trailer_url: string;
+  movie_url?: string;
 };
 
 type DevOpsPost = {
@@ -191,6 +192,7 @@ export default function AdminPage() {
           genre,
           rating: Number(rating),
           trailer_url: trailerUrl,
+          movie_url: trailerUrl,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -446,7 +448,7 @@ export default function AdminPage() {
             />
             <input
               type="text"
-              placeholder="Trailer URL"
+              placeholder="Movie URL"
               value={trailerUrl}
               onChange={(e) => setTrailerUrl(e.target.value)}
               className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
@@ -479,14 +481,14 @@ export default function AdminPage() {
                       <p className="text-xs sm:text-sm text-slate-300">Genre: {movie.genre}</p>
                       <p className="text-xs sm:text-sm text-slate-300">Rating: ⭐ {movie.rating}</p>
                       <p className="text-xs sm:text-sm text-slate-300">
-                        Trailer:
+                        Movie:
                         <a
-                          href={movie.trailer_url}
+                          href={movie.movie_url || movie.trailer_url}
                           target="_blank"
                           rel="noreferrer"
                           className="ml-2 text-cyan-400 underline break-all"
                         >
-                          Open Trailer
+                          Open Movie
                         </a>
                       </p>
                     </div>

@@ -9,18 +9,12 @@ import CinemaStatusFilter, {
 import CinemaFeaturedMovie from "../components/cinema/CinemaFeaturedMovie";
 import CinemaMovieCarousel from "../components/cinema/CinemaMovieCarousel";
 import CinemaEditorialFooter from "../components/cinema/CinemaEditorialFooter";
-import CinemaTrailerModal from "../components/cinema/CinemaTrailerModal";
 
 export default function CinemaPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<MovieStatusFilter>("ALL");
-
-  // Modal interaction state
-  const [modalMovie, setModalMovie] = useState<Movie | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"trailer" | "details">("trailer");
 
   const loadMovies = async () => {
     setLoading(true);
@@ -56,20 +50,12 @@ export default function CinemaPage() {
     return [...movies].sort((a, b) => (b.rating || 0) - (a.rating || 0))[0];
   }, [movies]);
 
-  const handleOpenTrailer = (movie: Movie) => {
-    setModalMovie(movie);
-    setModalMode("trailer");
-    setIsModalOpen(true);
-  };
-
-  const handleOpenDetails = (movie: Movie) => {
-    setModalMovie(movie);
-    setModalMode("details");
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  // Direct movie playback handler: Clicking a movie directly opens the stored movie URL
+  const handlePlayMovie = (movie: Movie) => {
+    const movieUrl = movie.movie_url || movie.trailer_url || "";
+    if (movieUrl && typeof window !== "undefined") {
+      window.open(movieUrl, "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
@@ -92,31 +78,25 @@ export default function CinemaPage() {
           {/* 3. CURRENT FAVORITE (Compact recommendation) */}
           <CinemaFeaturedMovie
             movie={featuredMovie}
-            onOpenTrailer={handleOpenTrailer}
-            onOpenDetails={handleOpenDetails}
+            onPlayMovie={handlePlayMovie}
+            onOpenTrailer={handlePlayMovie}
+            onOpenDetails={handlePlayMovie}
           />
 
           {/* 4. CONTINUE EXPLORING (2:3 Vertical Posters Discovery Row) */}
           <CinemaMovieCarousel
             movies={filteredMovies}
             activeStatus={statusFilter}
-            onSelectMovie={handleOpenDetails}
-            onOpenTrailer={handleOpenTrailer}
+            onPlayMovie={handlePlayMovie}
+            onSelectMovie={handlePlayMovie}
+            onOpenTrailer={handlePlayMovie}
             onClearStatus={() => setStatusFilter("ALL")}
           />
         </>
       )}
 
-      {/* 6. CINEMATIC CLOSING / EDITORIAL FOOTER */}
+      {/* 5. CINEMATIC CLOSING / EDITORIAL FOOTER */}
       <CinemaEditorialFooter />
-
-      {/* 7. CINEMATIC TRAILER & DETAILS MODAL */}
-      <CinemaTrailerModal
-        movie={modalMovie}
-        isOpen={isModalOpen}
-        initialMode={modalMode}
-        onClose={handleCloseModal}
-      />
     </div>
   );
 }

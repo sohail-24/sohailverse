@@ -5,18 +5,22 @@ import { getMovieEditorial } from "./cinemaData";
 interface CinemaMovieCarouselProps {
   movies: Movie[];
   activeStatus?: string | null;
-  onSelectMovie: (movie: Movie) => void;
-  onOpenTrailer: (movie: Movie) => void;
+  onPlayMovie?: (movie: Movie) => void;
+  onSelectMovie?: (movie: Movie) => void;
+  onOpenTrailer?: (movie: Movie) => void;
   onClearStatus: () => void;
 }
 
 export default function CinemaMovieCarousel({
   movies,
   activeStatus,
+  onPlayMovie,
   onSelectMovie,
   onOpenTrailer,
   onClearStatus,
 }: CinemaMovieCarouselProps) {
+  const handlePlay = onPlayMovie || onSelectMovie || onOpenTrailer;
+
   return (
     <section
       id="cinema-continue-exploring-section"
@@ -68,6 +72,15 @@ export default function CinemaMovieCarousel({
         <div className="cinema-desktop-movie-grid grid grid-cols-2 md:grid-cols-[repeat(4,230px)] gap-3.5 md:gap-x-2.5 md:gap-y-6 w-full max-w-[490px] md:max-w-none md:w-fit">
           {movies.map((movie, idx) => {
             const editorial = getMovieEditorial(movie, idx);
+            const movieUrl = movie.movie_url || movie.trailer_url || "";
+
+            const handleClick = (e: React.MouseEvent) => {
+              if (!movieUrl) {
+                e.preventDefault();
+                return;
+              }
+              handlePlay?.(movie);
+            };
 
             return (
               <div
@@ -75,17 +88,15 @@ export default function CinemaMovieCarousel({
                 id={`movie-poster-card-${movie.id}`}
                 className="group relative w-full sm:w-[210px] md:w-[230px] flex flex-col"
               >
-                {/* 2:3 Vertical Poster Container - Unchanged Dimensions */}
-                <div
-                  onClick={() => onSelectMovie(movie)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      onSelectMovie(movie);
-                    }
-                  }}
-                  className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg cursor-pointer transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-cyan-400/40 group-hover:shadow-[0_12px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.15)] focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                {/* 2:3 Vertical Poster Container - Directly links to stored movie URL */}
+                <a
+                  href={movieUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleClick}
+                  id={`movie-card-link-${movie.id}`}
+                  aria-label={`Watch ${editorial.title} Movie`}
+                  className="relative aspect-[2/3] w-full block overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg cursor-pointer transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-cyan-400/40 group-hover:shadow-[0_12px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.15)] focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 >
                   <img
                     src={editorial.poster}
@@ -109,33 +120,45 @@ export default function CinemaMovieCarousel({
                     </span>
                   </div>
 
-                  {/* Center Hover Play Icon */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-slate-950/40 backdrop-blur-[2px]">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOpenTrailer(movie);
-                      }}
-                      className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-400 text-slate-950 shadow-xl transition-transform duration-200 hover:scale-110 active:scale-95"
-                      title={`Watch trailer for ${editorial.title}`}
+                  {/* Center Hover Play Action - Clicking this or the card starts the movie */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-slate-950/40 backdrop-blur-[2px] pointer-events-none">
+                    <span
+                      id={`movie-hover-btn-${movie.id}`}
+                      className="flex items-center gap-2 rounded-full bg-cyan-400 px-4 py-2 text-slate-950 shadow-xl transition-transform duration-200 group-hover:scale-105 active:scale-95"
                     >
-                      <Play className="h-5 w-5 fill-slate-950 ml-0.5" />
-                    </button>
+                      <Play className="h-4 w-4 fill-slate-950 ml-0.5" />
+                      <span className="text-xs font-bold uppercase tracking-wider">Movie</span>
+                    </span>
                   </div>
-                </div>
+                </a>
 
-                {/* Typography Below Card */}
+                {/* Typography Below Card - Title directly opens movie */}
                 <div className="mt-3 flex flex-col">
-                  <h3
-                    onClick={() => onSelectMovie(movie)}
-                    className="font-display text-sm sm:text-base font-bold text-white group-hover:text-cyan-300 transition-colors cursor-pointer truncate"
-                  >
-                    {editorial.title}
-                  </h3>
-                  <p className="mt-0.5 text-xs text-slate-400 font-light truncate">
-                    {editorial.tagline}
-                  </p>
+                  {/* Title Container - strictly 2 lines of vertical space reserved */}
+                  <div className="h-10 sm:h-12 w-full flex flex-col justify-start">
+                    <a
+                      href={movieUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={handleClick}
+                      id={`movie-title-link-${movie.id}`}
+                      className="font-display text-sm sm:text-base font-bold text-white group-hover:text-cyan-300 transition-colors cursor-pointer line-clamp-2 leading-5 sm:leading-6 block break-words"
+                      title={`Watch ${editorial.title} Movie`}
+                    >
+                      {editorial.title}
+                    </a>
+                  </div>
+
+                  {/* Description Container - strictly 2 lines of vertical space reserved */}
+                  <div className="mt-1 h-9 w-full flex flex-col justify-start">
+                    <p
+                      id={`movie-desc-${movie.id}`}
+                      className="text-xs text-slate-400 font-light line-clamp-2 leading-[18px] block break-words"
+                      title={editorial.tagline || editorial.description}
+                    >
+                      {editorial.tagline || editorial.description}
+                    </p>
+                  </div>
                 </div>
               </div>
             );

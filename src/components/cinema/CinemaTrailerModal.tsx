@@ -7,14 +7,13 @@ import { getMovieEditorial, getYouTubeEmbedUrl } from "./cinemaData";
 interface CinemaTrailerModalProps {
   movie: Movie | null;
   isOpen: boolean;
-  initialMode?: "trailer" | "details";
+  initialMode?: "trailer" | "details" | "movie";
   onClose: () => void;
 }
 
-export default function CinemaTrailerModal({
+export function CinemaTrailerModal({
   movie,
   isOpen,
-  initialMode = "trailer",
   onClose,
 }: CinemaTrailerModalProps) {
   // Handle ESC key press
@@ -36,11 +35,14 @@ export default function CinemaTrailerModal({
   if (!movie) return null;
 
   const editorial = getMovieEditorial(movie);
-  const youtubeEmbed = getYouTubeEmbedUrl(movie.trailer_url);
+  const movieUrl = movie.movie_url || movie.trailer_url || "";
+  const youtubeEmbed = getYouTubeEmbedUrl(movieUrl);
+  const isDirectVideoFile = Boolean(
+    movieUrl && movieUrl.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i)
+  );
   const isDirectUrl = Boolean(
-    movie.trailer_url &&
-      (movie.trailer_url.startsWith("http://") ||
-        movie.trailer_url.startsWith("https://"))
+    movieUrl &&
+      (movieUrl.startsWith("http://") || movieUrl.startsWith("https://"))
   );
 
   return (
@@ -48,6 +50,7 @@ export default function CinemaTrailerModal({
       {isOpen && (
         <div
           id="cinema-trailer-modal-container"
+          data-testid="cinema-movie-modal"
           role="dialog"
           aria-modal="true"
           aria-labelledby="cinema-modal-title"
@@ -84,7 +87,7 @@ export default function CinemaTrailerModal({
                     {editorial.title}
                   </h3>
                   <p className="text-xs text-slate-400 font-mono">
-                    Observatory Screening
+                    Observatory Movie Screening
                   </p>
                 </div>
               </div>
@@ -107,11 +110,22 @@ export default function CinemaTrailerModal({
                 {youtubeEmbed ? (
                   <iframe
                     src={youtubeEmbed}
-                    title={`${editorial.title} Official Trailer`}
+                    title={`${editorial.title} Movie`}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="h-full w-full border-0"
                   />
+                ) : isDirectVideoFile ? (
+                  <video
+                    src={movieUrl}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="h-full w-full object-contain bg-black"
+                    title={`${editorial.title} Movie`}
+                  >
+                    Your browser does not support HTML video.
+                  </video>
                 ) : (
                   <div className="relative flex h-full w-full flex-col items-center justify-center p-6 text-center">
                     <img
@@ -129,21 +143,21 @@ export default function CinemaTrailerModal({
 
                       <div className="space-y-1">
                         <h4 className="text-lg font-bold text-white">
-                          Curated Stream Ready
+                          Curated Movie Ready
                         </h4>
                         <p className="text-xs sm:text-sm text-slate-300">
-                          This preview stream is hosted on the cloud cinema network.
+                          This movie stream is hosted on the cloud cinema network.
                         </p>
                       </div>
 
                       {isDirectUrl && (
                         <a
-                          href={movie.trailer_url}
+                          href={movieUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-cyan-400 px-6 py-2.5 text-xs sm:text-sm font-semibold text-slate-950 shadow hover:bg-cyan-300 transition-colors"
                         >
-                          <span>Open Cloud Stream</span>
+                          <span>Open Movie Stream</span>
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       )}
@@ -196,12 +210,12 @@ export default function CinemaTrailerModal({
 
                   {isDirectUrl && (
                     <a
-                      href={movie.trailer_url}
+                      href={movieUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-slate-800/80 px-4 py-2 text-xs font-medium text-white transition hover:bg-slate-700"
                     >
-                      <span>External Source</span>
+                      <span>Open Movie Source</span>
                       <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   )}
@@ -214,3 +228,6 @@ export default function CinemaTrailerModal({
     </AnimatePresence>
   );
 }
+
+export { CinemaTrailerModal as CinemaMovieModal };
+export default CinemaTrailerModal;

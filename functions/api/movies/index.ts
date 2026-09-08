@@ -31,13 +31,17 @@ export async function onRequestGet({ env }: PagesContext): Promise<Response> {
   try {
     const db = createDb(env.DATABASE_URL!);
     const records = await db.select().from(movies).orderBy(desc(movies.id));
-    const formatted = records.map((r: any) => ({
-      id: r.id,
-      title: r.title,
-      genre: r.genre || "General",
-      rating: Number(r.rating) || 5,
-      trailer_url: r.trailerUrl || r.trailer_url || "",
-    }));
+    const formatted = records.map((r: any) => {
+      const url = r.trailerUrl || r.trailer_url || "";
+      return {
+        id: r.id,
+        title: r.title,
+        genre: r.genre || "General",
+        rating: Number(r.rating) || 5,
+        trailer_url: url,
+        movie_url: url,
+      };
+    });
 
     return new Response(
       JSON.stringify({ data: formatted }),
@@ -81,7 +85,8 @@ export async function onRequestPost({ request, env }: PagesContext): Promise<Res
       );
     }
 
-    const { title, genre, rating, trailer_url } = body as Record<string, any>;
+    const { title, genre, rating, trailer_url, movie_url } = body as Record<string, any>;
+    const resolvedMovieUrl = movie_url !== undefined ? movie_url : trailer_url;
 
     if (!title || typeof title !== "string" || !title.trim()) {
       return new Response(
@@ -111,7 +116,7 @@ export async function onRequestPost({ request, env }: PagesContext): Promise<Res
         title: title.trim(),
         genre: typeof genre === "string" && genre.trim() ? genre.trim() : null,
         rating: numRating,
-        trailerUrl: typeof trailer_url === "string" && trailer_url.trim() ? trailer_url.trim() : null,
+        trailerUrl: typeof resolvedMovieUrl === "string" && resolvedMovieUrl.trim() ? resolvedMovieUrl.trim() : null,
       })
       .returning();
 

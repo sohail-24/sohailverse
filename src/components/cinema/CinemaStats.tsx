@@ -4,7 +4,8 @@ import GlassPanel from "../ui/GlassPanel";
 interface CinemaStatsProps {
   movieCount: number;
   genreCount: number;
-  trailerCount: number;
+  trailerCount?: number;
+  movieLibraryCount?: number;
   loading?: boolean;
 }
 
@@ -12,8 +13,10 @@ export default function CinemaStats({
   movieCount,
   genreCount,
   trailerCount,
+  movieLibraryCount,
   loading = false,
 }: CinemaStatsProps) {
+  const effectiveMovieCount = movieLibraryCount ?? trailerCount ?? movieCount;
   const stats = [
     {
       id: "favorite-movies",
@@ -30,11 +33,11 @@ export default function CinemaStats({
       detail: "Narrative worlds",
     },
     {
-      id: "trailer-library",
+      id: "movie-library",
       icon: Clapperboard,
-      value: loading ? "..." : trailerCount > 0 ? trailerCount : "9",
-      label: "Trailer Library",
-      detail: "Instant stream preview",
+      value: loading ? "..." : effectiveMovieCount > 0 ? effectiveMovieCount : "9",
+      label: "Movie Library",
+      detail: "Instant movie playback",
     },
     {
       id: "more-to-discover",
