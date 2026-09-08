@@ -31,6 +31,11 @@ export interface DevOpsProject {
   description: string;
   technologies?: string | null;
   status?: string | null;
+  image_url?: string | null;
+  ppt_url?: string | null;
+  github_url?: string | null;
+  highlights?: string | null;
+  rating?: number | null;
 }
 
 export interface TimelinePost {

@@ -132,6 +132,13 @@ export function CinemaTrailerModal({
                       src={editorial.poster}
                       alt={editorial.title}
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.dataset.triedFallback) {
+                          target.dataset.triedFallback = "1";
+                          target.src = "/cinema/posters/oppenheimer.jpg";
+                        }
+                      }}
                       className="absolute inset-0 h-full w-full object-cover opacity-25 filter blur-sm"
                     />
                     <div className="absolute inset-0 bg-slate-950/60" />

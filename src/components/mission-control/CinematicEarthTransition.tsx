@@ -35,18 +35,18 @@ const atmosphereFragmentShader = `
     float fresnel = pow(1.0 - nDotV, 3.2);
 
     // Smooth edge fade: ensures the atmospheric glow smoothly tapers to absolute ZERO
-    // at the geometry silhouette (nDotV -> 0), completely eliminating faceted polygonal chord
-    // line artifacts, bright slivers, and harsh geometric boundaries against cosmic space
-    float edgeFade = smoothstep(0.0, 0.08, nDotV);
+    // well before the geometry silhouette boundary (nDotV < 0.04), completely eliminating
+    // faceted polygonal chord line artifacts, bright slivers, and harsh geometric lines
+    float edgeFade = smoothstep(0.035, 0.22, nDotV);
 
     // Sunlit hemisphere masking: atmosphere illuminates on the day side
     float sunDot = dot(vNormal, lightDir);
-    float sunFactor = smoothstep(-0.20, 0.40, sunDot);
+    float sunFactor = smoothstep(-0.15, 0.40, sunDot);
 
     // Realistic electric cyan-blue atmosphere color gradient
     vec3 atmoColor = mix(vec3(0.12, 0.55, 0.95), vec3(0.42, 0.82, 1.0), fresnel);
 
-    float alpha = fresnel * edgeFade * sunFactor * 0.65;
+    float alpha = fresnel * edgeFade * sunFactor * 0.60;
     gl_FragColor = vec4(atmoColor, alpha);
   }
 `;
@@ -491,7 +491,7 @@ export default function CinematicEarthTransition() {
     const earthTexture = textureLoader.load("/earth-texture-2048.jpg");
     earthTexture.colorSpace = THREE.SRGBColorSpace;
 
-    const earthGeometry = new THREE.SphereGeometry(1.0, 96, 96);
+    const earthGeometry = new THREE.SphereGeometry(1.0, 128, 128);
     const earthMaterial = new THREE.MeshStandardMaterial({
       map: earthTexture,
       roughness: 0.65,
@@ -503,11 +503,12 @@ export default function CinematicEarthTransition() {
 
     // Translucent Clouds Layer
     const cloudsTexture = textureLoader.load("/earth-clouds-1024.png");
-    const cloudsGeometry = new THREE.SphereGeometry(1.008, 96, 96);
+    cloudsTexture.colorSpace = THREE.SRGBColorSpace;
+    const cloudsGeometry = new THREE.SphereGeometry(1.008, 128, 128);
     const cloudsMaterial = new THREE.MeshStandardMaterial({
       map: cloudsTexture,
       transparent: true,
-      opacity: 0.42,
+      opacity: 0.40,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       roughness: 0.9,
@@ -517,7 +518,7 @@ export default function CinematicEarthTransition() {
     cloudsMeshRef.current = cloudsMesh;
 
     // Realistic Atmospheric Limb Scattering (Subtle, photographic blue rim, no excessive glow)
-    const atmosphereGeo = new THREE.SphereGeometry(1.015, 96, 96);
+    const atmosphereGeo = new THREE.SphereGeometry(1.015, 128, 128);
     const atmosphereMat = new THREE.ShaderMaterial({
       vertexShader: atmosphereVertexShader,
       fragmentShader: atmosphereFragmentShader,

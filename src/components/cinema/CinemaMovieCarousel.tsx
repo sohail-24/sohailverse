@@ -102,6 +102,14 @@ export default function CinemaMovieCarousel({
                     src={editorial.poster}
                     alt={`${editorial.title} movie poster`}
                     referrerPolicy="no-referrer"
+                    loading="lazy"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.dataset.triedFallback) {
+                        target.dataset.triedFallback = "1";
+                        target.src = "/cinema/posters/oppenheimer.jpg";
+                      }
+                    }}
                     className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
                   />
 

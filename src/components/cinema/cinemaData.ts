@@ -96,10 +96,28 @@ const KNOWN_MOVIE_METADATA: Record<
     displayGenre: "Fantasy / Drama",
     featuredRating: 8.9,
   },
-  "chronicles_of_narnia_lion_witch_and_wardrobe": {
-    displayTitle: "The Chronicles of Narnia: Wardrobe",
+  "chronicles of narnia lion witch and wardrobe": {
+    displayTitle: "The Chronicles of Narnia: The Lion, the Witch and the Wardrobe",
     tagline: "Beyond the wardrobe lies an eternal winter.",
-    poster: "/cinema/posters/adventure.jpg",
+    poster: "/cinema/posters/narnia-lion-witch-wardrobe.jpg",
+    description:
+      "Four siblings step through a forgotten coat wardrobe into the mythical snowbound land of Narnia, bound by the prophecy of Aslan.",
+    displayGenre: "Adventure / Fantasy",
+    featuredRating: 8.4,
+  },
+  "chronicles_of_narnia_lion_witch_and_wardrobe": {
+    displayTitle: "The Chronicles of Narnia: The Lion, the Witch and the Wardrobe",
+    tagline: "Beyond the wardrobe lies an eternal winter.",
+    poster: "/cinema/posters/narnia-lion-witch-wardrobe.jpg",
+    description:
+      "Four siblings step through a forgotten coat wardrobe into the mythical snowbound land of Narnia, bound by the prophecy of Aslan.",
+    displayGenre: "Adventure / Fantasy",
+    featuredRating: 8.4,
+  },
+  "narnia": {
+    displayTitle: "The Chronicles of Narnia: The Lion, the Witch and the Wardrobe",
+    tagline: "Beyond the wardrobe lies an eternal winter.",
+    poster: "/cinema/posters/narnia-lion-witch-wardrobe.jpg",
     description:
       "Four siblings step through a forgotten coat wardrobe into the mythical snowbound land of Narnia, bound by the prophecy of Aslan.",
     displayGenre: "Adventure / Fantasy",
@@ -108,7 +126,16 @@ const KNOWN_MOVIE_METADATA: Record<
   "jurassic world 2018": {
     displayTitle: "Jurassic World: Fallen Kingdom",
     tagline: "The park was just the beginning.",
-    poster: "/cinema/posters/scifi.jpg",
+    poster: "/cinema/posters/jurassic-world-fallen-kingdom.jpg",
+    description:
+      "A race against time to rescue prehistoric marvels from a cataclysmic volcanic eruption before genetic capitalism claims them.",
+    displayGenre: "Sci-Fi / Action",
+    featuredRating: 7.8,
+  },
+  "jurassic world fallen kingdom": {
+    displayTitle: "Jurassic World: Fallen Kingdom",
+    tagline: "The park was just the beginning.",
+    poster: "/cinema/posters/jurassic-world-fallen-kingdom.jpg",
     description:
       "A race against time to rescue prehistoric marvels from a cataclysmic volcanic eruption before genetic capitalism claims them.",
     displayGenre: "Sci-Fi / Action",
@@ -135,16 +162,25 @@ const KNOWN_MOVIE_METADATA: Record<
   "final destination bloodlines": {
     displayTitle: "Final Destination: Bloodlines",
     tagline: "Death never forgets an interrupted design.",
-    poster: "/cinema/posters/thriller.jpg",
+    poster: "/cinema/posters/final-destination-bloodlines.jpg",
     description:
       "A visceral, inventive continuation of the iconic puzzle where destiny and escape collide through elaborate mechanical fate.",
     displayGenre: "Thriller / Mystery",
     featuredRating: 7.9,
   },
   kgf: {
-    displayTitle: "K.G.F: Chapters 1 & 2",
+    displayTitle: "K.G.F: Chapter 1",
     tagline: "The roar that carved an empire in gold.",
-    poster: "/cinema/posters/action.jpg",
+    poster: "/cinema/posters/kgf-chapter-1.jpg",
+    description:
+      "Prashanth Neel's sweeping, high-octane period epic following Rocky's relentless ascent inside the brutal gold mines of Kolar.",
+    displayGenre: "Action / Epic",
+    featuredRating: 9.1,
+  },
+  "kgf chapter 1": {
+    displayTitle: "K.G.F: Chapter 1",
+    tagline: "The roar that carved an empire in gold.",
+    poster: "/cinema/posters/kgf-chapter-1.jpg",
     description:
       "Prashanth Neel's sweeping, high-octane period epic following Rocky's relentless ascent inside the brutal gold mines of Kolar.",
     displayGenre: "Action / Epic",
@@ -153,7 +189,7 @@ const KNOWN_MOVIE_METADATA: Record<
   "sanam teri kasam": {
     displayTitle: "Sanam Teri Kasam",
     tagline: "A poignant ballad of sacrifice and memory.",
-    poster: "/cinema/posters/drama.jpg",
+    poster: "/cinema/posters/sanam-teri-kasam.jpg",
     description:
       "A deeply emotional romantic drama exploring sacrifice, unspoken devotion, and memories that outlast fleeting moments.",
     displayGenre: "Romance / Drama",
@@ -247,17 +283,25 @@ const KNOWN_MOVIE_METADATA: Record<
  * with live database records while adding editorial gloss.
  */
 export function getMovieEditorial(movie: Movie, index: number = 0) {
-  const normalizedKey = movie.title
-    .toLowerCase()
-    .trim()
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ");
+  const normalize = (str: string) =>
+    str
+      .toLowerCase()
+      .trim()
+      .replace(/[:.,_'-]+/g, " ")
+      .replace(/\s+/g, " ");
+
+  const normalizedKey = normalize(movie.title);
 
   // Check direct key or substring matches
   let match = KNOWN_MOVIE_METADATA[normalizedKey];
   if (!match) {
     for (const [key, val] of Object.entries(KNOWN_MOVIE_METADATA)) {
-      if (normalizedKey.includes(key) || key.includes(normalizedKey)) {
+      const cleanKey = normalize(key);
+      if (
+        normalizedKey === cleanKey ||
+        normalizedKey.includes(cleanKey) ||
+        cleanKey.includes(normalizedKey)
+      ) {
         match = val;
         break;
       }
