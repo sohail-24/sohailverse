@@ -4,6 +4,7 @@ import RootLayout from "../components/layout/RootLayout";
 import CinemaPage from "../pages/CinemaPage";
 import DashboardPage from "../pages/DashboardPage";
 import DevOpsPage from "../pages/DevOpsPage";
+import ProjectsPage from "../pages/ProjectsPage";
 import MissionControlPage from "../pages/MissionControlPage";
 import TimelinePage from "../pages/TimelinePage";
 import ProjectDetailPage from "../pages/ProjectDetailPage";
@@ -39,7 +40,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: "projects",
-        element: <DevOpsPage />,
+        element: <ProjectsPage />,
       },
       {
         path: "projects/:id",
