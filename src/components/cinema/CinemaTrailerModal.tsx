@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Play, ExternalLink, Star, Clapperboard } from "lucide-react";
 import type { Movie } from "../../lib/api";
-import { getMovieEditorial, getYouTubeEmbedUrl } from "./cinemaData";
+import { getYouTubeEmbedUrl } from "./cinemaData";
 
 interface CinemaTrailerModalProps {
   movie: Movie | null;
@@ -34,8 +34,10 @@ export function CinemaTrailerModal({
 
   if (!movie) return null;
 
-  const editorial = getMovieEditorial(movie);
   const movieUrl = movie.movie_url || movie.trailer_url || "";
+  const posterUrl = movie.poster_url || "/cinema/posters/oppenheimer.jpg";
+  const synopsis = movie.synopsis || "Curated film in the observatory collection.";
+  const ratingDisplay = movie.rating != null ? Number(movie.rating) : 5;
   const youtubeEmbed = getYouTubeEmbedUrl(movieUrl);
   const isDirectVideoFile = Boolean(
     movieUrl && movieUrl.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i)
@@ -84,7 +86,7 @@ export function CinemaTrailerModal({
                     id="cinema-modal-title"
                     className="font-display text-base sm:text-lg font-bold text-white truncate"
                   >
-                    {editorial.title}
+                    {movie.title}
                   </h3>
                   <p className="text-xs text-slate-400 font-mono">
                     Observatory Movie Screening
@@ -110,7 +112,7 @@ export function CinemaTrailerModal({
                 {youtubeEmbed ? (
                   <iframe
                     src={youtubeEmbed}
-                    title={`${editorial.title} Movie`}
+                    title={`${movie.title} Movie`}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="h-full w-full border-0"
@@ -122,15 +124,15 @@ export function CinemaTrailerModal({
                     autoPlay
                     playsInline
                     className="h-full w-full object-contain bg-black"
-                    title={`${editorial.title} Movie`}
+                    title={`${movie.title} Movie`}
                   >
                     Your browser does not support HTML video.
                   </video>
                 ) : (
                   <div className="relative flex h-full w-full flex-col items-center justify-center p-6 text-center">
                     <img
-                      src={editorial.poster}
-                      alt={editorial.title}
+                      src={posterUrl}
+                      alt={movie.title}
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         const target = e.currentTarget;
@@ -178,20 +180,16 @@ export function CinemaTrailerModal({
                 <div className="sm:col-span-2 space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full border border-cyan-400/30 bg-cyan-950/40 px-3 py-0.5 text-xs font-medium text-cyan-300">
-                      {editorial.genre}
+                      {movie.genre}
                     </span>
                     <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-950/40 px-2.5 py-0.5 text-xs font-semibold text-amber-300">
                       <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                      {editorial.rating} / 10
+                      {ratingDisplay} / 10
                     </span>
                   </div>
 
-                  <h4 className="font-serif italic text-base sm:text-lg text-slate-200">
-                    “{editorial.tagline}”
-                  </h4>
-
                   <p className="text-xs sm:text-sm leading-relaxed text-slate-300/90 font-light">
-                    {editorial.description}
+                    {synopsis}
                   </p>
                 </div>
 

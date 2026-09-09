@@ -10,6 +10,9 @@ export interface Movie {
   rating: number;
   trailer_url?: string;
   movie_url?: string;
+  poster_url?: string | null;
+  synopsis?: string | null;
+  is_featured?: boolean;
 }
 
 export function getMovieUrl(movie?: Movie | null): string {
@@ -109,56 +112,6 @@ export function isValidAtlasPost(item: any): item is AtlasPost {
 
 // Local fallback datasets if the server/API is offline or unreachable
 const FALLBACK_DATA: Record<string, any[]> = {
-  movies: [
-    {
-      id: 1,
-      title: "Interstellar",
-      genre: "Sci-Fi",
-      rating: 9.5,
-      trailer_url: "https://www.youtube.com/watch?v=zSWdZVtXT7E",
-      movie_url: "https://www.youtube.com/watch?v=zSWdZVtXT7E",
-    },
-    {
-      id: 2,
-      title: "Inception",
-      genre: "Sci-Fi",
-      rating: 9.2,
-      trailer_url: "https://www.youtube.com/watch?v=YoHD9XEInc0",
-      movie_url: "https://www.youtube.com/watch?v=YoHD9XEInc0",
-    },
-    {
-      id: 3,
-      title: "The Matrix",
-      genre: "Sci-Fi",
-      rating: 9.0,
-      trailer_url: "https://www.youtube.com/watch?v=vKQi3bBA1y8",
-      movie_url: "https://www.youtube.com/watch?v=vKQi3bBA1y8",
-    },
-    {
-      id: 4,
-      title: "The Dark Knight",
-      genre: "Action",
-      rating: 9.4,
-      trailer_url: "https://www.youtube.com/watch?v=EXeTwQWrcwY",
-      movie_url: "https://www.youtube.com/watch?v=EXeTwQWrcwY",
-    },
-    {
-      id: 5,
-      title: "Oppenheimer",
-      genre: "Drama",
-      rating: 8.9,
-      trailer_url: "https://www.youtube.com/watch?v=uYPbbksJxIg",
-      movie_url: "https://www.youtube.com/watch?v=uYPbbksJxIg",
-    },
-    {
-      id: 6,
-      title: "Blade Runner 2049",
-      genre: "Sci-Fi",
-      rating: 8.8,
-      trailer_url: "https://www.youtube.com/watch?v=gCcx85zbxz4",
-      movie_url: "https://www.youtube.com/watch?v=gCcx85zbxz4",
-    },
-  ],
   academy: [
     { id: 1, skill: "Kubernetes & EKS", category: "Cloud Infrastructure", level: "Advanced" },
     { id: 2, skill: "Terraform & IaC", category: "DevOps & Automation", level: "Advanced" },
@@ -193,36 +146,6 @@ const FALLBACK_DATA: Record<string, any[]> = {
       description: "Modular Infrastructure as Code repository defining VPCs, subnets, IAM policies, and compute instances across AWS.",
       technologies: "Terraform, AWS, GitHub Actions, HashiCorp HCL",
       status: "Production Ready",
-    },
-  ],
-  timeline: [
-    {
-      id: 1,
-      title: "Built & Deployed Sohail-Shop",
-      category: "Systems & Cloud",
-      description: "Engineered scalable e-commerce infrastructure with multi-vendor support, Docker containers, and Kubernetes deployment.",
-      created_at: "2026-01-15",
-    },
-    {
-      id: 2,
-      title: "Internship at Visas Company",
-      category: "Career & Systems",
-      description: "Hands-on engineering internship contributing to cloud automation, business systems, and production pipelines.",
-      created_at: "2025-06-01",
-    },
-    {
-      id: 3,
-      title: "Saudi Arabia Journey & AWS / DevOps Genesis",
-      category: "Exploration & Learning",
-      description: "Traveled to Saudi Arabia and initiated deep-dive mastery into AWS Cloud and DevOps architecture.",
-      created_at: "2024-03-10",
-    },
-    {
-      id: 4,
-      title: "Completed Engineering Degree",
-      category: "Education",
-      description: "Graduated with an Engineering degree, establishing a comprehensive foundation in algorithms and computer systems.",
-      created_at: "2023-06-20",
     },
   ],
   atlas: [
@@ -293,8 +216,14 @@ export async function fetchApi<T>(
       }
 
       return rawList as T[];
+    } else {
+      throw new Error(`HTTP ${response.status} from ${endpoint}`);
     }
   } catch (err: any) {
+    if (endpoint.includes("movies") || endpoint.includes("timeline")) {
+      // Cinema and Timeline errors must propagate to page error and retry state
+      throw err;
+    }
     console.warn(`[AI Studio] API request to ${endpoint} failed, activating fallback dataset:`, err?.message || err);
   }
 

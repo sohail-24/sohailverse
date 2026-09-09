@@ -4,6 +4,7 @@ import {
   text,
   real,
   timestamp,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 import {
@@ -39,6 +40,9 @@ export const movies = pgTable("movies", {
   genre: text("genre").notNull(),
   rating: real("rating").notNull(),
   trailerUrl: text("trailer_url"),
+  posterUrl: text("poster_url"),
+  synopsis: text("synopsis"),
+  isFeatured: boolean("is_featured").default(false),
 });
 
 export type Movie = InferSelectModel<typeof movies>;

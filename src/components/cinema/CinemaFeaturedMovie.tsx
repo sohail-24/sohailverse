@@ -1,6 +1,5 @@
 import { Heart, Play, Star } from "lucide-react";
 import type { Movie } from "../../lib/api";
-import { getMovieEditorial } from "./cinemaData";
 
 interface CinemaFeaturedMovieProps {
   movie?: Movie | null;
@@ -15,28 +14,23 @@ export default function CinemaFeaturedMovie({
   onOpenTrailer,
   onOpenDetails,
 }: CinemaFeaturedMovieProps) {
+  if (!movie) {
+    return null;
+  }
+
   const handlePlay = onPlayMovie || onOpenTrailer || onOpenDetails;
-
-  // Use provided movie or fall back to rich default if loading/null
-  const fallbackMovie: Movie = {
-    id: 17,
-    title: "Harry Potter and Chamber of secrets",
-    genre: "Fantasy / Adventure",
-    rating: 8.8,
-    trailer_url: "https://www.youtube.com/watch?v=1bq0qff4iF8",
-    movie_url: "https://www.youtube.com/watch?v=1bq0qff4iF8",
-  };
-
-  const activeMovie = movie || fallbackMovie;
-  const editorial = getMovieEditorial(activeMovie, 0);
-  const movieUrl = activeMovie.movie_url || activeMovie.trailer_url || "";
+  const movieUrl = movie.movie_url || movie.trailer_url || "";
+  const posterUrl = movie.poster_url || "/cinema/featured-favorite.jpg";
+  const synopsis =
+    movie.synopsis || "Curated film in the observatory collection.";
+  const ratingDisplay = movie.rating != null ? Number(movie.rating) : 5;
 
   const handleClick = (e: React.MouseEvent) => {
     if (!movieUrl) {
       e.preventDefault();
       return;
     }
-    handlePlay?.(activeMovie);
+    handlePlay?.(movie);
   };
 
   return (
@@ -61,7 +55,7 @@ export default function CinemaFeaturedMovie({
 
           <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/25 bg-amber-950/30 px-2.5 py-0.5 text-xs font-medium text-amber-300 font-mono">
             <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-            {editorial.rating} / 10
+            {ratingDisplay} / 10
           </span>
         </div>
 
@@ -73,12 +67,12 @@ export default function CinemaFeaturedMovie({
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleClick}
-            aria-label={`Watch ${editorial.title} Movie`}
+            aria-label={`Watch ${movie.title} Movie`}
             className="group/thumb relative shrink-0 w-20 h-24 sm:w-28 sm:h-32 rounded-xl overflow-hidden border border-white/10 bg-slate-900 shadow-md cursor-pointer transition-transform hover:border-cyan-400/50 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-cyan-400 block"
           >
             <img
-              src="/cinema/featured-favorite.jpg"
-              alt={`${editorial.title} artwork`}
+              src={posterUrl}
+              alt={`${movie.title} artwork`}
               referrerPolicy="no-referrer"
               className="h-full w-full object-cover transition-transform duration-500 group-hover/thumb:scale-105"
             />
@@ -98,18 +92,17 @@ export default function CinemaFeaturedMovie({
               rel="noopener noreferrer"
               onClick={handleClick}
               className="font-display text-base sm:text-lg md:text-xl font-bold text-white tracking-tight leading-snug line-clamp-2 cursor-pointer hover:text-cyan-300 transition-colors block"
-              title={`Watch ${editorial.title}`}
+              title={`Watch ${movie.title}`}
             >
-              {editorial.title}
+              {movie.title}
             </a>
 
             <p className="text-xs sm:text-sm text-cyan-300/90 font-medium">
-              {editorial.genre}
+              {movie.genre}
             </p>
 
             <p className="text-xs sm:text-sm text-slate-400 font-light line-clamp-1 sm:line-clamp-2 leading-relaxed">
-              {editorial.tagline ||
-                "A journey into a magical world that still feels like home."}
+              {synopsis}
             </p>
 
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 pt-1.5 sm:pt-2">

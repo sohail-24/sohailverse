@@ -66,6 +66,9 @@ const mockStore = {
       genre: "Sci-Fi",
       rating: 9.5,
       trailer_url: "https://www.youtube.com/watch?v=zSWdZVtXT7E",
+      poster_url: null,
+      synopsis: null,
+      is_featured: false,
     },
     {
       id: 2,
@@ -73,6 +76,9 @@ const mockStore = {
       genre: "Sci-Fi",
       rating: 9.2,
       trailer_url: "https://www.youtube.com/watch?v=YoHD9XEInc0",
+      poster_url: null,
+      synopsis: null,
+      is_featured: false,
     },
     {
       id: 3,
@@ -80,6 +86,9 @@ const mockStore = {
       genre: "Sci-Fi",
       rating: 9.0,
       trailer_url: "https://www.youtube.com/watch?v=vKQi3bBA1y8",
+      poster_url: null,
+      synopsis: null,
+      is_featured: false,
     },
     {
       id: 4,
@@ -87,6 +96,9 @@ const mockStore = {
       genre: "Action",
       rating: 9.4,
       trailer_url: "https://www.youtube.com/watch?v=EXeTwQWrcwY",
+      poster_url: null,
+      synopsis: null,
+      is_featured: false,
     },
     {
       id: 5,
@@ -94,6 +106,9 @@ const mockStore = {
       genre: "Drama",
       rating: 8.9,
       trailer_url: "https://www.youtube.com/watch?v=uYPbbksJxIg",
+      poster_url: null,
+      synopsis: null,
+      is_featured: false,
     },
     {
       id: 6,
@@ -101,6 +116,9 @@ const mockStore = {
       genre: "Sci-Fi",
       rating: 8.8,
       trailer_url: "https://www.youtube.com/watch?v=gCcx85zbxz4",
+      poster_url: null,
+      synopsis: null,
+      is_featured: false,
     },
   ],
   academy: [
@@ -314,7 +332,7 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
               if (resource === "movies") {
                 if (method === "GET") {
                   if (resourceId !== null) {
-                    const rows = await querySql`SELECT id, title, genre, rating, trailer_url FROM movies WHERE id = ${resourceId}`;
+                    const rows = await querySql`SELECT id, title, genre, rating, trailer_url, poster_url, synopsis, is_featured FROM movies WHERE id = ${resourceId}`;
                     if (rows && rows.length > 0) {
                       const r = rows[0];
                       return sendJson(200, {
@@ -324,12 +342,16 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                           genre: r.genre,
                           rating: Number(r.rating),
                           trailer_url: r.trailer_url || "",
+                          movie_url: r.trailer_url || "",
+                          poster_url: r.poster_url || null,
+                          synopsis: r.synopsis || null,
+                          is_featured: Boolean(r.is_featured || false),
                         },
                       });
                     }
                     return sendJson(404, { error: "Movie not found" });
                   }
-                  const rows = await querySql`SELECT id, title, genre, rating, trailer_url FROM movies ORDER BY id DESC`;
+                  const rows = await querySql`SELECT id, title, genre, rating, trailer_url, poster_url, synopsis, is_featured FROM movies ORDER BY id DESC`;
                   return sendJson(200, {
                     data: rows.map((r: any) => ({
                       id: r.id,
@@ -337,6 +359,10 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                       genre: r.genre,
                       rating: Number(r.rating),
                       trailer_url: r.trailer_url || "",
+                      movie_url: r.trailer_url || "",
+                      poster_url: r.poster_url || null,
+                      synopsis: r.synopsis || null,
+                      is_featured: Boolean(r.is_featured || false),
                     })),
                   });
                 }
@@ -344,11 +370,14 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                 if (method === "POST" && resourceId === null) {
                   const body = await readJsonBody();
                   const title = String(body.title || "").trim();
-                  const genre = String(body.genre || "").trim();
+                  const genre = String(body.genre || "").trim() || "General";
                   const rating = Number(body.rating) || 5;
                   const trailerUrl = String(body.trailer_url || body.trailerUrl || "").trim();
+                  const posterUrl = body.poster_url !== undefined ? (String(body.poster_url || "").trim() || null) : null;
+                  const synopsis = body.synopsis !== undefined ? (String(body.synopsis || "").trim() || null) : null;
+                  const isFeatured = Boolean(body.is_featured);
 
-                  const rows = await querySql`INSERT INTO movies (title, genre, rating, trailer_url) VALUES (${title}, ${genre}, ${rating}, ${trailerUrl}) RETURNING id, title, genre, rating, trailer_url`;
+                  const rows = await querySql`INSERT INTO movies (title, genre, rating, trailer_url, poster_url, synopsis, is_featured) VALUES (${title}, ${genre}, ${rating}, ${trailerUrl}, ${posterUrl}, ${synopsis}, ${isFeatured}) RETURNING id, title, genre, rating, trailer_url, poster_url, synopsis, is_featured`;
                   const r = rows[0];
                   return sendJson(201, {
                     success: true,
@@ -359,8 +388,56 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                       genre: r.genre,
                       rating: Number(r.rating),
                       trailer_url: r.trailer_url || "",
+                      movie_url: r.trailer_url || "",
+                      poster_url: r.poster_url || null,
+                      synopsis: r.synopsis || null,
+                      is_featured: Boolean(r.is_featured || false),
                     },
                   });
+                }
+
+                if (method === "PUT" && resourceId !== null) {
+                  const body = await readJsonBody();
+                  const title = body.title !== undefined ? String(body.title).trim() : null;
+                  const genre = body.genre !== undefined ? String(body.genre).trim() : null;
+                  const rating = body.rating !== undefined ? Number(body.rating) : null;
+                  const trailerUrl = (body.trailer_url !== undefined || body.trailerUrl !== undefined) ? String(body.trailer_url || body.trailerUrl || "").trim() : null;
+                  const posterUrl = body.poster_url !== undefined ? (String(body.poster_url || "").trim() || null) : null;
+                  const synopsis = body.synopsis !== undefined ? (String(body.synopsis || "").trim() || null) : null;
+                  const isFeatured = body.is_featured !== undefined ? Boolean(body.is_featured) : null;
+
+                  const rows = await querySql`
+                    UPDATE movies 
+                    SET 
+                      title = COALESCE(${title}, title),
+                      genre = COALESCE(${genre}, genre),
+                      rating = COALESCE(${rating}, rating),
+                      trailer_url = COALESCE(${trailerUrl}, trailer_url),
+                      poster_url = COALESCE(${posterUrl}, poster_url),
+                      synopsis = COALESCE(${synopsis}, synopsis),
+                      is_featured = COALESCE(${isFeatured}, is_featured)
+                    WHERE id = ${resourceId}
+                    RETURNING id, title, genre, rating, trailer_url, poster_url, synopsis, is_featured
+                  `;
+                  if (rows && rows.length > 0) {
+                    const r = rows[0];
+                    return sendJson(200, {
+                      success: true,
+                      message: "Updated successfully",
+                      data: {
+                        id: r.id,
+                        title: r.title,
+                        genre: r.genre,
+                        rating: Number(r.rating),
+                        trailer_url: r.trailer_url || "",
+                        movie_url: r.trailer_url || "",
+                        poster_url: r.poster_url || null,
+                        synopsis: r.synopsis || null,
+                        is_featured: Boolean(r.is_featured || false),
+                      },
+                    });
+                  }
+                  return sendJson(404, { error: "Movie not found" });
                 }
 
                 if (method === "DELETE" && resourceId !== null) {
@@ -611,11 +688,37 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
               if (method === "GET") {
                 if (resourceId !== null) {
                   const found = mockStore.movies.find((m) => m.id === resourceId);
-                  if (found) return sendJson(200, { data: found });
+                  if (found) {
+                    return sendJson(200, {
+                      data: {
+                        id: found.id,
+                        title: found.title,
+                        genre: found.genre,
+                        rating: Number(found.rating),
+                        trailer_url: found.trailer_url || "",
+                        movie_url: found.trailer_url || "",
+                        poster_url: (found as any).poster_url || null,
+                        synopsis: (found as any).synopsis || null,
+                        is_featured: Boolean((found as any).is_featured || false),
+                      },
+                    });
+                  }
                   return sendJson(404, { error: "Movie not found" });
                 }
                 const sorted = [...mockStore.movies].sort((a, b) => b.id - a.id);
-                return sendJson(200, { data: sorted });
+                return sendJson(200, {
+                  data: sorted.map((m: any) => ({
+                    id: m.id,
+                    title: m.title,
+                    genre: m.genre,
+                    rating: Number(m.rating),
+                    trailer_url: m.trailer_url || "",
+                    movie_url: m.trailer_url || "",
+                    poster_url: m.poster_url || null,
+                    synopsis: m.synopsis || null,
+                    is_featured: Boolean(m.is_featured || false),
+                  })),
+                });
               }
 
               if (method === "POST" && resourceId === null) {
@@ -628,6 +731,10 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                   genre: String(body.genre || "").trim() || "Cinema",
                   rating: Number(body.rating) || 5,
                   trailer_url: String(body.trailer_url || body.trailerUrl || "").trim(),
+                  movie_url: String(body.trailer_url || body.trailerUrl || "").trim(),
+                  poster_url: body.poster_url ? String(body.poster_url).trim() : null,
+                  synopsis: body.synopsis ? String(body.synopsis).trim() : null,
+                  is_featured: Boolean(body.is_featured),
                 };
                 mockStore.movies.unshift(newItem);
                 return sendJson(201, {
@@ -635,6 +742,38 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                   message: "Created successfully",
                   data: newItem,
                 });
+              }
+
+              if (method === "PUT" && resourceId !== null) {
+                const body = await readJsonBody();
+                const idx = mockStore.movies.findIndex((m) => m.id === resourceId);
+                if (idx !== -1) {
+                  mockStore.movies[idx] = {
+                    ...mockStore.movies[idx],
+                    ...(body.title !== undefined && { title: String(body.title).trim() }),
+                    ...(body.genre !== undefined && { genre: String(body.genre).trim() }),
+                    ...(body.rating !== undefined && { rating: Number(body.rating) }),
+                    ...((body.trailer_url !== undefined || body.trailerUrl !== undefined) && {
+                      trailer_url: String(body.trailer_url || body.trailerUrl || "").trim(),
+                      movie_url: String(body.trailer_url || body.trailerUrl || "").trim(),
+                    }),
+                    ...(body.poster_url !== undefined && {
+                      poster_url: body.poster_url ? String(body.poster_url).trim() : null,
+                    }),
+                    ...(body.synopsis !== undefined && {
+                      synopsis: body.synopsis ? String(body.synopsis).trim() : null,
+                    }),
+                    ...(body.is_featured !== undefined && {
+                      is_featured: Boolean(body.is_featured),
+                    }),
+                  };
+                  return sendJson(200, {
+                    success: true,
+                    message: "Updated successfully",
+                    data: mockStore.movies[idx],
+                  });
+                }
+                return sendJson(404, { error: "Movie not found" });
               }
 
               if (method === "DELETE" && resourceId !== null) {

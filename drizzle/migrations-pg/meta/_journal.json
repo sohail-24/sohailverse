@@ -8,6 +8,13 @@
       "when": 1788533381747,
       "tag": "0000_bouncy_prowler",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788931099921,
+      "tag": "0001_breezy_plazm",
+      "breakpoints": true
     }
   ]
 }

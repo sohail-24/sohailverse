@@ -1,6 +1,5 @@
 import { Play, Star } from "lucide-react";
 import type { Movie } from "../../lib/api";
-import { getMovieEditorial } from "./cinemaData";
 
 interface CinemaMovieCarouselProps {
   movies: Movie[];
@@ -70,9 +69,15 @@ export default function CinemaMovieCarousel({
         </div>
       ) : (
         <div className="cinema-desktop-movie-grid grid grid-cols-2 md:grid-cols-[repeat(4,230px)] gap-3.5 md:gap-x-2.5 md:gap-y-6 w-full max-w-[490px] md:max-w-none md:w-fit">
-          {movies.map((movie, idx) => {
-            const editorial = getMovieEditorial(movie, idx);
+          {movies.map((movie) => {
             const movieUrl = movie.movie_url || movie.trailer_url || "";
+            const posterUrl = movie.poster_url || "/cinema/posters/oppenheimer.jpg";
+            const synopsis =
+              movie.synopsis || "Curated film in the observatory collection.";
+            const ratingDisplay = movie.rating != null ? Number(movie.rating) : 5;
+            const genreBadge = movie.genre
+              ? movie.genre.split("/")[0].trim()
+              : "Film";
 
             const handleClick = (e: React.MouseEvent) => {
               if (!movieUrl) {
@@ -95,12 +100,12 @@ export default function CinemaMovieCarousel({
                   rel="noopener noreferrer"
                   onClick={handleClick}
                   id={`movie-card-link-${movie.id}`}
-                  aria-label={`Watch ${editorial.title} Movie`}
+                  aria-label={`Watch ${movie.title} Movie`}
                   className="relative aspect-[2/3] w-full block overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg cursor-pointer transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-cyan-400/40 group-hover:shadow-[0_12px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.15)] focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 >
                   <img
-                    src={editorial.poster}
-                    alt={`${editorial.title} movie poster`}
+                    src={posterUrl}
+                    alt={`${movie.title} movie poster`}
                     referrerPolicy="no-referrer"
                     loading="lazy"
                     onError={(e) => {
@@ -119,12 +124,12 @@ export default function CinemaMovieCarousel({
                   {/* Top Badges (Genre & Rating) */}
                   <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between">
                     <span className="rounded-full border border-white/20 bg-slate-950/70 px-2 py-0.5 text-[10px] font-medium text-slate-200 backdrop-blur-md">
-                      {editorial.genre.split("/")[0].trim()}
+                      {genreBadge}
                     </span>
 
                     <span className="flex items-center gap-1 rounded-full border border-amber-400/30 bg-slate-950/70 px-2 py-0.5 text-[10px] font-semibold text-amber-300 backdrop-blur-md">
                       <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
-                      {editorial.rating}
+                      {ratingDisplay}
                     </span>
                   </div>
 
@@ -151,9 +156,9 @@ export default function CinemaMovieCarousel({
                       onClick={handleClick}
                       id={`movie-title-link-${movie.id}`}
                       className="font-display text-sm sm:text-base font-bold text-white group-hover:text-cyan-300 transition-colors cursor-pointer line-clamp-2 leading-5 sm:leading-6 block break-words"
-                      title={`Watch ${editorial.title} Movie`}
+                      title={`Watch ${movie.title} Movie`}
                     >
-                      {editorial.title}
+                      {movie.title}
                     </a>
                   </div>
 
@@ -162,9 +167,9 @@ export default function CinemaMovieCarousel({
                     <p
                       id={`movie-desc-${movie.id}`}
                       className="text-xs text-slate-400 font-light line-clamp-2 leading-[18px] block break-words"
-                      title={editorial.tagline || editorial.description}
+                      title={synopsis}
                     >
-                      {editorial.tagline || editorial.description}
+                      {synopsis}
                     </p>
                   </div>
                 </div>

@@ -1,5 +1,4 @@
 import type { Movie } from "../../lib/api";
-import { getMovieEditorial } from "./cinemaData";
 
 export type MovieStatusFilter = "ALL" | "ACTION" | "FANTASY" | "ROMANCE" | "SCI-FI";
 
@@ -14,26 +13,23 @@ export const MOVIE_STATUS_FILTERS: MovieStatusFilter[] = [
 export function matchMovieStatus(movie: Movie, filter: MovieStatusFilter): boolean {
   if (filter === "ALL") return true;
 
-  const rawGenre = (movie.genre || "").trim().toLowerCase();
-  const editorial = getMovieEditorial(movie);
-  const editorialGenre = (editorial.genre || "").trim().toLowerCase();
+  const genre = (movie.genre || "").trim().toLowerCase();
+  const synopsis = (movie.synopsis || "").toLowerCase();
+  const title = (movie.title || "").toLowerCase();
+  const combined = `${genre} ${synopsis} ${title}`;
 
   const target = filter.toLowerCase();
 
   if (target === "sci-fi") {
     return (
-      rawGenre.includes("sci-fi") ||
-      rawGenre.includes("scifi") ||
-      rawGenre.includes("sci fi") ||
-      rawGenre.includes("science fiction") ||
-      editorialGenre.includes("sci-fi") ||
-      editorialGenre.includes("scifi") ||
-      editorialGenre.includes("sci fi") ||
-      editorialGenre.includes("science fiction")
+      combined.includes("sci-fi") ||
+      combined.includes("scifi") ||
+      combined.includes("sci fi") ||
+      combined.includes("science fiction")
     );
   }
 
-  return rawGenre.includes(target) || editorialGenre.includes(target);
+  return combined.includes(target);
 }
 
 interface CinemaStatusFilterProps {

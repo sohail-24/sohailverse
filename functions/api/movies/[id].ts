@@ -20,6 +20,75 @@ interface PagesContext {
   };
 }
 
+export async function onRequestGet({ env, params }: PagesContext): Promise<Response> {
+  if (!env.DATABASE_URL) {
+    return new Response(
+      JSON.stringify({ error: "Neon DATABASE_URL is not configured." }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
+  const id = parseInt(params.id, 10);
+  if (isNaN(id) || id <= 0) {
+    return new Response(
+      JSON.stringify({ error: "Invalid movie ID. ID must be a positive integer." }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
+  try {
+    const db = createDb(env.DATABASE_URL!);
+    const records = await db.select().from(movies).where(eq(movies.id, id)).limit(1);
+
+    if (records.length === 0) {
+      return new Response(
+        JSON.stringify({ error: `Movie with ID ${id} not found.` }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const r: any = records[0];
+    const url = r.trailerUrl || r.trailer_url || "";
+    const formatted = {
+      id: r.id,
+      title: r.title,
+      genre: r.genre || "General",
+      rating: Number(r.rating) || 5,
+      trailer_url: url,
+      movie_url: url,
+      poster_url: r.posterUrl || r.poster_url || null,
+      synopsis: r.synopsis || null,
+      is_featured: Boolean(r.isFeatured ?? r.is_featured ?? false),
+    };
+
+    return new Response(
+      JSON.stringify({ data: formatted }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error) {
+    console.error("Error querying movie by ID from Neon:", error);
+    return new Response(
+      JSON.stringify({ error: "Unable to retrieve data" }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+}
+
 export async function onRequestPut({ request, env, params }: PagesContext): Promise<Response> {
   if (!env.DATABASE_URL) {
     return new Response(
@@ -54,7 +123,7 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
       );
     }
 
-    const { title, genre, rating, trailer_url, movie_url } = body as Record<string, any>;
+    const { title, genre, rating, trailer_url, movie_url, poster_url, synopsis, is_featured } = body as Record<string, any>;
 
     const updateValues: Partial<typeof movies.$inferInsert> = {};
 
@@ -72,12 +141,12 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
     }
 
     if (genre !== undefined) {
-      updateValues.genre = typeof genre === "string" && genre.trim() ? genre.trim() : null;
+      updateValues.genre = typeof genre === "string" && genre.trim() ? genre.trim() : "General";
     }
 
     if (rating !== undefined) {
       if (rating === null || rating === "") {
-        updateValues.rating = null;
+        updateValues.rating = 5;
       } else {
         const numRating = Number(rating);
         if (isNaN(numRating) || numRating < 0 || numRating > 10) {
@@ -96,6 +165,18 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
     const movieUrlInput = movie_url !== undefined ? movie_url : trailer_url;
     if (movieUrlInput !== undefined) {
       updateValues.trailerUrl = typeof movieUrlInput === "string" && movieUrlInput.trim() ? movieUrlInput.trim() : null;
+    }
+
+    if (poster_url !== undefined) {
+      updateValues.posterUrl = typeof poster_url === "string" && poster_url.trim() ? poster_url.trim() : null;
+    }
+
+    if (synopsis !== undefined) {
+      updateValues.synopsis = typeof synopsis === "string" && synopsis.trim() ? synopsis.trim() : null;
+    }
+
+    if (is_featured !== undefined) {
+      updateValues.isFeatured = typeof is_featured === "boolean" ? is_featured : Boolean(is_featured);
     }
 
     if (Object.keys(updateValues).length === 0) {
@@ -125,11 +206,25 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
       );
     }
 
+    const updatedRecord: any = updated[0];
+    const url = updatedRecord.trailerUrl || updatedRecord.trailer_url || "";
+    const formatted = {
+      id: updatedRecord.id,
+      title: updatedRecord.title,
+      genre: updatedRecord.genre || "General",
+      rating: Number(updatedRecord.rating) || 5,
+      trailer_url: url,
+      movie_url: url,
+      poster_url: updatedRecord.posterUrl || updatedRecord.poster_url || null,
+      synopsis: updatedRecord.synopsis || null,
+      is_featured: Boolean(updatedRecord.isFeatured ?? updatedRecord.is_featured ?? false),
+    };
+
     return new Response(
       JSON.stringify({
         success: true,
         message: "Movie updated successfully",
-        data: updated[0],
+        data: formatted,
       }),
       {
         status: 200,

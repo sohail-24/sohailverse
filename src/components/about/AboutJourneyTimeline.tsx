@@ -5,15 +5,18 @@ import {
   Building2,
   ShoppingCart,
   Sparkles,
+  Terminal,
   CheckCircle2,
 } from "lucide-react";
 import type { TimelinePost } from "../../lib/api";
 
 interface AboutJourneyTimelineProps {
+  timeline?: TimelinePost[];
   dbTimeline?: TimelinePost[];
 }
 
 interface JourneyMilestone {
+  id?: number;
   year: string;
   stage: string;
   title: string;
@@ -38,121 +41,127 @@ interface JourneyMilestone {
   };
 }
 
-export default function AboutJourneyTimeline({ dbTimeline: _dbTimeline }: AboutJourneyTimelineProps) {
-  // Source of truth: The 2023 → 2026 chronological journey
-  const milestones: JourneyMilestone[] = [
-    {
-      year: "2023",
-      stage: "Foundation",
-      title: "Completed Engineering",
-      description:
-        "Completed my engineering journey and built the foundation for everything that came next.",
-      icon: GraduationCap,
-      theme: {
-        text: "text-emerald-400",
-        stageBg: "bg-emerald-500/10",
-        stageBorder: "border-emerald-500/30",
-        stageText: "text-emerald-400",
-        nodeBg: "bg-emerald-500/15",
-        nodeBorder: "border-emerald-400",
-        nodeRing: "ring-emerald-400/30",
-        nodeGlow: "shadow-[0_0_20px_rgba(52,211,153,0.35)]",
-        cardBorder: "border-white/10 hover:border-emerald-500/35",
-        cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
-        lineColor: "from-emerald-400",
-      },
-    },
-    {
-      year: "2024",
-      stage: "Exploration → Cloud & DevOps",
-      title: "Saudi Arabia & A New Direction",
-      description:
-        "Visited Saudi Arabia, gaining new real-world perspective and experiences. After returning, I started learning AWS and DevOps seriously.",
-      icon: Plane,
-      theme: {
-        text: "text-cyan-400",
-        stageBg: "bg-cyan-500/10",
-        stageBorder: "border-cyan-500/30",
-        stageText: "text-cyan-400",
-        nodeBg: "bg-cyan-500/15",
-        nodeBorder: "border-cyan-400",
-        nodeRing: "ring-cyan-400/30",
-        nodeGlow: "shadow-[0_0_20px_rgba(34,211,238,0.35)]",
-        cardBorder: "border-white/10 hover:border-cyan-500/35",
-        cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
-        lineColor: "from-cyan-400",
-      },
-    },
-    {
-      year: "2025",
-      stage: "Professional Experience",
-      title: "Internship at Visys Cloud Technology",
-      description:
-        "Started my internship at Visys Cloud Technology and moved from learning concepts toward practical professional experience.",
-      icon: Building2,
-      theme: {
-        text: "text-purple-400",
-        stageBg: "bg-purple-500/10",
-        stageBorder: "border-purple-500/30",
-        stageText: "text-purple-400",
-        nodeBg: "bg-purple-500/15",
-        nodeBorder: "border-purple-400",
-        nodeRing: "ring-purple-400/30",
-        nodeGlow: "shadow-[0_0_20px_rgba(192,132,252,0.35)]",
-        cardBorder: "border-white/10 hover:border-purple-500/35",
-        cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
-        lineColor: "from-purple-400",
-      },
-    },
-    {
-      year: "2026",
-      stage: "Real-World Impact",
-      title: "Live B2B Fruit Wholesale Platform",
-      description:
-        "Started a live B2B wholesale website for fruits, serving real users with real payments and real-world business requirements.",
-      icon: ShoppingCart,
-      isSpecialHighlight: true,
-      specialBadges: ["REAL USERS", "REAL PAYMENTS"],
-      note: "This is where projects became real-world systems.",
-      theme: {
-        text: "text-lime-400",
-        stageBg: "bg-lime-500/15",
-        stageBorder: "border-lime-400/40",
-        stageText: "text-lime-400",
-        nodeBg: "bg-lime-500/20",
-        nodeBorder: "border-lime-400",
-        nodeRing: "ring-lime-400/40",
-        nodeGlow: "shadow-[0_0_26px_rgba(163,230,53,0.45)]",
-        cardBorder: "border-lime-400/40 hover:border-lime-400/70",
-        cardBg: "bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-lime-950/30 hover:to-lime-950/40",
-        lineColor: "from-lime-400",
-      },
-    },
-    {
-      year: "2026",
-      stage: "Continuous Building",
-      title: "Building & Creating",
-      description:
-        "Continued building multiple websites for different real-world works while learning, experimenting, and turning ideas into working solutions.",
-      icon: Sparkles,
-      isContinuing: true,
-      specialBadges: ["STILL BUILDING · ONGOING"],
-      note: "The journey continues with new ideas, projects, and solutions.",
-      theme: {
-        text: "text-sky-400",
-        stageBg: "bg-sky-500/10",
-        stageBorder: "border-sky-500/30",
-        stageText: "text-sky-400",
-        nodeBg: "bg-sky-500/15",
-        nodeBorder: "border-sky-400",
-        nodeRing: "ring-sky-400/30",
-        nodeGlow: "shadow-[0_0_20px_rgba(56,189,248,0.35)]",
-        cardBorder: "border-sky-500/25 hover:border-sky-400/50",
-        cardBg: "bg-slate-900/65 hover:bg-slate-900/85",
-        lineColor: "from-sky-400",
-      },
-    },
-  ];
+const TIMELINE_THEMES = [
+  {
+    text: "text-emerald-400",
+    stageBg: "bg-emerald-500/10",
+    stageBorder: "border-emerald-500/30",
+    stageText: "text-emerald-400",
+    nodeBg: "bg-emerald-500/15",
+    nodeBorder: "border-emerald-400",
+    nodeRing: "ring-emerald-400/30",
+    nodeGlow: "shadow-[0_0_20px_rgba(52,211,153,0.35)]",
+    cardBorder: "border-white/10 hover:border-emerald-500/35",
+    cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
+    lineColor: "from-emerald-400",
+  },
+  {
+    text: "text-cyan-400",
+    stageBg: "bg-cyan-500/10",
+    stageBorder: "border-cyan-500/30",
+    stageText: "text-cyan-400",
+    nodeBg: "bg-cyan-500/15",
+    nodeBorder: "border-cyan-400",
+    nodeRing: "ring-cyan-400/30",
+    nodeGlow: "shadow-[0_0_20px_rgba(34,211,238,0.35)]",
+    cardBorder: "border-white/10 hover:border-cyan-500/35",
+    cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
+    lineColor: "from-cyan-400",
+  },
+  {
+    text: "text-purple-400",
+    stageBg: "bg-purple-500/10",
+    stageBorder: "border-purple-500/30",
+    stageText: "text-purple-400",
+    nodeBg: "bg-purple-500/15",
+    nodeBorder: "border-purple-400",
+    nodeRing: "ring-purple-400/30",
+    nodeGlow: "shadow-[0_0_20px_rgba(192,132,252,0.35)]",
+    cardBorder: "border-white/10 hover:border-purple-500/35",
+    cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
+    lineColor: "from-purple-400",
+  },
+  {
+    text: "text-lime-400",
+    stageBg: "bg-lime-500/15",
+    stageBorder: "border-lime-400/40",
+    stageText: "text-lime-400",
+    nodeBg: "bg-lime-500/20",
+    nodeBorder: "border-lime-400",
+    nodeRing: "ring-lime-400/40",
+    nodeGlow: "shadow-[0_0_26px_rgba(163,230,53,0.45)]",
+    cardBorder: "border-lime-400/40 hover:border-lime-400/70",
+    cardBg: "bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-lime-950/30 hover:to-lime-950/40",
+    lineColor: "from-lime-400",
+  },
+  {
+    text: "text-sky-400",
+    stageBg: "bg-sky-500/10",
+    stageBorder: "border-sky-500/30",
+    stageText: "text-sky-400",
+    nodeBg: "bg-sky-500/15",
+    nodeBorder: "border-sky-400",
+    nodeRing: "ring-sky-400/30",
+    nodeGlow: "shadow-[0_0_20px_rgba(56,189,248,0.35)]",
+    cardBorder: "border-sky-500/25 hover:border-sky-400/50",
+    cardBg: "bg-slate-900/65 hover:bg-slate-900/85",
+    lineColor: "from-sky-400",
+  },
+];
+
+function getCategoryIcon(category?: string, index: number = 0) {
+  const cat = (category || "").toLowerCase();
+  if (cat.includes("employ") || cat.includes("job") || cat.includes("career") || cat.includes("work")) {
+    return Building2;
+  }
+  if (cat.includes("platform") || cat.includes("system") || cat.includes("cms") || cat.includes("tech") || cat.includes("cloud")) {
+    return Terminal;
+  }
+  if (cat.includes("edu") || cat.includes("degree") || cat.includes("learn") || cat.includes("foundation")) {
+    return GraduationCap;
+  }
+  if (cat.includes("travel") || cat.includes("explor") || cat.includes("saudi")) {
+    return Plane;
+  }
+  if (cat.includes("shop") || cat.includes("b2b") || cat.includes("commerce") || cat.includes("fruit")) {
+    return ShoppingCart;
+  }
+  const ICONS = [Building2, Terminal, Sparkles, GraduationCap, Plane, ShoppingCart];
+  return ICONS[index % ICONS.length];
+}
+
+export default function AboutJourneyTimeline({
+  timeline,
+  dbTimeline,
+}: AboutJourneyTimelineProps) {
+  const posts = timeline || dbTimeline || [];
+
+  const milestones: JourneyMilestone[] = posts.map((post, idx) => {
+    const yearMatch = post.created_at ? post.created_at.match(/\b(19\d\d|20\d\d)\b/) : null;
+    const year = yearMatch ? yearMatch[1] : (post.created_at ? post.created_at.slice(0, 4) : "2026");
+    const theme = TIMELINE_THEMES[idx % TIMELINE_THEMES.length];
+    const icon = getCategoryIcon(post.category, idx);
+
+    return {
+      id: post.id,
+      year,
+      stage: post.category || "Milestone",
+      title: post.title,
+      description: post.description,
+      icon,
+      theme,
+    };
+  });
+
+  const years = milestones.map((m) => parseInt(m.year, 10)).filter((y) => !isNaN(y));
+  const minYear = years.length > 0 ? Math.min(...years) : 2026;
+  const maxYear = years.length > 0 ? Math.max(...years) : 2026;
+  const chronologyText =
+    milestones.length > 0
+      ? minYear === maxYear
+        ? `Chronology · ${minYear}`
+        : `Chronology · ${minYear} — ${maxYear}`
+      : "Chronology · Archive";
 
   return (
     <section id="about-my-journey" className="py-8 sm:py-14">
@@ -166,7 +175,7 @@ export default function AboutJourneyTimeline({ dbTimeline: _dbTimeline }: AboutJ
             <div className="w-8 h-1 bg-lime-400 rounded-full mt-2" />
           </div>
           <p className="font-mono text-xs uppercase tracking-widest text-slate-400">
-            Chronology · 2023 — 2026
+            {chronologyText}
           </p>
         </div>
       </div>
@@ -181,18 +190,23 @@ export default function AboutJourneyTimeline({ dbTimeline: _dbTimeline }: AboutJ
         {/* Fading Tail indicating open-ended continuation */}
         <div className="absolute -bottom-2 left-[180px] lg:left-[210px] w-[2px] h-10 bg-gradient-to-b from-sky-400 to-transparent opacity-40 pointer-events-none" />
 
-        <div className="space-y-8 lg:space-y-10">
-          {milestones.map((m, idx) => {
-            const Icon = m.icon;
-            return (
-              <motion.div
-                key={m.year + idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.45, delay: idx * 0.08 }}
-                className="relative flex items-start group"
-              >
+        {milestones.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-8 text-center backdrop-blur-md">
+            <p className="text-sm font-mono text-slate-400">No timeline milestones found in database.</p>
+          </div>
+        ) : (
+          <div className="space-y-8 lg:space-y-10">
+            {milestones.map((m, idx) => {
+              const Icon = m.icon;
+              return (
+                <motion.div
+                  key={m.id || m.year + idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 0.45, delay: idx * 0.08 }}
+                  className="relative flex items-start group"
+                >
                 {/* 1. Left Column: Year & Stage Classification */}
                 <div className="w-[180px] lg:w-[210px] pr-8 text-right shrink-0 pt-2">
                   <div className="font-mono text-xl lg:text-2xl font-black tracking-tight">
@@ -284,6 +298,7 @@ export default function AboutJourneyTimeline({ dbTimeline: _dbTimeline }: AboutJ
             );
           })}
         </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -296,18 +311,23 @@ export default function AboutJourneyTimeline({ dbTimeline: _dbTimeline }: AboutJ
         {/* Fading Tail for Mobile */}
         <div className="absolute -bottom-1 left-[18px] w-[2px] h-8 bg-gradient-to-b from-sky-400 to-transparent opacity-40 pointer-events-none" />
 
-        <div className="space-y-6">
-          {milestones.map((m, idx) => {
-            const Icon = m.icon;
-            return (
-              <motion.div
-                key={m.year + idx}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-25px" }}
-                transition={{ duration: 0.4, delay: idx * 0.06 }}
-                className="relative flex items-start gap-3.5 group"
-              >
+        {milestones.length === 0 ? (
+          <div className="rounded-xl border border-white/10 bg-slate-900/60 p-6 text-center backdrop-blur-md">
+            <p className="text-xs font-mono text-slate-400">No timeline milestones found in database.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {milestones.map((m, idx) => {
+              const Icon = m.icon;
+              return (
+                <motion.div
+                  key={m.id || m.year + idx}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-25px" }}
+                  transition={{ duration: 0.4, delay: idx * 0.06 }}
+                  className="relative flex items-start gap-3.5 group"
+                >
                 {/* Milestone Circular Node on Rail */}
                 <div className="relative z-10 shrink-0 mt-0.5">
                   <div
@@ -383,6 +403,7 @@ export default function AboutJourneyTimeline({ dbTimeline: _dbTimeline }: AboutJ
             );
           })}
         </div>
+        )}
       </div>
     </section>
   );

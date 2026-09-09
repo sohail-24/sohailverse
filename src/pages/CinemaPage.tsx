@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { fetchApi, isValidMovie, type Movie } from "../lib/api";
-import { ErrorState } from "../components/ui/StatusStates";
+import { ErrorState, LoadingSkeleton } from "../components/ui/StatusStates";
 import CinemaHero from "../components/cinema/CinemaHero";
 import CinemaStatusFilter, {
   type MovieStatusFilter,
@@ -39,15 +39,25 @@ export default function CinemaPage() {
     return movies.filter((m) => matchMovieStatus(m, statusFilter));
   }, [movies, statusFilter]);
 
-  // Identify featured movie (prefer Harry Potter or top rated) - kept completely independent
+  // Identify featured movie using the database-backed is_featured boolean flag
   const featuredMovie = useMemo(() => {
     if (movies.length === 0) return null;
-    const hp = movies.find((m) =>
-      m.title.toLowerCase().includes("harry potter")
-    );
-    if (hp) return hp;
-    // Otherwise highest rating
-    return [...movies].sort((a, b) => (b.rating || 0) - (a.rating || 0))[0];
+    const featuredList = movies.filter((m) => Boolean(m.is_featured));
+    if (featuredList.length === 1) {
+      return featuredList[0];
+    }
+    if (featuredList.length > 1) {
+      console.warn(
+        `[Cinema] Multiple featured movies found (${featuredList.length}), resolving deterministically by highest rating and ID.`
+      );
+      return [...featuredList].sort(
+        (a, b) => (b.rating || 0) - (a.rating || 0) || b.id - a.id
+      )[0];
+    }
+    // Deterministic UI fallback if no record has is_featured === true (highest rated, tie-break ID)
+    return [...movies].sort(
+      (a, b) => (b.rating || 0) - (a.rating || 0) || b.id - a.id
+    )[0];
   }, [movies]);
 
   // Direct movie playback handler: Clicking a movie directly opens the stored movie URL
@@ -66,6 +76,10 @@ export default function CinemaPage() {
       {error ? (
         <div className="mt-12">
           <ErrorState message={error} onRetry={loadMovies} />
+        </div>
+      ) : loading ? (
+        <div className="mt-12">
+          <LoadingSkeleton label="Loading cinema observatory collection..." />
         </div>
       ) : (
         <>
