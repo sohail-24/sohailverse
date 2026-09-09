@@ -95,8 +95,8 @@ export default function ProjectsPage() {
             <span>SELECTED WORK</span>
           </div>
 
-          {/* Main Heading — Guaranteed One Line on Desktop */}
-          <h1 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-[40px] xl:text-[42px] font-extrabold tracking-tight text-white leading-tight whitespace-normal lg:whitespace-nowrap">
+          {/* Main Heading — Guaranteed ONE SINGLE LINE on All Viewports */}
+          <h1 className="font-display text-[13px] min-[360px]:text-[15px] min-[400px]:text-[17px] min-[480px]:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[42px] font-extrabold tracking-tight text-white leading-tight whitespace-nowrap overflow-hidden text-ellipsis sm:text-clip">
             REAL PRODUCTS. REAL SYSTEMS. REAL IMPACT.
           </h1>
 
@@ -158,7 +158,7 @@ export default function ProjectsPage() {
         <div className="w-full border-t border-white/[0.08] my-3 sm:my-5" />
 
         {/* =====================================================================
-            B. EDITORIAL PROJECT SHOWCASE (Data-Driven Alternating Desktop, Stacked Mobile)
+            B. EDITORIAL PROJECT SHOWCASE (Data-Driven Alternating Layout)
            ===================================================================== */}
         <section
           id="project-showcase-list"

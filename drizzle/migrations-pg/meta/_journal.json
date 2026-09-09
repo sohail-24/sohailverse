@@ -15,6 +15,13 @@
       "when": 1788931099921,
       "tag": "0001_breezy_plazm",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788932000000,
+      "tag": "0002_dapper_timeline_events",
+      "breakpoints": true
     }
   ]
 }

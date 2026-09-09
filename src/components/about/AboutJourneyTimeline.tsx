@@ -136,11 +136,39 @@ export default function AboutJourneyTimeline({
 }: AboutJourneyTimelineProps) {
   const posts = timeline || dbTimeline || [];
 
-  const milestones: JourneyMilestone[] = posts.map((post, idx) => {
-    const yearMatch = post.created_at ? post.created_at.match(/\b(19\d\d|20\d\d)\b/) : null;
-    const year = yearMatch ? yearMatch[1] : (post.created_at ? post.created_at.slice(0, 4) : "2026");
+  // Sort posts chronologically: year ascending, then event_date/created_at ascending, then id ascending
+  const sortedPosts = [...posts].sort((a, b) => {
+    const yearA = parseInt(a.year || (a.event_date ? a.event_date.slice(0, 4) : (a.created_at ? a.created_at.slice(0, 4) : "2026")), 10);
+    const yearB = parseInt(b.year || (b.event_date ? b.event_date.slice(0, 4) : (b.created_at ? b.created_at.slice(0, 4) : "2026")), 10);
+    if (yearA !== yearB) return yearA - yearB;
+    const dateA = a.event_date || a.created_at || "";
+    const dateB = b.event_date || b.created_at || "";
+    if (dateA && dateB) return dateA.localeCompare(dateB);
+    return (a.id || 0) - (b.id || 0);
+  });
+
+  const milestones: JourneyMilestone[] = sortedPosts.map((post, idx) => {
+    let year = post.year ? post.year.trim() : null;
+    if (!year) {
+      const yearMatch = post.created_at ? post.created_at.match(/\b(19\d\d|20\d\d)\b/) : null;
+      year = yearMatch ? yearMatch[1] : (post.created_at ? post.created_at.slice(0, 4) : "2026");
+    }
     const theme = TIMELINE_THEMES[idx % TIMELINE_THEMES.length];
     const icon = getCategoryIcon(post.category, idx);
+
+    // Contextual badge & highlight detection
+    const isSpecialHighlight = (post.title || "").toLowerCase().includes("sohail-shop");
+    const isContinuing = (post.title || "").toLowerCase().includes("visys");
+    let specialBadges: string[] | undefined = undefined;
+    let note: string | undefined = undefined;
+
+    if (isSpecialHighlight) {
+      specialBadges = ["REAL USERS & LIVE ARCHITECTURE"];
+      note = "Flagship cloud architecture & e-commerce deployment";
+    } else if (isContinuing) {
+      specialBadges = ["ACTIVE CLOUD ROLE"];
+      note = "DevOps automation and multi-cloud systems";
+    }
 
     return {
       id: post.id,
@@ -149,6 +177,10 @@ export default function AboutJourneyTimeline({
       title: post.title,
       description: post.description,
       icon,
+      isSpecialHighlight,
+      isContinuing,
+      specialBadges,
+      note,
       theme,
     };
   });

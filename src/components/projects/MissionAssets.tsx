@@ -45,7 +45,15 @@ function AssetCard({
   );
 }
 
-export default function MissionAssets() {
+interface MissionAssetsProps {
+  pptUrl?: string | null;
+  githubUrl?: string | null;
+}
+
+export default function MissionAssets({ pptUrl, githubUrl }: MissionAssetsProps = {}) {
+  const presentationHref = pptUrl && pptUrl !== "coming-soon" ? pptUrl : undefined;
+  const githubHref = githubUrl && githubUrl !== "coming-soon" ? githubUrl : undefined;
+
   return (
     <section className="mt-6 sm:mt-10 rounded-2xl sm:rounded-[2rem] border border-white/10 bg-slate-950/40 p-5 sm:p-8">
       <div className="mb-5 sm:mb-8">
@@ -66,11 +74,13 @@ export default function MissionAssets() {
           title="DevOps Case Study"
           description="Detailed documentation of architecture, tools, and outcomes."
           icon={<FileText className="h-5 w-5" />}
+          href={presentationHref}
         />
         <AssetCard
           title="GitHub Repositories"
           description="Application, kubeadm, EKS, and Terraform repositories."
           icon={<GitBranch className="h-5 w-5" />}
+          href={githubHref}
         />
         <AssetCard
           title="Deployment Playbook"

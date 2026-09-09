@@ -1,45 +1,75 @@
 import { ExternalLink, Code2, BookOpenText, Server, Workflow } from "lucide-react";
 
-const links = [
+interface ProjectLinksProps {
+  primaryGithubUrl?: string | null;
+  isFlagship?: boolean;
+}
+
+const defaultFlagshipLinks = [
   {
     title: "Kubeadm Application",
     description: "Main Django application repository",
     href: "https://github.com/sohail-24/django_ecommerce.git",
     icon: <Code2 className="h-5 w-5" />,
+    isPrimaryApp: true,
   },
   {
     title: "Kubeadm Stack",
     description: "Helm charts and ArgoCD stack",
     href: "https://github.com/sohail-24/devops-ecommerce-kubeadm.git",
     icon: <Workflow className="h-5 w-5" />,
+    isPrimaryApp: false,
   },
   {
     title: "Kubeadm Platform",
     description: "Terraform infrastructure for EC2 platform",
     href: "https://github.com/sohail-24/devops-ecommerce-platform.git",
     icon: <Server className="h-5 w-5" />,
+    isPrimaryApp: false,
   },
   {
     title: "EKS Application",
     description: "Main Django application repository",
     href: "https://github.com/sohail-24/django_ecommerce.git",
     icon: <Code2 className="h-5 w-5" />,
+    isPrimaryApp: true,
   },
   {
     title: "EKS Infra",
     description: "Kubernetes manifests for AWS EKS",
     href: "https://github.com/sohail-24/django_ecommerce_infra.git",
     icon: <Workflow className="h-5 w-5" />,
+    isPrimaryApp: false,
   },
   {
     title: "EKS Platform",
     description: "Terraform modules for the EKS stack",
     href: "https://github.com/sohail-24/terraform-eks-platform.git",
     icon: <Server className="h-5 w-5" />,
+    isPrimaryApp: false,
   },
 ];
 
-export default function ProjectLinks() {
+export default function ProjectLinks({ primaryGithubUrl, isFlagship = true }: ProjectLinksProps = {}) {
+  const displayLinks = isFlagship
+    ? defaultFlagshipLinks.map((link) => ({
+        ...link,
+        href: link.isPrimaryApp && primaryGithubUrl ? primaryGithubUrl : link.href,
+      }))
+    : primaryGithubUrl
+    ? [
+        {
+          title: "Source Code",
+          description: "Primary project repository",
+          href: primaryGithubUrl,
+          icon: <Code2 className="h-5 w-5" />,
+          isPrimaryApp: true,
+        },
+      ]
+    : [];
+
+  if (displayLinks.length === 0) return null;
+
   return (
     <section className="mt-6 sm:mt-10 rounded-2xl sm:rounded-[2rem] border border-white/10 bg-slate-950/40 p-5 sm:p-8">
       <div className="mb-5 sm:mb-8">
@@ -50,7 +80,7 @@ export default function ProjectLinks() {
       </div>
 
       <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {links.map((link) => (
+        {displayLinks.map((link) => (
           <a
             key={link.title + link.href}
             href={link.href}

@@ -23,6 +23,8 @@ type TimelinePost = {
   title: string;
   category: string;
   description: string;
+  year?: string | null;
+  event_date?: string | null;
 };
 
 export default function AdminPage() {
@@ -52,6 +54,8 @@ export default function AdminPage() {
   // Timeline state
   const [timelineTitle, setTimelineTitle] = useState("");
   const [timelineCategory, setTimelineCategory] = useState("");
+  const [timelineYear, setTimelineYear] = useState("");
+  const [timelineEventDate, setTimelineEventDate] = useState("");
   const [timelineDescription, setTimelineDescription] = useState("");
   const [timeline, setTimeline] = useState<TimelinePost[]>([]);
   const [timelineLoading, setTimelineLoading] = useState(false);
@@ -280,7 +284,7 @@ export default function AdminPage() {
 
   const addTimelinePost = async () => {
     if (!timelineTitle || !timelineCategory || !timelineDescription) {
-      setMessage("⚠️ Please fill all fields");
+      setMessage("⚠️ Please fill title, category, and description");
       return;
     }
     try {
@@ -292,6 +296,8 @@ export default function AdminPage() {
           title: timelineTitle,
           category: timelineCategory,
           description: timelineDescription,
+          year: timelineYear.trim() || undefined,
+          event_date: timelineEventDate.trim() || undefined,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -299,6 +305,8 @@ export default function AdminPage() {
         setMessage("✅ Timeline event added");
         setTimelineTitle("");
         setTimelineCategory("");
+        setTimelineYear("");
+        setTimelineEventDate("");
         setTimelineDescription("");
         loadTimelinePosts();
       } else {
@@ -612,6 +620,23 @@ export default function AdminPage() {
               className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
             />
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder="Year (e.g. 2024)"
+                value={timelineYear}
+                onChange={(e) => setTimelineYear(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
+              />
+              <input
+                type="text"
+                placeholder="Event Date (e.g. 2024-03-10)"
+                value={timelineEventDate}
+                onChange={(e) => setTimelineEventDate(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
+              />
+            </div>
+
             <textarea
               placeholder="Description"
               value={timelineDescription}
@@ -647,15 +672,27 @@ export default function AdminPage() {
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold text-base sm:text-lg">
-                        #{event.id} - {event.title}
-                      </h3>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold text-base sm:text-lg">
+                          #{event.id} - {event.title}
+                        </h3>
+                        {event.year && (
+                          <span className="rounded-full bg-cyan-500/20 text-cyan-400 text-xs px-2.5 py-0.5 font-medium">
+                            {event.year}
+                          </span>
+                        )}
+                        {event.event_date && (
+                          <span className="rounded-full bg-slate-800 text-slate-400 text-xs px-2.5 py-0.5">
+                            {event.event_date}
+                          </span>
+                        )}
+                      </div>
 
-                      <p className="text-xs sm:text-sm text-slate-300">
+                      <p className="text-xs sm:text-sm text-slate-300 mt-1">
                         Category: {event.category}
                       </p>
 
-                      <p className="text-xs sm:text-sm text-slate-300">
+                      <p className="text-xs sm:text-sm text-slate-300 mt-0.5">
                         Description: {event.description}
                       </p>
                     </div>

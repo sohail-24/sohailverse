@@ -46,6 +46,8 @@ export interface TimelinePost {
   title: string;
   category: string;
   description: string;
+  year?: string | null;
+  event_date?: string | null;
   created_at: string;
 }
 
@@ -235,3 +237,55 @@ export async function fetchApi<T>(
 
   return [];
 }
+
+/**
+ * Single-record fetch helper for retrieving an individual resource by ID.
+ * Strict zero-fallback: errors and 404s are directly thrown to the caller
+ * to prevent silent substitution of unrelated mock data.
+ */
+export async function fetchApiRecord<T>(
+  endpoint: string,
+  validator?: (item: any) => boolean
+): Promise<T> {
+  const response = await fetch(endpoint, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    const errorMessage =
+      errorBody?.error || errorBody?.message || `HTTP ${response.status} from ${endpoint}`;
+    const err = new Error(errorMessage);
+    (err as any).status = response.status;
+    throw err;
+  }
+
+  const json = await response.json();
+  const rawRecord = json && typeof json === "object" && "data" in json ? json.data : json;
+
+  if (!rawRecord || typeof rawRecord !== "object" || Array.isArray(rawRecord)) {
+    throw new Error(`Malformed response from ${endpoint}: missing 'data' record object`);
+  }
+
+  if (validator && !validator(rawRecord)) {
+    throw new Error(`Record validation failed for ${endpoint}: malformed data structure`);
+  }
+
+  return rawRecord as T;
+}
+
+/**
+ * Retrieve a single DevOps project record from Neon by its numeric ID.
+ */
+export async function fetchDevOpsProjectById(id: number | string): Promise<DevOpsProject> {
+  const numericId = typeof id === "string" ? parseInt(id, 10) : id;
+  if (isNaN(numericId) || numericId <= 0) {
+    const err = new Error("Invalid project ID. ID must be a positive integer.");
+    (err as any).status = 400;
+    throw err;
+  }
+  return fetchApiRecord<DevOpsProject>(`/api/devops/${numericId}`, isValidDevOpsProject);
+}
+

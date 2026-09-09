@@ -93,6 +93,8 @@ export const timelinePosts = pgTable("timeline_posts", {
   title: text("title").notNull(),
   category: text("category").notNull(),
   description: text("description").notNull(),
+  year: text("year"),
+  eventDate: text("event_date"),
   createdAt: timestamp("created_at", {
     withTimezone: false,
     mode: "string",

@@ -171,32 +171,49 @@ const mockStore = {
   ],
   timeline: [
     {
-      id: 1,
-      title: "Built & Deployed Sohail-Shop",
-      category: "Systems & Cloud",
-      description: "Engineered scalable e-commerce infrastructure with multi-vendor support, Docker containers, and Kubernetes deployment.",
-      created_at: "2026-01-15",
-    },
-    {
-      id: 2,
-      title: "Internship at Visas Company",
-      category: "Career & Systems",
-      description: "Hands-on engineering internship contributing to cloud automation, business systems, and production pipelines.",
-      created_at: "2025-06-01",
-    },
-    {
-      id: 3,
-      title: "Saudi Arabia Journey & AWS / DevOps Genesis",
-      category: "Exploration & Learning",
-      description: "Traveled to Saudi Arabia and initiated deep-dive mastery into AWS Cloud and DevOps architecture.",
-      created_at: "2024-03-10",
-    },
-    {
       id: 4,
       title: "Completed Engineering Degree",
       category: "Education",
       description: "Graduated with an Engineering degree, establishing a comprehensive foundation in algorithms and computer systems.",
+      year: "2023",
+      event_date: "2023-06-20",
       created_at: "2023-06-20",
+    },
+    {
+      id: 5,
+      title: "Saudi Arabia Journey & AWS / DevOps Genesis",
+      category: "Exploration & Learning",
+      description: "Traveled to Saudi Arabia and initiated deep-dive mastery into AWS Cloud and DevOps architecture.",
+      year: "2024",
+      event_date: "2024-03-10",
+      created_at: "2024-03-10",
+    },
+    {
+      id: 2,
+      title: "Internship at Visys Company",
+      category: "Career & Systems",
+      description: "Hands-on engineering internship contributing to cloud automation, business systems, and production pipelines.",
+      year: "2025",
+      event_date: "2025-12-20",
+      created_at: "2025-12-20",
+    },
+    {
+      id: 6,
+      title: "Built & Deployed Sohail-Shop",
+      category: "Systems & Cloud",
+      description: "Engineered scalable e-commerce infrastructure with multi-vendor support, Docker containers, and Kubernetes deployment.",
+      year: "2026",
+      event_date: "2026-01-15",
+      created_at: "2026-01-15",
+    },
+    {
+      id: 1,
+      title: "Timeline CMS Created",
+      category: "Platform",
+      description: "Built a dynamic timeline powered by Cloudflare Workers and D1 Database",
+      year: "2026",
+      event_date: "2026-06-16",
+      created_at: "2026-06-16",
     },
   ],
   atlas: [
@@ -308,10 +325,20 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
         }
 
         // 2. Resource routes: movies, academy, devops, timeline, atlas
-        const resourceMatch = pathname.match(/^\/api\/(movies|academy|devops|timeline|atlas)(?:\/(\d+))?$/);
+        const resourceMatch = pathname.match(/^\/api\/(movies|academy|devops|timeline|atlas)(?:\/([^/]+))?$/);
         if (resourceMatch) {
           const resource = resourceMatch[1] as "movies" | "academy" | "devops" | "timeline" | "atlas";
-          const resourceId = resourceMatch[2] ? parseInt(resourceMatch[2], 10) : null;
+          const rawId = resourceMatch[2];
+          let resourceId: number | null = null;
+          if (rawId !== undefined) {
+            const parsed = parseInt(rawId, 10);
+            if (isNaN(parsed) || parsed <= 0) {
+              return sendJson(400, {
+                error: `Invalid ${resource} ID. ID must be a positive integer.`,
+              });
+            }
+            resourceId = parsed;
+          }
 
           const dbUrl = devEnv.DATABASE_URL;
           let sql: ReturnType<typeof neon> | null = null;
@@ -560,7 +587,7 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
               if (resource === "timeline") {
                 if (method === "GET") {
                   if (resourceId !== null) {
-                    const rows = await querySql`SELECT id, title, category, description, created_at FROM timeline_posts WHERE id = ${resourceId}`;
+                    const rows = await querySql`SELECT id, title, category, description, year, event_date, created_at FROM timeline_posts WHERE id = ${resourceId}`;
                     if (rows && rows.length > 0) {
                       const r = rows[0];
                       return sendJson(200, {
@@ -569,20 +596,28 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                           title: r.title || "",
                           category: r.category || "",
                           description: r.description || "",
-                          created_at: r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+                          year: r.year || (r.event_date ? r.event_date.slice(0, 4) : (r.created_at ? new Date(r.created_at).toISOString().slice(0, 4) : "2026")),
+                          event_date: r.event_date || (r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]),
+                          created_at: r.event_date || (r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]),
                         },
                       });
                     }
                     return sendJson(404, { error: "Timeline item not found" });
                   }
-                  const rows = await querySql`SELECT id, title, category, description, created_at FROM timeline_posts ORDER BY id DESC`;
+                  const rows = await querySql`
+                    SELECT id, title, category, description, year, event_date, created_at 
+                    FROM timeline_posts 
+                    ORDER BY COALESCE(year, '2026') ASC, COALESCE(event_date, created_at::text) ASC, id ASC
+                  `;
                   return sendJson(200, {
                     data: rows.map((r: any) => ({
                       id: r.id,
                       title: r.title || "",
                       category: r.category || "",
                       description: r.description || "",
-                      created_at: r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+                      year: r.year || (r.event_date ? r.event_date.slice(0, 4) : (r.created_at ? new Date(r.created_at).toISOString().slice(0, 4) : "2026")),
+                      event_date: r.event_date || (r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]),
+                      created_at: r.event_date || (r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]),
                     })),
                   });
                 }
@@ -592,8 +627,14 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                   const title = String(body.title || "").trim();
                   const category = String(body.category || "").trim();
                   const description = String(body.description || "").trim();
+                  const year = body.year ? String(body.year).trim() : null;
+                  const eventDate = body.event_date ? String(body.event_date).trim() : (body.eventDate ? String(body.eventDate).trim() : null);
 
-                  const rows = await querySql`INSERT INTO timeline_posts (title, category, description) VALUES (${title}, ${category}, ${description}) RETURNING *`;
+                  const rows = await querySql`
+                    INSERT INTO timeline_posts (title, category, description, year, event_date) 
+                    VALUES (${title}, ${category}, ${description}, ${year}, ${eventDate}) 
+                    RETURNING *
+                  `;
                   const r = rows[0];
                   return sendJson(201, {
                     success: true,
@@ -603,7 +644,9 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                       title: r.title || "",
                       category: r.category || "",
                       description: r.description || "",
-                      created_at: r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+                      year: r.year || (r.event_date ? r.event_date.slice(0, 4) : (r.created_at ? new Date(r.created_at).toISOString().slice(0, 4) : "2026")),
+                      event_date: r.event_date || (r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]),
+                      created_at: r.event_date || (r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]),
                     },
                   });
                 }
@@ -865,7 +908,12 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                   if (found) return sendJson(200, { data: found });
                   return sendJson(404, { error: "Timeline item not found" });
                 }
-                const sorted = [...mockStore.timeline].sort((a, b) => b.id - a.id);
+                const sorted = [...mockStore.timeline].sort((a, b) => {
+                  const yearA = parseInt(a.year || (a.event_date ? a.event_date.slice(0, 4) : "2026"), 10);
+                  const yearB = parseInt(b.year || (b.event_date ? b.event_date.slice(0, 4) : "2026"), 10);
+                  if (yearA !== yearB) return yearA - yearB;
+                  return a.id - b.id;
+                });
                 return sendJson(200, { data: sorted });
               }
 
@@ -873,14 +921,18 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                 const body = await readJsonBody();
                 const nextId =
                   (mockStore.timeline.reduce((max, t) => Math.max(max, t.id), 0) || 0) + 1;
+                const eventDate = body.event_date ? String(body.event_date).trim() : new Date().toISOString().split("T")[0];
+                const year = body.year ? String(body.year).trim() : eventDate.slice(0, 4);
                 const newItem = {
                   id: nextId,
                   title: String(body.title || "").trim(),
                   category: String(body.category || "").trim(),
                   description: String(body.description || "").trim(),
-                  created_at: new Date().toISOString().split("T")[0],
+                  year,
+                  event_date: eventDate,
+                  created_at: eventDate,
                 };
-                mockStore.timeline.unshift(newItem);
+                mockStore.timeline.push(newItem);
                 return sendJson(201, {
                   success: true,
                   message: "Created successfully",

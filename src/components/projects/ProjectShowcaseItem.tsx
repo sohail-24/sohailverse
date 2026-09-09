@@ -65,7 +65,7 @@ export default function ProjectShowcaseItem({
   // Alternation logic:
   // Even index (0, 2, 4): Image Left, Info Right
   // Odd index  (1, 3, 5): Info Left, Image Right
-  // On mobile (<1024px): ALWAYS Image top, Info bottom
+  // The information panel (including its bottom View Project button) reverses together with the image
   const isEven = index % 2 === 0;
 
   const targetLink = project.internalUrl || `/projects/${project.id}`;
@@ -75,32 +75,38 @@ export default function ProjectShowcaseItem({
     <article
       id={`project-showcase-${project.id}`}
       aria-label={`Project: ${project.title}`}
-      className="group relative w-full py-8 sm:py-10 lg:py-12 transition-all duration-300"
+      className="group relative w-full py-6 sm:py-8 md:py-10 transition-all duration-300"
     >
+      {/* =========================================================================
+          EDITORIAL ALTERNATING ROW
+          isEven:  [ IMAGE ]          [ INFORMATION PANEL (with button) ]
+          !isEven: [ INFORMATION PANEL (with button) ]          [ IMAGE ]
+         ========================================================================= */}
       <div
-        className={`flex flex-col ${
-          isEven ? "lg:flex-row" : "lg:flex-row-reverse"
-        } items-start lg:items-center gap-6 sm:gap-8 lg:gap-12 xl:gap-14`}
+        className={`flex ${
+          isEven ? "flex-row" : "flex-row-reverse"
+        } items-stretch gap-2 min-[400px]:gap-2.5 sm:gap-6 md:gap-8 lg:gap-12 w-full`}
       >
         {/* =========================================================================
-            1. CINEMA-SIZED PROJECT IMAGE CONTAINER
-            Directly modeled from src/components/cinema/CinemaMovieCarousel.tsx:
-            - Size: w-[210px] sm:w-[220px] md:w-[230px] shrink-0
-            - Aspect Ratio: aspect-[2/3] (same visual scale as Cinema movie posters)
-            - Radius: rounded-2xl
-            - Border: border border-white/10
-            - Background: bg-slate-900/60
-            - Elevation/Shadow: shadow-lg
-            - Mobile: self-start (left-aligned with project metadata)
+            1. TALL, CINEMATIC PORTRAIT IMAGE CONTAINER
+            - Prominent, tall vertical height with LOCKED mobile min-h
+            - Expanded mobile width (~47-48%) reclaiming the unused outer black space
+            - Left image expands toward LEFT outer edge; right image expands toward RIGHT outer edge
+            - Desktop layout completely untouched (~25-28%)
+            - NO button beneath image
            ========================================================================= */}
-        <div className="w-[210px] sm:w-[220px] md:w-[230px] shrink-0 self-start">
-          <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-cyan-400/40 group-hover:shadow-[0_12px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.15)]">
+        <div
+          className={`w-[47%] min-[380px]:w-[48%] sm:w-[28%] md:w-[26%] lg:w-[25%] shrink-0 max-w-[210px] min-[400px]:max-w-[240px] sm:max-w-[190px] md:max-w-[230px] lg:max-w-[260px] self-stretch flex flex-col justify-center ${
+            isEven ? "items-start" : "items-end sm:items-center"
+          }`}
+        >
+          <div className="relative h-full min-h-[260px] min-[400px]:min-h-[285px] sm:min-h-[340px] md:min-h-[390px] lg:min-h-[430px] w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-white/[0.12] bg-slate-900/60 shadow-[0_8px_24px_rgba(0,0,0,0.45),0_0_15px_rgba(56,189,248,0.08)] transition-all duration-300 group-hover:-translate-y-1 group-hover:border-cyan-400/40 group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.65),0_0_24px_rgba(56,189,248,0.2)]">
             {/* Clickable Image Link */}
             {isInternal ? (
               <Link
                 to={targetLink}
                 aria-label={`Inspect ${project.title}`}
-                className="block h-full w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded-2xl"
+                className="block h-full w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded-2xl sm:rounded-3xl"
               >
                 <img
                   src={project.imageUrl}
@@ -115,7 +121,7 @@ export default function ProjectShowcaseItem({
                         "/projects/temporary/sohail-shop-desktop.jpg";
                     }
                   }}
-                  className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+                  className="h-full w-full object-cover object-center brightness-[1.06] contrast-[1.05] saturate-[1.08] transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-110"
                 />
               </Link>
             ) : (
@@ -124,7 +130,7 @@ export default function ProjectShowcaseItem({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Inspect ${project.title}`}
-                className="block h-full w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded-2xl"
+                className="block h-full w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded-2xl sm:rounded-3xl"
               >
                 <img
                   src={project.imageUrl}
@@ -139,19 +145,19 @@ export default function ProjectShowcaseItem({
                         "/projects/temporary/sohail-shop-desktop.jpg";
                     }
                   }}
-                  className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+                  className="h-full w-full object-cover object-center brightness-[1.06] contrast-[1.05] saturate-[1.08] transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-110"
                 />
               </a>
             )}
 
-            {/* Cinematic bottom vignette (from Cinema Movie Carousel) */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-70 group-hover:opacity-85 transition-opacity" />
+            {/* Very light edge depth shadow */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent opacity-50 group-hover:opacity-30 transition-opacity" />
 
             {/* Highlight metric badge on poster if present */}
             {project.highlight && (
-              <div className="pointer-events-none absolute bottom-2.5 left-2.5 right-2.5 z-20">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-mono text-cyan-300 font-medium shadow-md">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <div className="pointer-events-none absolute bottom-2 left-2 right-2 z-20">
+                <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-slate-950/85 backdrop-blur-md px-2 py-0.5 text-[9px] min-[400px]:text-[10px] font-mono text-cyan-300 font-medium shadow-md max-w-full">
+                  <span className="h-1 w-1 rounded-full bg-cyan-400 animate-pulse shrink-0" />
                   <span className="truncate">{project.highlight}</span>
                 </span>
               </div>
@@ -160,101 +166,108 @@ export default function ProjectShowcaseItem({
         </div>
 
         {/* =========================================================================
-            2. PROJECT INFORMATION AREA (Comfortable breathing room beside Cinema image)
+            2. PROJECT INFORMATION PANEL
+            - Independent panel with generous horizontal breathing room
+            - Contains Category, Rating, Title, Tagline, Description, Tech, Website
+            - Subtle divider immediately above the single "View Project →" button
+            - Button is anchored at the bottom of THIS panel
            ========================================================================= */}
-        <div className="flex-1 min-w-0 w-full flex flex-col justify-center">
-          {/* Header Line: 01 / CATEGORY           ★ RATING / STATUS */}
-          <div className="flex items-center justify-between gap-4 mb-2">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold tracking-widest text-cyan-400">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span className="text-slate-600 font-mono text-xs">/</span>
-              <span className="font-mono text-xs font-semibold tracking-wider text-slate-300 uppercase">
+        <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch">
+          {/* Main textual content block */}
+          <div className="space-y-1.5 sm:space-y-2.5">
+            {/* Header Line: [Category Badge]            [Rating / Status Badge] */}
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 min-[400px]:px-2.5 sm:px-3 py-0.5 text-[10px] sm:text-xs font-mono font-medium text-slate-300 truncate max-w-[95px] min-[400px]:max-w-[130px] sm:max-w-none">
                 {project.category}
               </span>
+
+              {/* Rating badge if real rating is present, or status */}
+              {project.rating ? (
+                <div className="inline-flex items-center gap-1 rounded-full border border-amber-400/25 bg-amber-950/30 px-2 sm:px-2.5 py-0.5 text-[10px] sm:text-xs font-mono font-semibold text-amber-300 shrink-0">
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  <span>{Number(project.rating).toFixed(1)}</span>
+                </div>
+              ) : project.status ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-950/20 px-2 sm:px-2.5 py-0.5 text-[10px] sm:text-[11px] font-mono text-emerald-400 shrink-0">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <span className="truncate max-w-[75px] sm:max-w-none">{project.status}</span>
+                </span>
+              ) : null}
             </div>
 
-            {/* Rating badge if real rating is present, or status */}
-            {project.rating ? (
-              <div className="inline-flex items-center gap-1 rounded-full border border-amber-400/25 bg-amber-950/30 px-2.5 py-0.5 text-xs font-mono font-semibold text-amber-300">
-                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                <span>{Number(project.rating).toFixed(1)}</span>
+            {/* Project Title */}
+            <h2 className="font-display text-[15px] min-[400px]:text-lg sm:text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight group-hover:text-cyan-300 transition-colors">
+              {project.title}
+            </h2>
+
+            {/* Tagline / Subtitle */}
+            {project.tagline && (
+              <p className="font-mono text-[10px] sm:text-xs md:text-sm text-cyan-400/90 font-medium truncate">
+                {project.tagline}
+              </p>
+            )}
+
+            {/* Narrative Description — clean wrapping with breathing room */}
+            <p className="text-xs sm:text-sm md:text-base text-slate-300/90 leading-relaxed font-normal line-clamp-3 sm:line-clamp-4 md:line-clamp-none">
+              {project.description}
+            </p>
+
+            {/* Technology Stack with Clean Branded Icons */}
+            {project.technologies && project.technologies.length > 0 && (
+              <div className="pt-0.5 sm:pt-1">
+                <div className="flex flex-wrap gap-1 sm:gap-1.5 md:gap-2">
+                  {project.technologies.slice(0, 4).map((tech) => (
+                    <span
+                      key={tech}
+                      className="inline-flex items-center gap-1 sm:gap-1.5 rounded-md sm:rounded-lg border border-white/10 bg-white/[0.03] px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-mono text-slate-200"
+                    >
+                      <span className="text-[10px] sm:text-xs shrink-0">{getTechIcon(tech)}</span>
+                      <span className="truncate max-w-[85px] sm:max-w-none">{tech}</span>
+                    </span>
+                  ))}
+                  {project.technologies.length > 4 && (
+                    <span className="inline-flex items-center rounded-md sm:rounded-lg border border-white/10 bg-white/[0.02] px-1.5 py-0.5 sm:px-2 sm:py-1 text-[9px] sm:text-xs font-mono text-slate-400">
+                      +{project.technologies.length - 4}
+                    </span>
+                  )}
+                </div>
               </div>
-            ) : project.status ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-950/20 px-2.5 py-0.5 text-[11px] font-mono text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                {project.status}
-              </span>
-            ) : null}
+            )}
+
+            {/* Website Link (e.g. sohailverse.com ↗) */}
+            {project.liveUrl && (
+              <div className="pt-0.5">
+                <a
+                  href={
+                    project.liveUrl.startsWith("http")
+                      ? project.liveUrl
+                      : `https://${project.liveUrl}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/link inline-flex items-center gap-1.5 text-xs sm:text-sm font-mono text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0 transition-transform group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" />
+                  <span className="truncate underline underline-offset-4 decoration-cyan-400/30 group-hover/link:decoration-cyan-300 max-w-[170px] sm:max-w-none">
+                    {project.liveUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                  </span>
+                </a>
+              </div>
+            )}
           </div>
 
-          {/* Project Title */}
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight leading-tight group-hover:text-cyan-300 transition-colors">
-            {project.title}
-          </h2>
-
-          {/* Tagline / Subtitle */}
-          {project.tagline && (
-            <p className="font-mono text-xs sm:text-sm text-cyan-400 font-medium mt-1">
-              {project.tagline}
-            </p>
-          )}
-
-          {/* Narrative Description */}
-          <p className="mt-2.5 text-sm sm:text-base text-slate-300/90 leading-relaxed max-w-xl font-normal">
-            {project.description}
-          </p>
-
-          {/* Technology Stack with Clean Branded Icons */}
-          {project.technologies && project.technologies.length > 0 && (
-            <div className="mt-4 space-y-1.5">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
-                TECH STACK
-              </span>
-              <div className="flex flex-wrap gap-2 pt-0.5">
-                {project.technologies.map((tech) => (
-                  <span
-                    key={tech}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs font-mono text-slate-200"
-                  >
-                    <span className="text-xs">{getTechIcon(tech)}</span>
-                    <span>{tech}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Website Link (e.g. sohailverse.com ↗) */}
-          {project.liveUrl && (
-            <div className="mt-3.5">
-              <a
-                href={
-                  project.liveUrl.startsWith("http")
-                    ? project.liveUrl
-                    : `https://${project.liveUrl}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group/link inline-flex items-center gap-1.5 text-xs sm:text-sm font-mono text-cyan-400 hover:text-cyan-300 transition-colors"
-              >
-                <span className="underline underline-offset-4 decoration-cyan-400/30 group-hover/link:decoration-cyan-300">
-                  {project.liveUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                </span>
-                <ExternalLink className="h-3.5 w-3.5 transition-transform group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" />
-              </a>
-            </div>
-          )}
-
-          {/* Action CTAs */}
-          <div className="flex flex-wrap items-center gap-3 pt-5">
-            {/* Primary CTA: View Project → */}
+          {/* =========================================================================
+              SUBTLE DIVIDER + VIEW PROJECT BUTTON (AT BOTTOM OF INFORMATION PANEL)
+              - Preceded by subtle separator line
+              - Only one action button: [ View Project → ]
+              - Inside Information Panel, never under or overlaid on image
+             ========================================================================= */}
+          <div className="mt-3.5 min-[400px]:mt-4 sm:mt-5 pt-2.5 min-[400px]:pt-3 sm:pt-4 border-t border-white/[0.08]">
             {isInternal ? (
               <Link
                 to={targetLink}
                 id={`view-project-${project.id}`}
-                className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold px-5 py-2 text-xs sm:text-sm transition-all duration-200 shadow-[0_0_15px_rgba(34,211,238,0.25)] hover:shadow-[0_0_20px_rgba(34,211,238,0.35)] active:scale-[0.98]"
+                className="inline-flex w-full sm:w-auto min-h-[38px] min-[400px]:min-h-[40px] sm:min-h-[44px] items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 sm:px-5 py-2 text-xs sm:text-sm transition-all duration-200 shadow-[0_0_18px_rgba(37,99,235,0.35)] hover:shadow-[0_0_24px_rgba(37,99,235,0.45)] active:scale-[0.98]"
               >
                 <span>View Project</span>
                 <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -265,24 +278,10 @@ export default function ProjectShowcaseItem({
                 target="_blank"
                 rel="noopener noreferrer"
                 id={`view-project-${project.id}`}
-                className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold px-5 py-2 text-xs sm:text-sm transition-all duration-200 shadow-[0_0_15px_rgba(34,211,238,0.25)] hover:shadow-[0_0_20px_rgba(34,211,238,0.35)] active:scale-[0.98]"
+                className="inline-flex w-full sm:w-auto min-h-[38px] min-[400px]:min-h-[40px] sm:min-h-[44px] items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 sm:px-5 py-2 text-xs sm:text-sm transition-all duration-200 shadow-[0_0_18px_rgba(37,99,235,0.35)] hover:shadow-[0_0_24px_rgba(37,99,235,0.45)] active:scale-[0.98]"
               >
                 <span>View Project</span>
                 <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-              </a>
-            )}
-
-            {/* Secondary CTA: Source Code (Rendered ONLY if real githubUrl exists) */}
-            {project.githubUrl && (
-              <a
-                href={project.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                id={`source-code-${project.id}`}
-                className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 text-slate-300 hover:text-white px-4 py-2 text-xs sm:text-sm font-medium transition-all duration-200 active:scale-[0.98]"
-              >
-                <FaGithub className="h-3.5 w-3.5" />
-                <span>Source Code</span>
               </a>
             )}
           </div>

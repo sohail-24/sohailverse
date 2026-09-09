@@ -54,7 +54,7 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
       );
     }
 
-    const { title, category, description, created_at } = body as Record<string, any>;
+    const { title, category, description, year, event_date, created_at } = body as Record<string, any>;
 
     const updateValues: Partial<typeof timeline.$inferInsert> = {};
 
@@ -77,6 +77,14 @@ export async function onRequestPut({ request, env, params }: PagesContext): Prom
 
     if (description !== undefined) {
       updateValues.description = typeof description === "string" && description.trim() ? description.trim() : null;
+    }
+
+    if (year !== undefined) {
+      updateValues.year = typeof year === "string" && year.trim() ? year.trim() : null;
+    }
+
+    if (event_date !== undefined) {
+      updateValues.eventDate = typeof event_date === "string" && event_date.trim() ? event_date.trim() : null;
     }
 
     if (created_at !== undefined) {

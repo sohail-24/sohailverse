@@ -30,13 +30,25 @@ export async function onRequestGet({ env }: PagesContext): Promise<Response> {
 
   try {
     const db = createDb(env.DATABASE_URL!);
-    const records = await db.select().from(timeline).orderBy(desc(timeline.id));
-    const formatted = records.map((r: any) => ({
+    const records = await db.select().from(timeline).orderBy(timeline.id);
+    // Sort chronologically by year, event_date/created_at
+    const sorted = [...records].sort((a: any, b: any) => {
+      const yearA = parseInt(a.year || (a.eventDate ? a.eventDate.slice(0, 4) : "2026"), 10);
+      const yearB = parseInt(b.year || (b.eventDate ? b.eventDate.slice(0, 4) : "2026"), 10);
+      if (yearA !== yearB) return yearA - yearB;
+      const dateA = a.eventDate || a.createdAt || "";
+      const dateB = b.eventDate || b.createdAt || "";
+      return dateA.localeCompare(dateB);
+    });
+
+    const formatted = sorted.map((r: any) => ({
       id: r.id,
       title: r.title || "",
       category: r.category || "",
       description: r.description || "",
-      created_at: r.createdAt ? new Date(r.createdAt).toISOString().split("T")[0] : (r.created_at || new Date().toISOString().split("T")[0]),
+      year: r.year || (r.eventDate ? r.eventDate.slice(0, 4) : (r.createdAt ? new Date(r.createdAt).toISOString().slice(0, 4) : "2026")),
+      event_date: r.eventDate || (r.createdAt ? new Date(r.createdAt).toISOString().split("T")[0] : (r.created_at || new Date().toISOString().split("T")[0])),
+      created_at: r.eventDate || (r.createdAt ? new Date(r.createdAt).toISOString().split("T")[0] : (r.created_at || new Date().toISOString().split("T")[0])),
     }));
 
     return new Response(
@@ -81,7 +93,7 @@ export async function onRequestPost({ request, env }: PagesContext): Promise<Res
       );
     }
 
-    const { title, category, description, created_at } = body as Record<string, any>;
+    const { title, category, description, year, event_date, created_at } = body as Record<string, any>;
 
     if (!title || typeof title !== "string" || !title.trim()) {
       return new Response(
@@ -93,6 +105,9 @@ export async function onRequestPost({ request, env }: PagesContext): Promise<Res
       );
     }
 
+    const eventDate = typeof event_date === "string" && event_date.trim() ? event_date.trim() : null;
+    const yearVal = typeof year === "string" && year.trim() ? year.trim() : (eventDate ? eventDate.slice(0, 4) : null);
+
     const db = createDb(env.DATABASE_URL!);
     const inserted = await db
       .insert(timeline)
@@ -100,6 +115,8 @@ export async function onRequestPost({ request, env }: PagesContext): Promise<Res
         title: title.trim(),
         category: typeof category === "string" && category.trim() ? category.trim() : null,
         description: typeof description === "string" && description.trim() ? description.trim() : null,
+        year: yearVal,
+        eventDate: eventDate,
         createdAt: typeof created_at === "string" && created_at.trim() ? created_at.trim() : new Date().toISOString(),
       })
       .returning();

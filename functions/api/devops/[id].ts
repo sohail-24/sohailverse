@@ -26,6 +26,75 @@ function json(data: unknown, status: number): Response {
   });
 }
 
+export async function onRequestGet({
+  env,
+  params,
+}: PagesContext): Promise<Response> {
+  if (!env.DATABASE_URL) {
+    return json(
+      {
+        error: "Neon DATABASE_URL is not configured.",
+      },
+      500
+    );
+  }
+
+  const id = parseInt(params.id, 10);
+
+  if (isNaN(id) || id <= 0) {
+    return json(
+      {
+        error: "Invalid project ID. ID must be a positive integer.",
+      },
+      400
+    );
+  }
+
+  try {
+    const db = createDb(env.DATABASE_URL);
+
+    const records = await db
+      .select()
+      .from(devops)
+      .where(eq(devops.id, id))
+      .limit(1);
+
+    if (records.length === 0) {
+      return json(
+        {
+          error: `DevOps project with ID ${id} not found.`,
+        },
+        404
+      );
+    }
+
+    const r: any = records[0];
+    const project = {
+      id: r.id,
+      title: r.title || "",
+      category: r.category || "",
+      description: r.description || "",
+      image_url: r.imageUrl || r.image_url || "",
+      ppt_url: r.pptUrl || r.ppt_url || "",
+      github_url: r.githubUrl || r.github_url || "",
+      technologies: r.technologies || "",
+      highlights: r.highlights || "",
+      status: r.status || "Production Ready",
+    };
+
+    return json({ data: project }, 200);
+  } catch (error: any) {
+    console.error(`Error querying DevOps project ID ${id} from Neon:`, error);
+
+    return json(
+      {
+        error: error?.message || "Unable to retrieve DevOps project data.",
+      },
+      500
+    );
+  }
+}
+
 export async function onRequestPut({
   request,
   env,
