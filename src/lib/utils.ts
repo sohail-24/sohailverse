@@ -13,15 +13,30 @@ export function formatProjectStatus(status?: string | null): string {
   const trimmed = status.trim();
   const lower = trimmed.toLowerCase();
 
-  if (lower === "production ready" || lower === "production" || lower === "ready") {
+  if (
+    lower.includes("ready") ||
+    lower.includes("production") ||
+    lower.includes("live") ||
+    lower.includes("running")
+  ) {
     return "Ready";
   }
-  if (lower === "in development" || lower === "active") {
+  if (
+    lower.includes("active") ||
+    lower.includes("development") ||
+    lower.includes("building") ||
+    lower.includes("progress")
+  ) {
     return "Active";
   }
-  if (lower === "coming soon" || lower === "upcoming") {
+  if (
+    lower.includes("upcoming") ||
+    lower.includes("coming") ||
+    lower.includes("soon") ||
+    lower.includes("planned")
+  ) {
     return "Upcoming";
   }
-  return trimmed;
+  return "Ready";
 }
 

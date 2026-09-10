@@ -80,7 +80,7 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
         fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.jpg",
         githubUrl: dbFlagship.github_url || "https://github.com/sohail-24/django_ecommerce",
         liveUrl: "sohail-shop.sohailverse.com",
-        internalUrl: "/projects/1",
+        internalUrl: "/projects/sohail-shop",
         rating: dbFlagship.rating ? Number(dbFlagship.rating) : undefined,
         status: formatProjectStatus(dbFlagship.status || proj.statusLabel),
         statusLabel: formatProjectStatus(dbFlagship.status || proj.statusLabel),
@@ -114,7 +114,7 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
           : proj.id === "wedding"
           ? "memories.sohailverse.com"
           : undefined,
-      internalUrl: proj.link || "/projects",
+      internalUrl: `/projects/${proj.id}`,
       status: formatProjectStatus(proj.statusLabel),
       statusLabel: formatProjectStatus(proj.statusLabel),
       tagline: proj.tagline,
@@ -142,7 +142,7 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
             ? dbP.image_url
             : "/projects/temporary/sohail-shop-desktop.jpg",
         githubUrl: dbP.github_url || undefined,
-        internalUrl: `/devops/${dbP.id}`,
+        internalUrl: `/projects/${dbP.id}`,
         rating: dbP.rating ? Number(dbP.rating) : undefined,
         status: formatProjectStatus(dbP.status || "Ready"),
         statusLabel: formatProjectStatus(dbP.status || "Ready"),

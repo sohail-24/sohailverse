@@ -8,6 +8,7 @@ import ProjectsPage from "../pages/ProjectsPage";
 import MissionControlPage from "../pages/MissionControlPage";
 import TimelinePage from "../pages/TimelinePage";
 import ProjectDetailPage from "../pages/ProjectDetailPage";
+import ProjectInformationPage from "../pages/ProjectInformationPage";
 
 export const routes: RouteObject[] = [
   {
@@ -44,7 +45,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: "projects/:id",
-        element: <ProjectDetailPage />,
+        element: <ProjectInformationPage />,
       },
       {
         path: "dashboard",

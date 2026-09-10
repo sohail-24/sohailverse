@@ -1,10 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ArrowDown } from "lucide-react";
 import DevOpsLearningPathCard from "./DevOpsLearningPathCard";
 import DevOpsPathModal from "./DevOpsPathModal";
 import DevOpsFinalCTA from "./DevOpsFinalCTA";
+import DevOpsPillarVideoSessions from "./DevOpsPillarVideoSessions";
 import { learningPathStages, devopsNotes } from "../../data/devopsData";
-import { parsePillarResource, detectPillar } from "../../lib/pillarContent";
+import { parsePillarResource, detectPillar, type PillarResource } from "../../lib/pillarContent";
 import type { LearningPathStage, DevOpsProject } from "../../types/devops";
 
 interface DevOpsLearningJourneyProps {
@@ -12,8 +14,27 @@ interface DevOpsLearningJourneyProps {
 }
 
 export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJourneyProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedStage, setSelectedStage] = useState<LearningPathStage | null>(null);
   const [noPdfNotice, setNoPdfNotice] = useState(false);
+  const [activePillarSession, setActivePillarSession] = useState<"Networking" | "AWS" | null>(null);
+
+  // Sync state with URL query parameter (e.g. ?pillar=networking or ?pillar=aws)
+  useEffect(() => {
+    const pillarParam = (searchParams.get("pillar") || searchParams.get("stage") || "").toLowerCase();
+    if (pillarParam === "networking") {
+      setActivePillarSession("Networking");
+    } else if (pillarParam === "aws") {
+      setActivePillarSession("AWS");
+    } else {
+      setActivePillarSession(null);
+    }
+  }, [searchParams]);
+
+  // Parse dynamic records from /api/devops into structured PillarResource items
+  const parsedResources = useMemo<PillarResource[]>(() => {
+    return (projects || []).map(parsePillarResource);
+  }, [projects]);
 
   // Retrieve attached PDF from real persisted Notes data:
   // 1. First look in dynamic database records from /api/devops
@@ -57,9 +78,50 @@ export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJ
       return;
     }
 
-    // 2. Networking, AWS, DevOps, Learn & Test Projects: Existing masterclass detail view
+    // 2. NETWORKING: Dedicated Video Session page
+    if (stage.id === "networking") {
+      setActivePillarSession("Networking");
+      setSearchParams({ pillar: "networking" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    // 3. AWS: Dedicated Video Session page
+    if (stage.id === "aws") {
+      setActivePillarSession("AWS");
+      setSearchParams({ pillar: "aws" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    // 4. DevOps, Learn & Test Projects: Existing masterclass detail view
     setSelectedStage(stage);
   };
+
+  const handleBackToJourney = () => {
+    setActivePillarSession(null);
+    setSearchParams({});
+    // Scroll back to the learning journey section
+    const el = document.getElementById("learning-journey");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  // If a dedicated video session page is active, render it exclusively
+  if (activePillarSession) {
+    return (
+      <section id="learning-journey-session" className="w-full scroll-mt-24 pt-2 sm:pt-4">
+        <DevOpsPillarVideoSessions
+          pillar={activePillarSession}
+          resources={parsedResources}
+          onBack={handleBackToJourney}
+        />
+      </section>
+    );
+  }
 
   return (
     <section id="learning-journey" className="w-full scroll-mt-24 pt-4 sm:pt-6" aria-labelledby="learning-journey-heading">
@@ -75,7 +137,7 @@ export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJ
 
       {/* 5-Step Clear Vertical Progression Path */}
       <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
-        {learningPathStages.map((stage, idx) => (
+        {learningPathStages.map((stage) => (
           <div key={stage.id} className="w-full flex flex-col items-center">
             {/* Step Card */}
             <DevOpsLearningPathCard
@@ -103,7 +165,7 @@ export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJ
       {/* 6. THE JOURNEY CONTINUES */}
       <DevOpsFinalCTA />
 
-      {/* Interactive Detail Modal */}
+      {/* Interactive Detail Modal for DevOps & Learn & Test Projects */}
       <DevOpsPathModal
         stage={selectedStage}
         onClose={() => setSelectedStage(null)}

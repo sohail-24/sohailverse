@@ -19,6 +19,8 @@ import {
 import { loadUnifiedProjects, type UnifiedProject } from "../projects/projectData";
 import type { DevOpsPost } from "./AuthenticatedCMS";
 import DeleteConfirmModal from "./DeleteConfirmModal";
+import ProjectContentManagerModal from "./ProjectContentManagerModal";
+import { formatProjectStatus } from "../../lib/utils";
 
 interface ProjectsManagerProps {
   devops: DevOpsPost[];
@@ -53,6 +55,7 @@ export default function ProjectsManager({
     title: string;
   } | null>(null);
   const [staticInfoProject, setStaticInfoProject] = useState<UnifiedProject | null>(null);
+  const [contentManagingProject, setContentManagingProject] = useState<UnifiedProject | null>(null);
 
   // Form state
   const [formTitle, setFormTitle] = useState("");
@@ -564,7 +567,7 @@ export default function ProjectsManager({
                         <div className="flex items-center gap-2">
                           {project.statusLabel && (
                             <span className="px-2.5 py-0.5 rounded-full bg-slate-800 border border-white/10 text-slate-300 font-mono text-xs">
-                              {project.statusLabel}
+                              {formatProjectStatus(project.statusLabel)}
                             </span>
                           )}
                           <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-mono text-xs">
@@ -630,30 +633,49 @@ export default function ProjectsManager({
                         {isDatabaseBacked ? "Persisted in DB" : "Static Code Definition"}
                       </div>
                       <div className="flex items-center gap-2">
+                        {/* 1. Edit Button */}
+                        <button
+                          onClick={() => {
+                            if (isDatabaseBacked) {
+                              handleOpenEdit(project);
+                            } else {
+                              setContentManagingProject(project);
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-slate-800/60 hover:bg-slate-700/70 text-xs font-medium text-slate-200 hover:text-white transition-colors"
+                          title="Quick edit project info"
+                        >
+                          <Edit3 className="h-3.5 w-3.5 text-emerald-400" />
+                          <span>Edit</span>
+                        </button>
+
+                        {/* 2. Dedicated Manage Content Button */}
+                        <button
+                          onClick={() => setContentManagingProject(project)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-950/25 hover:bg-cyan-900/50 text-xs font-medium text-cyan-300 hover:text-cyan-200 transition-colors shadow-sm"
+                          title="Manage overview, video sessions, documents, architecture, and links"
+                        >
+                          <Layers className="h-3.5 w-3.5 text-cyan-400" />
+                          <span>Manage Content</span>
+                        </button>
+
+                        {/* 3. Remove Button */}
                         {isDatabaseBacked ? (
-                          <>
-                            <button
-                              onClick={() => handleOpenEdit(project)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-slate-800/60 hover:bg-slate-700/70 text-xs font-medium text-slate-200 hover:text-white transition-colors"
-                            >
-                              <Edit3 className="h-3.5 w-3.5 text-emerald-400" />
-                              <span>Edit</span>
-                            </button>
-                            <button
-                              onClick={() => handleOpenRemove(project)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/20 bg-red-950/20 hover:bg-red-900/40 text-xs font-medium text-red-400 hover:text-red-300 transition-colors"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              <span>Remove</span>
-                            </button>
-                          </>
+                          <button
+                            onClick={() => handleOpenRemove(project)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/20 bg-red-950/20 hover:bg-red-900/40 text-xs font-medium text-red-400 hover:text-red-300 transition-colors"
+                            title="Remove project from database"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>Remove</span>
+                          </button>
                         ) : (
                           <button
                             onClick={() => setStaticInfoProject(project)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/20 bg-amber-950/20 hover:bg-amber-900/40 text-xs font-medium text-amber-300 transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg border border-white/5 bg-slate-900 text-[11px] font-mono text-slate-400 hover:text-slate-300"
+                            title="Static project information"
                           >
                             <Info className="h-3.5 w-3.5" />
-                            <span>Definition Info</span>
                           </button>
                         )}
                       </div>
@@ -983,6 +1005,19 @@ export default function ProjectsManager({
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeletingProject(null)}
       />
+
+      {/* Dedicated Project Content & Media Manager Modal */}
+      {contentManagingProject && (
+        <ProjectContentManagerModal
+          project={contentManagingProject}
+          isOpen={Boolean(contentManagingProject)}
+          onClose={() => setContentManagingProject(null)}
+          onSaved={async () => {
+            await onRefreshDevops();
+            await fetchProjects();
+          }}
+        />
+      )}
     </section>
   );
 }

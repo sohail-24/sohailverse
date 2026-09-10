@@ -468,7 +468,7 @@ export default function ProjectsShowcase({
                   {/* EXPLORE PROJECT BUTTON */}
                   <div className="pt-2 border-t border-slate-800/80 mt-1">
                     <Link
-                      to={project.link || "/devops"}
+                      to={project.link || `/projects/${project.id}`}
                       className={`w-full min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-98 shadow-sm ${theme.ctaButton}`}
                     >
                       <span>Explore Project</span>

@@ -1,648 +1,392 @@
-# SohailVerse v2.0 — Technical Architecture
+# SohailVerse v2.0 — System Architecture
 
-> **Document Type:** System Architecture Specification  
-> **Status:** Evidence-Based Current State  
-> **Repository Inspection Date:** September 2026  
-> **Standard:** Real Project Data Only (Zero Placeholders / Zero Speculation)
-
----
-
-## 1. Project Identity
-
-| Property | Value | Evidence Source |
-|---|---|---|
-| **Project Name** | SohailVerse v2.0 (`sohailverse`) | `metadata.json` line 2, `package.json` line 2 |
-| **Description** | A personal digital universe for travel, systems, and learning | `metadata.json` line 3 |
-| **Current Architecture** | Hybrid Single-Page Application (SPA) with Serverless Edge API Functions | `package.json`, `functions/api/`, `vite.config.ts` |
-| **Frontend Framework** | React 18.2.0 with React Router DOM 6.30.1 | `package.json` lines 18, 21 |
-| **Styling Engine** | Tailwind CSS 3.4.17 with PostCSS 8.4.49 & Autoprefixer 10.4.20 | `package.json` lines 33-36, `tailwind.config.ts` |
-| **Animation & Graphics** | Framer Motion 13.1.1, Three.js 0.185.1, React Simple Maps 3.0.0 | `package.json` lines 16, 22, 23 |
-| **Iconography** | Lucide React 1.21.0, React Icons 5.6.0 | `package.json` lines 17, 20 |
-| **Backend / API Engine** | Cloudflare Pages Functions (V8 Worker runtime with Web Crypto API) | `functions/api/*`, `functions/api/_middleware.ts` |
-| **Database Technology** | Neon Serverless PostgreSQL (`@neondatabase/serverless` v1.1.0) | `package.json` line 13, `src/db/index.ts` line 2 |
-| **ORM & Schema Toolkit** | Drizzle ORM v0.45.2 (`drizzle-orm/neon-http`, `drizzle-orm/pg-core`) & Drizzle Kit v0.31.10 | `package.json` lines 14-15, `drizzle.config.ts` |
-| **Target Deployment Platform** | Cloudflare Pages (Static SPA + Pages Functions API) | `functions/api/`, `.dev.vars.example` |
-| **Local Dev Server** | Vite 5.4.10 with custom dev server API proxy middleware | `package.json` line 38, `vite.config.ts` lines 212-450 |
-| **Node.js Package Type** | ECMAScript Module (`"type": "module"`) | `package.json` line 5 |
-| **Current Git Branch** | **NOT VERIFIED FROM REPOSITORY** (no `.git` metadata present in runtime container) | Container environment inspection |
+> **Document Type:** Technical System Architecture Specification  
+> **Status:** Current Repository State (Verified September 2026)  
+> **Standard:** Strict Empirical Codebase Truth (Zero Placeholders / Zero Unverified Assumptions)
 
 ---
 
-## 2. Repository Structure
+## 1. System Overview
 
-The physical directory tree and architectural responsibilities of each area are verified as follows:
+**SohailVerse v2.0** is an interactive, multidimensional digital platform and cloud engineering portfolio. The platform is architected around independent functional domains:
+
+1. **Mission Control (Home — `/`):** High-impact interactive gateway featuring a 3D Earth globe visualization (`Three.js`), live telemetry strips, personal philosophy, brand avatar identity, world gateways, and the Favourite Projects showcase carousel.
+2. **Projects System (`/projects`, `/projects/:id`):** Completely decoupled from DevOps. An independent portfolio and content-management system providing high-level project showcases and deep, standalone **Project Information Pages** (`ProjectInformationPage.tsx`) covering project overviews, video sessions, README/documentation, architecture diagrams, and repository/demo links.
+3. **DevOps Laboratory (`/devops`, `/devops/:id`):** An educational cloud-native laboratory structured around **Five Distinct Learning Pillars**:
+   - **Pillar 1: Notes** — Runbooks, foundational concepts, and PDF cheatsheets/documentation with inline reader support.
+   - **Pillar 2: Networking** — Internet protocols, OSI layers, DNS, subnets, and video sessions masterclass.
+   - **Pillar 3: AWS** — Cloud architecture, VPCs, compute, storage, EKS, and video sessions masterclass.
+   - **Pillar 4: DevOps** — Containers, Kubernetes orchestration, Terraform IaC, and ArgoCD GitOps pipelines.
+   - **Pillar 5: Learn & Test Projects** — Staging systems, hands-on architectural blueprints, and practice labs.
+4. **Cinema Observatory (`/cinema`):** Dedicated film appreciation observatory backed strictly by Neon PostgreSQL (`movies` table) with zero client-side fallback data, genre filtering, statistics, and embedded video trailer and streaming playback.
+5. **Timeline & Career Journey (`/timeline`, `/about`):** Verified chronological milestone progression spanning academic graduation (2023), AWS & DevOps exploration (2024), engineering internship (2025), and production platform deployments (2026).
+6. **Admin Console & CMS (`/admin`, `/console`):** Authenticated administrative control center (`AuthenticatedCMS.tsx`) secured with Web Crypto PBKDF2 verification and HMAC-signed session cookies (`sv_admin_session`). Provides dedicated tabbed managers for Projects (with deep content editing), Cinema, and DevOps (5 pillars with resource editor and media viewers).
+
+---
+
+## 2. High-Level Architecture Diagram
 
 ```
-sohailverse/
-├── .dev.vars.example            # Cloudflare Pages Functions server secrets template
-├── .env.example                 # Application environment variable reference
-├── bun.lock                     # Bun dependency lockfile
-├── drizzle.config.ts            # Drizzle Kit configuration targeting Neon PostgreSQL
-├── functions/                   # Cloudflare Pages Functions (Serverless Edge API)
-│   └── api/
-│       ├── _middleware.ts       # Global route interceptor & admin session auth guard
-│       ├── academy/             # Skills & certification endpoints (GET, POST, PUT, DELETE)
-│       ├── atlas/               # Travel & destination log endpoints (GET, POST, PUT, DELETE)
-│       ├── auth/                # PBKDF2 authentication & HMAC-SHA256 session handlers
-│       ├── devops/              # Portfolio systems & projects endpoints (GET, POST, PUT, DELETE)
-│       ├── movies/              # Cinema Observatory endpoints (GET, POST, PUT, DELETE)
-│       └── timeline/            # Career & platform milestone endpoints (GET, POST, PUT, DELETE)
-├── drizzle/
-│   └── migrations-pg/           # PostgreSQL migration outputs and snapshot meta
-│       ├── 0000_bouncy_prowler.sql
-│       └── meta/
-├── index.html                   # HTML entry point (title: "SohailVerse v2.0")
-├── metadata.json                # AI Studio platform capabilities & permissions
-├── package.json                 # Project dependencies, scripts, and runtime engine
-├── public/                      # Static assets served at root
-│   ├── cinema/                  # Cinema observatory imagery and genre banners
-│   ├── movies/                  # Movie poster backdrops
-│   ├── projects/temporary/      # SVG/JPEG generated project previews
-│   ├── earth-*.jpg / .webp      # Globe textures and astronomical space backdrops
-│   ├── dev-real-*.jpg           # Engineering photography
-│   └── resume.pdf               # Career resume document
-├── scripts/                     # Operational, generation, and migration scripts
-│   ├── generate-password-hash.js       # CLI tool for PBKDF2 admin password hashing
-│   ├── generate-project-placeholders.cjs # Sharp vector-to-JPEG project renderer
-│   ├── generate-space-background.mjs   # Procedural deep-space background generator
-│   ├── generate-temporary-images.mjs   # Sharp temporary project image generator
-│   └── migrate-d1-to-neon.mjs          # Data migration runner from D1 SQL into Neon
-├── src/
-│   ├── app/                     # Application bootstrapping & router definitions
-│   │   ├── App.tsx              # Root component rendering RouterProvider
-│   │   ├── router.tsx           # React Router DOM browser router instance
-│   │   └── routes.tsx           # Route mapping definitions
-│   ├── assets/                  # Bundled assets (images, icons)
-│   ├── components/              # Modular UI components
-│   │   ├── about/               # About & career journey cards
-│   │   ├── cards/               # Card visual primitives
-│   │   ├── cinema/              # Cinema carousel, movie player, filter controls
-│   │   ├── devops/              # DevOps architecture displays & lab widgets
-│   │   ├── layout/              # RootLayout, Navbar, Footer, PageShell
-│   │   ├── map/                 # Interactive SVG world map (react-simple-maps)
-│   │   ├── mission-control/     # Hero, 3D Earth, telemetry strip, project carousel
-│   │   ├── navigation/          # Navigation bars and header links
-│   │   ├── projects/            # Project showcase cards, data adapters, detail panels
-│   │   └── ui/                  # GlassPanel, buttons, badges
-│   ├── data/                    # Static initial data and telemetry definitions
-│   │   ├── devopsData.ts        # DevOps project metrics and infrastructure blueprints
-│   │   ├── mission-control.ts   # Flagship project registry and orbit telemetry
-│   │   ├── navigation.ts        # Global navigation links
-│   │   └── profile.ts           # Author bio, certifications, and contacts
-│   ├── db/                      # Database layer
-│   │   ├── index.ts             # Database connection factory (`createDb`) via Neon HTTP
-│   │   ├── schema.pg.ts         # Active PostgreSQL / Neon schema (7 physical tables)
-│   │   └── schema.ts            # Legacy Cloudflare D1 / SQLite schema (preserved)
-│   ├── lib/                     # Utilities
-│   │   ├── api.ts               # Typed client (`fetchApi`), response validators, fallbacks
-│   │   └── utils.ts             # Tailwind classnames merger (`cn`)
-│   ├── pages/                   # Routed page views
-│   │   ├── AdminPage.tsx        # Authenticated Admin Console for CRUD management
-│   │   ├── CinemaPage.tsx       # Cinema Observatory catalog
-│   │   ├── DashboardPage.tsx    # Telemetry and collection analytics dashboard
-│   │   ├── DevOpsPage.tsx       # DevOps Engineering laboratory & systems
-│   │   ├── MissionControlPage.tsx # Platform home page and 3D planetary interface
-│   │   ├── ProjectDetailPage.tsx  # Architectural deep-dive for flagship systems
-│   │   ├── ProjectsPage.tsx     # Unified portfolio project showcase
-│   │   └── TimelinePage.tsx     # Milestones and career chronology
-│   ├── styles/                  # Global styles
-│   │   ├── globals.css          # Base Tailwind imports and utility classes
-│   │   └── tokens.css           # Custom design token variables
-│   └── types/                   # Shared TypeScript interfaces
-│       ├── devops.ts
-│       ├── mission-control.ts
-│       └── shared.ts
-├── tailwind.config.ts           # Tailwind CSS configuration
-├── tsconfig.json                # Project TypeScript references configuration
-├── tsconfig.app.json            # Client TypeScript compilation settings
-├── tsconfig.node.json           # Node / Vite configuration settings
-└── vite.config.ts               # Vite build configuration with embedded dev API middleware
+                              ┌────────────────────────┐
+                              │     Browser Client     │
+                              └───────────┬────────────┘
+                                          │
+                  ┌───────────────────────┴───────────────────────┐
+                  │ (1) HTTP GET static assets                    │ (2) HTTP /api/* requests
+                  ▼                                               ▼
+      ┌───────────────────────┐                       ┌───────────────────────┐
+      │  Cloudflare Pages CDN │                       │ Pages Functions Edge  │
+      │  (Compiled dist/)     │                       │ (V8 Worker Runtime)   │
+      └───────────────────────┘                       └───────────┬───────────┘
+                                                                  │
+                                                      ┌───────────▼───────────┐
+                                                      │ functions/api/        │
+                                                      │ _middleware.ts        │
+                                                      │ (Cookie Auth Guard)   │
+                                                      └───────────┬───────────┘
+                                                                  │
+                                      ┌───────────────────────────┴───────────────────────────┐
+                                      │                                                       │
+                           [GET /api/movies, devops, ...]                       [POST/PUT/DELETE mutations]
+                                      │                                                       │
+                                      ▼                                                       ▼
+                          ┌───────────────────────────┐                       ┌───────────────────────────┐
+                          │   Route Handlers          │                       │ Authenticated Handlers    │
+                          │   functions/api/*         │                       │ functions/api/*           │
+                          └─────────────┬─────────────┘                       └─────────────┬─────────────┘
+                                        │                                                   │
+                                        └─────────────────────┬─────────────────────────────┘
+                                                              │
+                                                              ▼
+                                                  ┌───────────────────────┐
+                                                  │ src/db/index.ts       │
+                                                  │ Drizzle ORM + Neon    │
+                                                  │ HTTP Serverless       │
+                                                  └───────────┬───────────┘
+                                                              │
+                                                              ▼
+                                                  ┌───────────────────────┐
+                                                  │ Neon PostgreSQL       │
+                                                  │ (Serverless Database) │
+                                                  └───────────────────────┘
 ```
 
 ---
 
-## 3. Runtime Architecture
+## 3. Decoupled Projects Architecture
 
-SohailVerse operates under two distinct runtime environments: **Production (Cloudflare Pages)** and **Local Development (Vite Dev Server)**.
+### 3.1 Fundamental Product Rule
+**A PROJECT IS COMPLETELY INDEPENDENT FROM DEVOPS.**
 
-### Production Runtime Flow (Cloudflare Pages)
-
-```
-[Browser Client]
-       │
-       ├─────────────────────────────────────────┐
-       │ (1) HTTP GET static assets               │ (2) HTTP /api/* requests
-       ▼                                         ▼
-[Cloudflare Pages CDN Edge]           [Pages Functions V8 Worker]
-(Serves compiled dist/ assets)                   │
-                                      [functions/api/_middleware.ts]
-                                      (Validates auth on POST/PUT/DELETE)
-                                                 │
-                                      [Route Handler: functions/api/*]
-                                                 │
-                                      [src/db/index.ts (createDb)]
-                                      (Drizzle ORM + Neon HTTP Client)
-                                                 │
-                                                 ▼
-                                     [Neon Serverless PostgreSQL]
-                                     (Tables: movies, academy_posts, etc.)
-```
-
-### Local Development Flow (Vite Dev Server)
+Historically, clicking a project on the Projects page routed users into `/devops`. This connection has been severed:
 
 ```
-[Browser Client]
-       │
-       ▼
-[Vite Dev Server (Port 3000)] (vite.config.ts)
-       │
-       ├── Non-API routes ──► Serves Vite HMR client & TypeScript modules
-       │
-       └── /api/* routes  ──► apiMiddleware in vite.config.ts
-                                  │
-                                  ├── If DATABASE_URL configured:
-                                  │     neon(DATABASE_URL) ──► Live Neon PostgreSQL
-                                  │
-                                  └── If DATABASE_URL missing / fails:
-                                        mockStore (In-memory fallback data)
+[Legacy Flow — WRONG]
+Projects Page  ──►  Click Project  ──►  Opens DevOps Page (/devops)
+
+[Current Flow — IMPLEMENTED]
+Projects Page (/projects)  ──►  Select Project  ──►  PROJECT INFORMATION PAGE (/projects/:id)
+                                                      ├── Project Hero & Live Links
+                                                      ├── Overview & Tech Arsenal
+                                                      ├── Video Sessions Masterclass
+                                                      ├── README / Documentation & PDFs
+                                                      ├── Architecture & System Diagrams
+                                                      └── External Repository Links
 ```
+
+### 3.2 Routing & Component Separation
+- **`/projects`:** Managed by `src/pages/ProjectsPage.tsx`. Fetches portfolio items via `loadUnifiedProjects()` (`src/components/projects/projectData.ts`), supporting status filters (`ALL`, `LIVE`, `BUILDING`, `UPCOMING`).
+- **`/projects/:id`:** Handled by `src/pages/ProjectInformationPage.tsx`. Resolves either dynamic database IDs (numeric) or canonical slugs (`sohail-shop`, `sohail-studio`, `fresh-flow`, `wedding`, `new-chapter`).
+- **`/devops`:** Handled by `src/pages/DevOpsPage.tsx`. Houses the 5-Pillar DevOps Learning Journey.
+- **`/devops/:id`:** Handled by `src/pages/ProjectDetailPage.tsx`. Dedicated strictly to DevOps technical blueprints and incident retrospectives.
+
+### 3.3 Project Content Model (`src/lib/projectContent.ts`)
+The project content engine provides a typed schema for deep project documentation:
+
+```typescript
+export interface FullProjectData {
+  id: string;
+  numericId?: number;
+  title: string;
+  category: string;
+  description: string;
+  tagline?: string;
+  status: "Ready" | "Active" | "Upcoming";
+  statusLabel: "Ready" | "Active" | "Upcoming";
+  technologies: string[];
+  hero_image: string;
+  content: ProjectContentDetails;
+  isDatabaseBacked: boolean;
+  githubUrl?: string;
+  liveUrl?: string;
+}
+
+export interface ProjectContentDetails {
+  overview?: string;
+  hero_image?: string;
+  videos: ProjectVideoSession[];       // id, title, video_url, duration, thumbnail_url, description
+  documents: ProjectDocument[];         // id, title, type (pdf|readme|doc|link), url, content
+  architecture: ProjectArchitectureDiagram[]; // id, title, image_url, caption, description
+  links: ProjectLinkItem[];             // id, title, url, type (github|demo|docs|deploy|other)
+  highlightsList?: string[];
+}
+```
+
+### 3.4 Persistence Strategy
+1. **Neon PostgreSQL Storage:** Projects are persisted in the `devops_projects` table. Structured content (videos, documents, diagrams, links, overview) is serialized as JSON in the `highlights` column.
+2. **Dual-Hydration Adapter (`fetchProjectDetailsById`):**
+   - First queries Neon via `fetchApi<DevOpsProject>('/api/devops')`.
+   - If a matching database record exists, parses `highlights` JSON into `ProjectContentDetails`.
+   - If no database record exists, falls back to the static curated dossier in `DEFAULT_PROJECT_CONTENTS` to guarantee zero broken routes.
+3. **Admin Mutation:** `saveProjectContentToDatabase(dbId, payload)` issues a `PUT /api/devops/:id` request with `{ highlights: JSON.stringify(payload.content), ...fields }`, seamlessly storing rich content without requiring schema alterations.
 
 ---
 
-## 4. Database Architecture
+## 4. DevOps 5-Pillar Laboratory Architecture
 
-### Engine & Connection
+The DevOps domain (`src/pages/DevOpsPage.tsx` and `src/components/devops/DevOpsLearningJourney.tsx`) is structured around 5 clear, progressive learning pillars:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        THE 5 DEVOPS LEARNING PILLARS                                  │
+├──────────────┬─────────────────┬─────────────────┬─────────────────┬───────────────────┤
+│ 1. Notes     │ 2. Networking   │ 3. AWS          │ 4. DevOps       │ 5. Learn & Test   │
+│ Concepts,    │ Internet, DNS,  │ Cloud Compute,  │ Docker, K8s,    │ Hands-on Staging  │
+│ Runbooks,    │ Subnets, Ports  │ VPC, S3, EKS    │ Terraform,      │ Labs & Staging    │
+│ PDF Support  │ Video Sessions  │ Video Sessions  │ ArgoCD GitOps   │ Blueprints        │
+└──────────────┴─────────────────┴─────────────────┴─────────────────┴───────────────────┘
+```
+
+### 4.1 Pillar Content Engine (`src/lib/pillarContent.ts`)
+- **Pillar Enum:** `"Notes" | "Networking" | "AWS" | "DevOps" | "Learn & Test Projects"`.
+- **Parsing & Detection:** `detectPillar(category, title)` deterministically classifies incoming database records or fallback items into one of the 5 pillars.
+- **PillarResource Interface:**
+  - `id`: Unique numeric identifier.
+  - `title`: Resource headline.
+  - `pillar`: Bound learning pillar.
+  - `description`: Technical narrative or cheat-sheet runbook.
+  - `video_url` & `video_duration`: Embeddable video URL for masterclass lectures.
+  - `pdf_url`: Direct URL to downloadable/viewable PDF documentation.
+  - `links`: Array of external resources (`github`, `docs`, `slides`, `video`, `demo`).
+
+### 4.2 Interactive Viewers & Modals
+- **PDF Viewer Support:** `DevOpsLearningJourney.tsx` inspects database records for `pdf_url` (or falls back to curated static notes) and provides inline PDF reading and downloading.
+- **Pillar Video Sessions Player (`DevOpsPillarVideoSessions.tsx` / `DevOpsVideoSessionPlayer.tsx`):**
+  - Activated via UI cards or deep-linked URL parameters (`?pillar=networking` or `?pillar=aws`).
+  - Provides video playlist switching, progress indicators, takeaway bullet points, and related resource links.
+- **Mobile Sticky Navigation (`DevOpsBottomNav.tsx`):** Docked mobile navigation bar enabling direct scrolling to the 5 pillars.
+
+---
+
+## 5. Cinema Observatory Architecture
+
+### 5.1 Architecture & End-to-End Flow
+- **Data Source:** Neon PostgreSQL `movies` table exclusively (`GET /api/movies`).
+- **Zero-Fallback Policy:** `CinemaPage.tsx` and `fetchApi<Movie>('/api/movies')` maintain **zero mock fallback data**. If the database is unreachable, the UI surfaces an explicit `ErrorState` with a "Try Again" retry trigger.
+- **Curated Inventory:** Exactly 9 curated movie records verified in Neon (`Interstellar`, `Inception`, `Oppenheimer`, `Dune: Part Two`, `The Dark Knight`, `Gladiator`, `Blade Runner 2049`, `The Matrix`, `Arrival`).
+
+### 5.2 Presentation Components
+- `CinemaHero.tsx`: Computes total films, average rating, and top genre dynamically from live records.
+- `CinemaFeaturedMovie.tsx`: Evaluates `is_featured === true` (or falls back to the highest rating) to render the showcase movie with poster art, synopsis, rating, and watch modal triggers.
+- `CinemaMovieCarousel.tsx`: Horizontal multi-item card carousel with poster thumbnails, genre badges, ratings, and video trailer modal triggers.
+- `CinemaTrailerModal.tsx`: Web-accessible modal player supporting YouTube trailer embeds and direct JioCloud streaming URLs.
+
+---
+
+## 6. Timeline & Career Milestones Architecture
+
+### 6.1 Schema & Date Semantics
+- **Database Table:** `timeline_posts` in Neon PostgreSQL.
+- **Date Separation:**
+  - `created_at` (`timestamp`): Database creation time.
+  - `year` (`text`): Primary historical milestone grouping anchor (e.g., `"2023"`, `"2024"`, `"2025"`, `"2026"`).
+  - `event_date` (`text`): Specific ISO date (`YYYY-MM-DD`) for secondary ordering.
+- **Sorting Logic:** `ORDER BY year ASC, event_date ASC, id ASC` enforced at both the API layer (`functions/api/timeline/index.ts`) and frontend layer (`AboutJourneyTimeline.tsx`).
+
+### 6.2 Verified Database State (5 Records)
+1. **ID 4 (2023):** Completed Engineering Degree (Education)
+2. **ID 5 (2024):** Saudi Arabia Journey & AWS / DevOps Genesis (Exploration & Learning)
+3. **ID 2 (2025):** Internship at Visys Company (Career & Systems)
+4. **ID 6 (2026):** Built & Deployed Sohail-Shop (Systems & Cloud)
+5. **ID 1 (2026):** Timeline CMS Created (Platform)
+
+---
+
+## 7. Admin Console & CMS Architecture
+
+The administrative control plane is accessed via `/admin` or `/console` (`src/pages/AdminPage.tsx`).
+
+### 7.1 Authentication & Security Guard
+1. **PBKDF2 Web Crypto:** `functions/api/auth/login.ts` uses constant-time comparisons against `ADMIN_PASSWORD_HASH` (PBKDF2, 600,000 iterations, SHA-256) or plaintext fallback `ADMIN_PASSWORD`.
+2. **Session Cookie:** Sets `sv_admin_session` (`HttpOnly`, `Secure`, `SameSite=Strict`, `Max-Age=604800` / 7 days) signed with `SESSION_SECRET` via HMAC-SHA256.
+3. **Mutation Guard (`functions/api/_middleware.ts`):** Intercepts every `POST`, `PUT`, `DELETE`, and `PATCH` request under `/api/*`. Requests lacking a valid session receive `HTTP 401 Unauthorized`.
+
+### 7.2 Authenticated CMS Subsystems (`src/components/admin/AuthenticatedCMS.tsx`)
+The authenticated workspace provides three primary operational managers:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                     AUTHENTICATED CMS CONSOLE                          │
+├──────────────────────┬──────────────────────┬──────────────────────────┤
+│ 1. Projects Manager  │ 2. Cinema Manager    │ 3. DevOps Manager        │
+│ CRUD + Content Modal │ CRUD + Poster Studio │ 5-Pillar Resource Studio │
+└──────────────────────┴──────────────────────┴──────────────────────────┘
+```
+
+#### A. Projects Manager (`src/components/admin/ProjectsManager.tsx`)
+- **Filtering & Search:** Real-time search across title, description, and technologies. Filters for Category, Status (`Ready`, `Active`, `Upcoming`), and Source (`Database`, `Static`).
+- **Core CRUD:** Create new project, edit metadata, delete project with `DeleteConfirmModal`.
+- **Deep Content Management (`ProjectContentManagerModal.tsx`):**
+  - **Overview Tab:** Edit executive summary, tagline, hero image, status.
+  - **Videos Tab:** Add, edit, and reorder video sessions (title, embed URL, duration, thumbnail).
+  - **Documents Tab:** Manage technical documentation, runbooks, markdown content, and attached PDF URLs.
+  - **Architecture Tab:** Upload/link architecture diagrams with captions.
+  - **Links Tab:** Manage repository, demo, documentation, and external links.
+
+#### B. Cinema Manager (`src/components/admin/CinemaManager.tsx`)
+- **Poster Studio & Validation:** Live poster thumbnail preview with graceful fallback (`No Poster Available`).
+- **Modal Editor:** Add and edit movies with full schema support: Title, Genre, Rating (0.0–10.0), Trailer URL, Poster URL, Synopsis narrative, and `is_featured` showcase toggle.
+- **Card Library:** Responsive movie library grid with quick actions (Watch trailer, Edit, Delete).
+
+#### C. DevOps Manager (`src/components/admin/DevOpsManager.tsx`)
+- **5-Pillar Segmentation:** Filter by pillar (`Notes`, `Networking`, `AWS`, `DevOps`, `Learn & Test Projects`).
+- **Resource Editor Modal (`ResourceEditorModal.tsx`):** Add and edit pillar resources with title, pillar selector, category, notes, image URL, video URL, video duration, PDF document URL, and external links.
+- **Integrated Viewers:**
+  - `VideoPlayerModal.tsx`: Watch attached masterclass video sessions.
+  - `NoteReaderModal.tsx`: Read technical notes and inspect attached PDF URLs.
+  - `ImageLightboxModal.tsx`: Zoom and inspect architecture diagrams.
+
+---
+
+## 8. Frontend Routing & Navigation Architecture
+
+Declared in `src/app/routes.tsx` using React Router DOM:
+
+| Route | Component | Purpose | Data Source |
+|---|---|---|---|
+| `/` | `MissionControlPage.tsx` | Platform home page, 3D Earth, telemetry, gateways | `data/mission-control.ts` |
+| `/projects` | `ProjectsPage.tsx` | Decoupled project portfolio with status filters | `loadUnifiedProjects()` (`/api/devops` + static) |
+| `/projects/:id` | `ProjectInformationPage.tsx` | Independent deep project dossier (Overview, Videos, Docs, Architecture, Links) | `fetchProjectDetailsById()` (`/api/devops` + content) |
+| `/devops` | `DevOpsPage.tsx` | DevOps Laboratory (5 Pillars, Masterclasses, Notes) | `fetchApi('/api/devops')` |
+| `/devops/:id` | `ProjectDetailPage.tsx` | Technical blueprint & incident retrospective | `src/components/projects/*` |
+| `/cinema` | `CinemaPage.tsx` | Cinema Observatory catalog & player | `fetchApi('/api/movies')` (Zero fallback) |
+| `/timeline` | `TimelinePage.tsx` | Chronological career progression | `fetchApi('/api/timeline')` (Zero fallback) |
+| `/about` | `TimelinePage.tsx` | Alias for Timeline / Journey | `fetchApi('/api/timeline')` (Zero fallback) |
+| `/dashboard` | `DashboardPage.tsx` | Aggregated platform metrics & counts | `/api/movies`, `/api/devops`, `/api/timeline` |
+| `/admin` | `AdminPage.tsx` | Authenticated CMS Console | `/api/auth/*` + Domain APIs |
+| `/console` | `AdminPage.tsx` | Alias for Admin Console | `/api/auth/*` + Domain APIs |
+
+### Navigation & Brand Components
+- **Navbar (`src/components/navigation/Navbar.tsx`):** Sticky navigation bar featuring `BrandAvatar` (profile image with fallback monogram) and active route indicator pills.
+- **Mobile Menu (`src/components/navigation/MobileMenu.tsx`):** Accessible mobile drawer.
+- **Worlds Gateway (`WorldsGatewaySection.tsx`):** 5 dimension cards routing to `/devops`, `/cinema`, `/timeline`, etc.
+
+---
+
+## 9. Database Architecture & Physical Tables
+
 - **Database Engine:** Neon Serverless PostgreSQL.
-- **Connection Transport:** HTTP serverless queries via `@neondatabase/serverless` using `drizzle-orm/neon-http`.
-- **Environment Variable:** `DATABASE_URL` (supplied via Cloudflare Pages environment variables, `.dev.vars`, or local shell).
-- **Configuration File:** `drizzle.config.ts`:
-  - `schema: "./src/db/schema.pg.ts"`
-  - `out: "./drizzle/migrations-pg"`
-  - `dialect: "postgresql"`
-  - `dbCredentials.url: process.env.DATABASE_URL || ""`
-- **Database Adapter:** `src/db/index.ts` exports `createDb(databaseUrl?: string)`. If `DATABASE_URL` is undefined or fails, it returns a proxy that prevents runtime crashes while logging a console warning.
+- **Connection Transport:** `@neondatabase/serverless` via `drizzle-orm/neon-http`.
+- **Drizzle Schema:** `src/db/schema.pg.ts`.
+- **Active Migrations (`drizzle/migrations-pg/`):**
+  - `0000_bouncy_prowler.sql`: Base tables.
+  - `0001_breezy_plazm.sql`: Cinema expansion (`poster_url`, `synopsis`, `is_featured`).
+  - `0002_dapper_timeline_events.sql`: Timeline expansion (`year`, `event_date`).
 
-### Physical PostgreSQL Tables
-
-The repository defines exactly seven physical PostgreSQL tables in `src/db/schema.pg.ts` and `drizzle/migrations-pg/`:
-
+### Physical Tables Specification
 ```
 ┌───────────────────┬────────────────────────────────────────────────────────────────────────┐
-│ Physical Table    │ Column Definitions (PostgreSQL Dialect)                                │
+│ Physical Table    │ Columns (PostgreSQL Dialect)                                           │
 ├───────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ movies            │ id (integer, PK, identity), title (text, not null), genre (text,       │
-│                   │ not null), rating (real, not null), trailer_url (text, nullable),       │
-│                   │ poster_url (text, nullable), synopsis (text, nullable),                │
-│                   │ is_featured (boolean, default false, not null)                         │
+│ movies            │ id (int, PK, identity), title (text), genre (text), rating (real),      │
+│                   │ trailer_url (text), poster_url (text), synopsis (text),                │
+│                   │ is_featured (boolean, default false)                                   │
 ├───────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ travel_posts      │ id (integer, PK, identity), country (text, not null), city (text,      │
-│                   │ not null), description (text, nullable)                                │
+│ devops_projects   │ id (int, PK, identity), title (text), category (text),                  │
+│                   │ description (text), image_url (text), ppt_url (text),                  │
+│                   │ github_url (text), technologies (text), highlights (text),             │
+│                   │ status (text)                                                          │
 ├───────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ academy_posts     │ id (integer, PK, identity), skill (text, not null), category (text,    │
-│                   │ not null), level (text, not null)                                      │
+│ timeline_posts    │ id (int, PK, identity), title (text), category (text),                  │
+│                   │ description (text), year (text), event_date (text),                    │
+│                   │ created_at (timestamp, default now())                                  │
 ├───────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ devops_posts      │ id (integer, PK, identity), title (text, not null), category (text,    │
-│                   │ not null), description (text, not null), created_at (timestamp,        │
-│                   │ default now(), not null)                                               │
+│ atlas_posts       │ id (int, PK, identity), country (text), status (text), year (text),    │
+│                   │ highlight (text), created_at (timestamp, default now())                │
 ├───────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ timeline_posts    │ id (integer, PK, identity), title (text, not null), category (text,    │
-│                   │ not null), description (text, not null), created_at (timestamp,        │
-│                   │ default now(), not null), year (text, nullable),                       │
-│                   │ event_date (text, nullable)                                            │
+│ academy_posts     │ id (int, PK, identity), skill (text), category (text), level (text)    │
 ├───────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ atlas_posts       │ id (integer, PK, identity), country (text, not null), status (text,   │
-│                   │ not null), year (text, not null), highlight (text, not null),          │
-│                   │ created_at (timestamp, default now(), not null)                        │
+│ devops_posts      │ id (int, PK, identity), title (text), category (text),                  │
+│                   │ description (text), created_at (timestamp, default now())              │
 ├───────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ devops_projects   │ id (integer, PK, identity), title (text, nullable), category (text,    │
-│                   │ nullable), description (text, nullable), image_url (text, nullable),   │
-│                   │ ppt_url (text, nullable), github_url (text, nullable),                 │
-│                   │ technologies (text, nullable), highlights (text, nullable),            │
-│                   │ status (text, nullable)                                                │
+│ travel_posts      │ id (int, PK, identity), country (text), city (text), description (text)│
 └───────────────────┴────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Application-Level Aliases
-In `src/db/schema.pg.ts`, semantic aliases are exported to maintain backwards compatibility without altering physical database table names:
-- `academy = academyPosts`
-- `devops = devopsProjects`
-- `timeline = timelinePosts`
-- `atlas = atlasPosts`
-- `destinations = atlasPosts`
-- `projects = devopsProjects`
-- `academyTopics = academyPosts`
-- `timelineEvents = timelinePosts`
+---
 
-### Relationships
-- **Entity Relationships:** No explicit foreign key (`foreignKey` or `references`) relationships are declared in `src/db/schema.pg.ts` or migration SQL files. The seven tables operate as independent domain collections.
+## 10. API Architecture & Contracts
 
-### Migrations
-- **PostgreSQL Migrations Folder:** `drizzle/migrations-pg/`
-- **Active Migration History:**
-  1. `0000_bouncy_prowler.sql`: Defines the initial 7 physical tables with `PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY`.
-  2. `0001_breezy_plazm.sql`: Expands `movies` with `poster_url` (text), `synopsis` (text), and `is_featured` (boolean, default false, not null).
-  3. `0002_dapper_timeline_events.sql`: Expands `timeline_posts` with `year` (text) and `event_date` (text) to support chronological milestone restoration and sorting.
-- **Migration Scripts:**
-  - `scripts/migrate-d1-to-neon.mjs`: Reads an exported SQLite dump (`d1-export.sql`), inserts rows with original IDs into Neon, and resets sequence counters via `SELECT setval(pg_get_serial_sequence(table, 'id'), max_id, true)`.
+All endpoints run as Cloudflare Pages Functions under `functions/api/`:
+
+| Endpoint | Methods | Auth? | Database Table | Purpose |
+|---|---|---|---|---|
+| `/api/auth/login` | POST | No | N/A | Authenticates password, sets `sv_admin_session` cookie |
+| `/api/auth/session` | GET | No | N/A | Validates session token validity |
+| `/api/auth/logout` | POST | No | N/A | Clears session cookie |
+| `/api/movies` | GET, POST | POST: Yes | `movies` | List movies (`id DESC`) / Create movie |
+| `/api/movies/:id` | PUT, DELETE | Yes | `movies` | Update movie / Delete movie |
+| `/api/devops` | GET, POST | POST: Yes | `devops_projects` | List projects (`id DESC`) / Create project |
+| `/api/devops/:id` | GET, PUT, DELETE | PUT/DEL: Yes | `devops_projects` | Fetch single / Update project / Delete project |
+| `/api/timeline` | GET, POST | POST: Yes | `timeline_posts` | List milestones (`year ASC, event_date ASC`) |
+| `/api/timeline/:id`| PUT, DELETE | Yes | `timeline_posts` | Update / Delete milestone |
+| `/api/atlas` | GET, POST | POST: Yes | `atlas_posts` | List destinations / Create destination |
+| `/api/atlas/:id` | PUT, DELETE | Yes | `atlas_posts` | Update / Delete destination |
+| `/api/academy` | GET, POST | POST: Yes | `academy_posts` | List skills / Create skill |
+| `/api/academy/:id` | PUT, DELETE | Yes | `academy_posts` | Update / Delete skill |
 
 ---
 
-## 5. API Architecture
-
-All endpoints are hosted as Cloudflare Pages Functions under `functions/api/`.
-
-### Middleware Security Guard (`functions/api/_middleware.ts`)
-- **Scope:** Intercepts every incoming request under `/api/*`.
-- **Public Routes:** Allows `GET`, `HEAD`, `OPTIONS`, and all paths beginning with `/api/auth/` without authentication.
-- **Protected Methods:** Requests using `POST`, `PUT`, `DELETE`, or `PATCH` to data endpoints require a valid administrative session token (`sv_admin_session` cookie).
-- **Unauthorized Handling:** Returns HTTP 401 with JSON `{ authenticated: false, error: "Unauthorized: Valid admin session required." }`.
-
-### Verified API Endpoints
-
-#### 1. Authentication Endpoints
-- **`POST /api/auth/login`** (`functions/api/auth/login.ts`)
-  - **Purpose:** Authenticates the administrator and issues a session cookie.
-  - **Body:** `{ password: string }`
-  - **Verification:** Constant-time comparison against `ADMIN_PASSWORD_HASH` (PBKDF2) or plaintext `ADMIN_PASSWORD`.
-  - **Response:** HTTP 200 `{ authenticated: true }` with `Set-Cookie: sv_admin_session=<hmac_token>; Path=/api; HttpOnly; Secure; SameSite=Strict; Max-Age=604800`.
-- **`GET /api/auth/session`** (`functions/api/auth/session.ts`)
-  - **Purpose:** Verifies current admin session cookie validity.
-  - **Response:** HTTP 200 `{ authenticated: boolean, requiresSetup: boolean }`.
-- **`POST /api/auth/logout`** (`functions/api/auth/logout.ts`)
-  - **Purpose:** Invalidates the admin session cookie.
-  - **Response:** HTTP 200 `{ authenticated: false }` with `Set-Cookie: sv_admin_session=; Max-Age=0`.
-
-#### 2. Movies Endpoints
-- **`GET /api/movies`** (`functions/api/movies/index.ts`)
-  - **Database Table:** `movies`
-  - **Sorting:** `ORDER BY id DESC`
-  - **Response:** HTTP 200 `{ data: [{ id, title, genre, rating, trailer_url, poster_url, synopsis, is_featured, movie_url }] }`.
-- **`POST /api/movies`** (`functions/api/movies/index.ts`) [Auth Required]
-  - **Body:** `{ title: string, genre?: string, rating?: number, trailer_url?: string, poster_url?: string, synopsis?: string, is_featured?: boolean, movie_url?: string }`
-  - **Response:** HTTP 201 `{ success: true, message: string, data: Movie }`.
-- **`PUT /api/movies/:id`** (`functions/api/movies/[id].ts`) [Auth Required]
-  - **Database Table:** `movies`
-  - **Body:** Partial fields (`title`, `genre`, `rating`, `trailer_url`, `poster_url`, `synopsis`, `is_featured`, `movie_url`).
-  - **Response:** HTTP 200 `{ success: true, message: string, data: Movie }`.
-- **`DELETE /api/movies/:id`** (`functions/api/movies/[id].ts`) [Auth Required]
-  - **Database Table:** `movies`
-  - **Response:** HTTP 200 `{ success: true, message: string, deletedCount: number }`.
-
-#### 3. DevOps Projects Endpoints
-- **`GET /api/devops`** (`functions/api/devops/index.ts`)
-  - **Database Table:** `devops_projects` (via alias `devops`)
-  - **Sorting:** `ORDER BY id DESC`
-  - **Transformation:** Maps Drizzle columns (`imageUrl`, `pptUrl`, `githubUrl`) to snake_case API fields (`image_url`, `ppt_url`, `github_url`).
-  - **Response:** HTTP 200 `{ data: [{ id, title, category, description, image_url, ppt_url, github_url, technologies, highlights, status }] }`.
-- **`POST /api/devops`** (`functions/api/devops/index.ts`) [Auth Required]
-  - **Body:** `{ title, category, description, image_url, ppt_url, github_url, technologies, highlights, status }`
-  - **Response:** HTTP 201 `{ success: true, message: string, data: DevOpsProject }`.
-- **`PUT /api/devops/:id`** (`functions/api/devops/[id].ts`) [Auth Required]
-  - **Database Table:** `devops_projects`
-  - **Response:** HTTP 200 `{ success: true, message: string, data: DevOpsProject }`.
-- **`DELETE /api/devops/:id`** (`functions/api/devops/[id].ts`) [Auth Required]
-  - **Database Table:** `devops_projects`
-  - **Response:** HTTP 200 `{ success: true, message: string, deletedCount: number }`.
-
-#### 4. Timeline Endpoints
-- **`GET /api/timeline`** (`functions/api/timeline/index.ts`)
-  - **Database Table:** `timeline_posts` (via alias `timeline`)
-  - **Sorting:** `ORDER BY year ASC, event_date ASC, id ASC` (chronological order from earliest to latest milestone)
-  - **Response:** HTTP 200 `{ data: [{ id, title, category, description, created_at, year, event_date }] }`.
-- **`POST /api/timeline`** (`functions/api/timeline/index.ts`) [Auth Required]
-  - **Body:** `{ title: string, category?: string, description?: string, year?: string, event_date?: string, created_at?: string }`
-  - **Response:** HTTP 201 `{ success: true, message: string, data: TimelinePost }`.
-- **`PUT /api/timeline/:id`** (`functions/api/timeline/[id].ts`) [Auth Required]
-  - **Database Table:** `timeline_posts`
-  - **Body:** Partial fields (`title`, `category`, `description`, `year`, `event_date`, `created_at`).
-  - **Response:** HTTP 200 `{ success: true, message: string, data: TimelinePost }`.
-- **`DELETE /api/timeline/:id`** (`functions/api/timeline/[id].ts`) [Auth Required]
-  - **Database Table:** `timeline_posts`
-  - **Response:** HTTP 200 `{ success: true, message: string, deletedCount: number }`.
-
-#### 5. Atlas Endpoints
-- **`GET /api/atlas`** (`functions/api/atlas/index.ts`)
-  - **Database Table:** `atlas_posts` (via alias `atlas`)
-  - **Sorting:** `ORDER BY id DESC`
-  - **Response:** HTTP 200 `{ data: [{ id, country, status, year, highlight, created_at }] }`.
-- **`POST /api/atlas`** (`functions/api/atlas/index.ts`) [Auth Required]
-  - **Body:** `{ country, status, year, highlight, created_at? }`
-  - **Response:** HTTP 201 `{ success: true, message: string, data: AtlasPost }`.
-- **`PUT /api/atlas/:id`** (`functions/api/atlas/[id].ts`) [Auth Required]
-  - **Database Table:** `atlas_posts`
-  - **Response:** HTTP 200 `{ success: true, message: string, data: AtlasPost }`.
-- **`DELETE /api/atlas/:id`** (`functions/api/atlas/[id].ts`) [Auth Required]
-  - **Database Table:** `atlas_posts`
-  - **Response:** HTTP 200 `{ success: true, message: string, deletedCount: number }`.
-
-#### 6. Academy Endpoints
-- **`GET /api/academy`** (`functions/api/academy/index.ts`)
-  - **Database Table:** `academy_posts` (via alias `academy`)
-  - **Sorting:** `ORDER BY id ASC`
-  - **Response:** HTTP 200 `{ data: [{ id, skill, category, level }] }`.
-- **`POST /api/academy`** (`functions/api/academy/index.ts`) [Auth Required]
-  - **Body:** `{ skill, category, level }`
-  - **Response:** HTTP 201 `{ success: true, message: string, data: AcademyPost }`.
-- **`PUT /api/academy/:id`** (`functions/api/academy/[id].ts`) [Auth Required]
-  - **Database Table:** `academy_posts`
-  - **Response:** HTTP 200 `{ success: true, message: string, data: AcademyPost }`.
-- **`DELETE /api/academy/:id`** (`functions/api/academy/[id].ts`) [Auth Required]
-  - **Database Table:** `academy_posts`
-  - **Response:** HTTP 200 `{ success: true, message: string, deletedCount: number }`.
-
----
-
-## 6. End-to-End Data Flow
-
-```
-┌──────────────┐      ┌────────────────────┐      ┌────────────────────────┐      ┌───────────────────────┐
-│ Database     │ ───► │ Pages Functions    │ ───► │ Frontend API Client    │ ───► │ Page / Component      │
-└──────────────┘      └────────────────────┘      └────────────────────────┘      └───────────────────────┘
- movies               /api/movies                 fetchApi<Movie>()               CinemaPage.tsx
-                      (Neon: 9 movies)            (Strict: No Fallback)           DashboardPage.tsx
-                                                                                  AdminPage.tsx
-
- timeline_posts       /api/timeline               fetchApi<TimelinePost>()        TimelinePage.tsx
-                      (Neon: 5 milestones)        (Strict: No Fallback)           DashboardPage.tsx
-                                                                                  AdminPage.tsx
-
- devops_projects      /api/devops                 loadUnifiedProjects()           ProjectsPage.tsx
-                      (Neon: 3 projects)          fetchApi<DevOpsProject>()       DevOpsPage.tsx
-                                                  (Bundled Fallback Available)    DashboardPage.tsx
-                                                                                  AdminPage.tsx
-
- atlas_posts          /api/atlas                  fetchApi<AtlasPost>()           MissionWorldMap.tsx
-                      (Neon: 4 destinations)      (Bundled Fallback Available)    (No dedicated page route)
-
- academy_posts        /api/academy                fetchApi<AcademyPost>()         src/lib/api.ts
-                      (Neon: 6 skills)            (Bundled Fallback Available)    (No dedicated page route)
-
- travel_posts         [NO API ROUTE]              NOT VERIFIED IN CLIENT          NOT CONNECTED
- (D1 migration table) (No /api/travel route)      (Schema exists only)            (5 rows in Neon)
-```
-
-### Data Flow Policies
-1. **Cinema Zero-Fallback Policy:** `fetchApi('/api/movies')` has zero client-side mock fallback. If the Neon database or `/api/movies` endpoint fails, an error is immediately thrown, triggering the `ErrorState` UI on `CinemaPage.tsx` with a manual retry button.
-2. **Timeline Zero-Fallback Policy:** `fetchApi('/api/timeline')` has zero client-side mock fallback. If the database or endpoint fails, the error propagates to `TimelinePage.tsx`, displaying an `ErrorState` UI with retry capabilities.
-3. **Resilient Domain Fallbacks:** Domain endpoints `/api/devops`, `/api/atlas`, and `/api/academy` maintain local JSON fallbacks in `src/lib/api.ts` to guarantee baseline rendering during local offline development or network degradation.
-
----
-
-## 7. Media & Asset Architecture
-
-SohailVerse enforces strict tier separation to ensure high performance and clear ownership:
-
-1. **Single Source of Truth for Structured Data:**
-   - **Neon Serverless PostgreSQL:** Holds all structured records, relational fields, status flags, timestamps, and external resource URLs.
-   - **No Binary Storage in Database:** Images, audio, video files, and binary blobs are strictly prohibited from PostgreSQL.
-2. **Metadata & External Destination URLs:**
-   - `movies.poster_url`: Relative path to movie poster image (e.g., `/movies/interstellar.jpg`) or external artwork URL.
-   - `movies.trailer_url`: Remote trailer embed link (e.g., YouTube URL) or streaming destination link.
-   - `movies.synopsis`: Full narrative plot summary stored directly as structured text.
-   - `movies.is_featured`: Boolean flag designating the primary highlight movie in the Cinema observatory.
-   - `devops_projects.image_url`: Relative screenshot path or external image URL.
-   - `devops_projects.ppt_url`: Remote presentation deck URL.
-   - `devops_projects.github_url`: Remote repository link.
-3. **Local Static Assets (`public/`):**
-   - High-resolution movie backdrops and posters: `public/movies/*.jpg` (`interstellar.jpg`, `inception.jpg`, `oppenheimer.jpg`, `dune-part-two.jpg`, `the-dark-knight.jpg`, `gladiator.jpg`, `blade-runner-2049.jpg`, `the-matrix.jpg`, `arrival.jpg`).
-   - Cinema UI visuals: `public/cinema/hero-projector.jpg`, `public/cinema/featured-favorite.jpg`.
-   - Developer photography: `public/dev-real-*.jpg`, `public/real-dev-*.jpg`.
-   - Three.js globe textures: `public/earth-texture-2048.jpg`, `public/earth-clouds-1024.png`.
-   - Career CV: `public/resume.pdf`.
-4. **Streaming & External Media Services:**
-   - **JioCloud Video Streams:** Full-length movie streaming URLs preserved in `trailer_url` / `movie_url` records route users directly to verified external cloud streaming destinations.
-   - **YouTube Video Embeds:** Embedded video player modal supports trailer previewing.
-
----
-
-## 8. Cinema Architecture (Verified Phases 3.1 – 3.3B)
-
-The Cinema Observatory domain has completed a full end-to-end migration from hardcoded assets to a Neon-backed architecture:
-
-### 1. Schema Expansion (Phase 3.1 — COMPLETED)
-- Defined in `src/db/schema.pg.ts` and migration `drizzle/migrations-pg/0001_breezy_plazm.sql`.
-- Added columns:
-  - `poster_url` (`text`): Path to movie poster visual.
-  - `synopsis` (`text`): Comprehensive cinematic plot description.
-  - `is_featured` (`boolean`, default `false`, not null): Flag identifying featured showcase movies.
-
-### 2. API & Data Access Layer (Phase 3.2 — COMPLETED)
-- Handlers: `functions/api/movies/index.ts` and `functions/api/movies/[id].ts`.
-- `GET /api/movies`: Queries Neon via Drizzle ORM, returns all 8 movie fields ordered by `id DESC`.
-- `POST /api/movies` & `PUT /api/movies/:id`: Accept and validate expanded fields (`poster_url`, `synopsis`, `is_featured`, `trailer_url`).
-- Protected by `_middleware.ts` administrative authentication.
-
-### 3. Database Content Backfill (Phase 3.3A — COMPLETED)
-- Exactly 9 curated movie records verified in Neon `movies` table:
-  1. *Interstellar* (Sci-Fi, 9.5, Featured, JioCloud / YouTube trailer)
-  2. *Inception* (Sci-Fi / Thriller, 9.3)
-  3. *Oppenheimer* (Biography / Drama, 9.2)
-  4. *Dune: Part Two* (Sci-Fi / Adventure, 9.0)
-  5. *The Dark Knight* (Action / Crime, 9.4)
-  6. *Gladiator* (Action / Drama, 8.9)
-  7. *Blade Runner 2049* (Sci-Fi / Neo-Noir, 8.8)
-  8. *The Matrix* (Sci-Fi / Action, 9.1)
-  9. *Arrival* (Sci-Fi / Drama, 8.7)
-- JioCloud streaming destination URLs and YouTube trailer links are verified in database records.
-
-### 4. Frontend Neon Wiring (Phase 3.3B — COMPLETED)
-- `CinemaPage.tsx`: Fetches from `/api/movies` with zero fallback data.
-- `CinemaFeaturedMovie.tsx`: Evaluates `is_featured` (or highest rating fallback) and renders synopsis, poster, rating, and watch modal.
-- `CinemaMovieCarousel.tsx`: Displays interactive cards with poster images, genres, ratings, and modal triggers.
-- `CinemaHero.tsx`: Renders observatory statistics derived directly from live database records.
-
----
-
-## 9. Timeline Architecture (Restoration & Reconciliation Verified State)
-
-The timeline milestone domain reflects a verified restoration connecting life chapters, education, career shifts, and cloud accomplishments:
-
-### 1. Schema Expansion & Date Semantics
-- Defined in `src/db/schema.pg.ts` and migration `drizzle/migrations-pg/0002_dapper_timeline_events.sql`.
-- Added columns:
-  - `year` (`text`): Historical calendar year of milestone occurrence (e.g., `"2023"`, `"2024"`, `"2025"`, `"2026"`).
-  - `event_date` (`text`): Specific ISO date string (`YYYY-MM-DD`) representing milestone date.
-- **Date Semantics Distinction:**
-  - `created_at` (`timestamp`): Database record creation time (technical metadata).
-  - `year` (`text`): Timeline display and sorting anchor representing historical milestone year.
-  - `event_date` (`text`): Calendar date of historical occurrence.
-
-### 2. API Sorting Logic
-- In `functions/api/timeline/index.ts` and dev proxy:
-  - Sorting: `ORDER BY year ASC, event_date ASC, id ASC`.
-  - Ensures accurate chronological progression from earliest milestone (2023) to latest (2026).
-
-### 3. Timeline Content Reconciliation (MANDATORY CURRENT STATE)
-The Neon database `timeline_posts` table currently contains **exactly 5 records**:
-
-| ID | Year | Event Date | Created At | Title | Category | Description | Origin / Classification |
-|---|---|---|---|---|---|---|---|
-| **4** | 2023 | `2023-06-20` | `2023-06-20T00:00:00Z` | Completed Engineering Degree | Education | Graduated with an Engineering degree, establishing a comprehensive foundation in algorithms and computer systems. | Verified Historical Milestone |
-| **5** | 2024 | `2024-03-10` | `2024-03-10T00:00:00Z` | Saudi Arabia Journey & AWS / DevOps Genesis | Exploration & Learning | Traveled to Saudi Arabia and initiated deep-dive mastery into AWS Cloud and DevOps architecture. | Verified Historical Milestone |
-| **2** | 2025 | `2025-12-20` | `2026-06-16T12:28:54Z` | Internship at Visys Company | Career & Systems | Hands-on engineering internship contributing to cloud automation, business systems, and production pipelines. | Verified Historical Milestone (Retained from D1 id:2) |
-| **6** | 2026 | `2026-01-15` | `2026-01-15T00:00:00Z` | Built & Deployed Sohail-Shop | Systems & Cloud | Engineered scalable e-commerce infrastructure with multi-vendor support, Docker containers, and Kubernetes deployment. | Verified Historical Milestone ("Built & Deployed Sohail-Shop") |
-| **1** | 2026 | `2026-06-16` | `2026-06-16T11:59:45Z` | Timeline CMS Created | Platform | Built a dynamic timeline powered by Cloudflare Workers and D1 Database | System / CMS Milestone (Original D1 seed record #1) |
-
-#### Explicit Content Discrepancy Findings:
-- **Missing Milestone:** The historical milestone `"Building & Creating"` (which appeared in early static About/Journey designs as an ongoing chapter) is **NOT present** in the Neon database.
-- **System Milestone Present:** Record #1 (`"Timeline CMS Created"`) is a technical CMS artifact rather than a biographical life milestone, but is active in the public timeline.
-- **Title Variation:** Record #6 is titled `"Built & Deployed Sohail-Shop"` rather than `"Built & Deployed Sohail-Shop / Live B2B Fruit Wholesale Platform"`.
-- *Status:* In accordance with documentation-only constraints, these differences are documented without modifying database records.
-
-### 4. Frontend Timeline Rendering
-- `TimelinePage.tsx`: Fetches `/api/timeline` with zero fallback data; handles loading and error states.
-- `AboutJourneyTimeline.tsx`:
-  - Sorts milestones chronologically: `year ASC`, `event_date ASC`, `id ASC`.
-  - Computes dynamic header chronology: `"Chronology · 2023 — 2026"`.
-  - Color-coded vertical spine rail with responsive node glow and milestone icons.
-  - Special highlight badge for Sohail-Shop: `"REAL USERS & LIVE ARCHITECTURE"`.
-  - Continuing role badge for Visys: `"ACTIVE CLOUD ROLE"`.
-
-### 5. Admin Integration
-- `AdminPage.tsx`: Includes input fields for `Event Title`, `Category`, `Year (e.g. 2024)`, `Event Date (e.g. 2024-03-10)`, and `Description`.
-- Timeline Library list displays event ID, title, year badge, event date badge, category, and delete button.
-
----
-
-## 10. Admin & Authentication Architecture
-
-- **Session Protocol:** Cookie-based session management using `sv_admin_session`.
-- **Crypto Implementation:** Web Crypto API (`crypto.subtle`) supporting constant-time PBKDF2 verification (600,000 iterations with SHA-256) and HMAC-SHA256 session signatures.
-- **Middleware Guard:** `functions/api/_middleware.ts` intercepts all mutating HTTP verbs (`POST`, `PUT`, `DELETE`, `PATCH`), rejecting unauthenticated calls with HTTP 401.
-- **Supported Entity Managers:**
-  - Movies Manager: CRUD for cinema records with trailer URLs.
-  - DevOps Project Manager: CRUD for portfolio architecture records.
-  - Timeline Manager: CRUD for milestones including year and event date fields.
-  - *(Academy and Atlas forms are deferred and not yet mounted in Admin UI).*
-
----
-
-## 11. Environment & Secrets
-
-Environment variables verified through code inspection:
-
-| Variable Name | Role | Secret? | Code References |
-|---|---|---|---|
-| `DATABASE_URL` | Neon PostgreSQL pooled connection string | **YES** | `src/db/index.ts`, `drizzle.config.ts`, `scripts/migrate-d1-to-neon.mjs`, `functions/api/*`, `vite.config.ts` |
-| `ADMIN_PASSWORD_HASH` | PBKDF2 salt and hash (`pbkdf2:600000:salt:hash`) | **YES** | `functions/api/auth/_utils.ts`, `.dev.vars.example`, `scripts/generate-password-hash.js` |
-| `ADMIN_PASSWORD` | Fallback plaintext admin password | **YES** | `.env.example`, `functions/api/auth/_utils.ts`, `vite.config.ts` |
-| `SESSION_SECRET` | 32-byte secret key for HMAC-SHA256 session signatures | **YES** | `functions/api/auth/_utils.ts`, `.dev.vars.example`, `.env.example`, `vite.config.ts` |
-| `GEMINI_API_KEY` | Google Gemini API key for server-side generative AI | **YES** | `.env.example`, `package.json` (`@google/genai`) |
-
-*Security invariant: No secret values or credentials are committed to the repository.*
-
----
-
-## 12. Deployment Architecture
-
-- **Platform:** Cloudflare Pages with Pages Functions.
-- **Build Command:** `npm run build` (`tsc -b && vite build`) producing static files in `dist/`.
-- **Output Directory:** `dist/`.
-- **Edge API:** Automatically detected by Cloudflare Pages from the root `functions/` directory.
-- **Serverless Secrets:** Configured in Cloudflare Pages Dashboard under Settings > Environment Variables > Production/Preview (`DATABASE_URL`, `ADMIN_PASSWORD_HASH`, `SESSION_SECRET`).
-- **Dedicated Cloudflare Config Files:** `wrangler.toml`, `wrangler.json`, `wrangler.jsonc`, and `_routes.json` are **NOT PRESENT IN REPOSITORY** (Cloudflare Pages conventions are relied upon).
-
----
-
-## 13. Legacy / Migration Architecture
-
-### Migration State: Cloudflare D1 → Neon PostgreSQL
-
-- **CURRENT RUNTIME (Active):**
-  - Schema: `src/db/schema.pg.ts` (7 physical PostgreSQL tables using `pgTable`).
-  - Connection Adapter: `src/db/index.ts` connecting via `@neondatabase/serverless` and `drizzle-orm/neon-http`.
-  - API Routes: `functions/api/*` querying PostgreSQL tables.
-- **LEGACY / ROLLBACK MATERIAL:**
-  - `src/db/schema.ts`: SQLite / Cloudflare D1 schema (5 tables: `movies`, `academy`, `devops`, `timeline`, `atlas`). Retained for reference and rollback safety.
-- **MIGRATION ARTIFACTS:**
-  - `drizzle/migrations-pg/0000_bouncy_prowler.sql`: PostgreSQL initial migration file creating the 7 physical tables.
-  - `drizzle/migrations-pg/0001_breezy_plazm.sql`: PostgreSQL Cinema expansion migration (`poster_url`, `synopsis`, `is_featured`).
-  - `drizzle/migrations-pg/0002_dapper_timeline_events.sql`: PostgreSQL Timeline expansion migration (`year`, `event_date`).
-  - `scripts/migrate-d1-to-neon.mjs`: Row-by-row data transfer script from SQLite memory to Neon.
-  - `d1-export.sql`: **NOT PRESENT IN REPOSITORY** (referenced in `scripts/migrate-d1-to-neon.mjs`, must be extracted from D1 prior to executing migration).
-
----
-
-## 14. Current Implementation & Migration Status Matrix
+## 11. Current Implementation & Verification Status Matrix
 
 ```
 ┌──────────────────────────────────────────────────┬──────────────────────┬────────────────────────────────────────────────────────┐
 │ Domain / Feature                                 │ Verified Status      │ Implementation Evidence & Notes                        │
 ├──────────────────────────────────────────────────┼──────────────────────┼────────────────────────────────────────────────────────┤
-│ PostgreSQL Baseline Schema                       │ COMPLETED            │ src/db/schema.pg.ts (7 tables)                         │
-│ Neon HTTP Database Adapter                       │ COMPLETED            │ src/db/index.ts (drizzle-orm/neon-http + neon)         │
-│ Cinema Schema Expansion (3.1)                    │ COMPLETED            │ 0001_breezy_plazm.sql (poster_url, synopsis, featured) │
-│ Cinema API & Data Access (3.2)                   │ COMPLETED            │ functions/api/movies/* (supports all 8 fields)         │
-│ Cinema Content Backfill (3.3A)                   │ COMPLETED            │ 9 movies verified in Neon with JioCloud/YouTube links  │
-│ Cinema Frontend Neon Wiring (3.3B)               │ COMPLETED            │ CinemaPage.tsx, FeaturedMovie, Carousel (zero fallback)│
-│ Timeline Schema Expansion (Phase 4)              │ COMPLETED            │ 0002_dapper_timeline_events.sql (year, event_date)     │
-│ Timeline API Chronological Sorting               │ COMPLETED            │ functions/api/timeline/* (year ASC, event_date ASC)    │
-│ Timeline Milestone Restoration                   │ COMPLETED            │ 5 records verified in Neon (IDs 4, 5, 2, 6, 1)         │
-│ Timeline Frontend Neon Wiring                    │ COMPLETED            │ TimelinePage.tsx, AboutJourneyTimeline (zero fallback) │
-│ Admin Timeline CRUD Controls                     │ COMPLETED            │ AdminPage.tsx (year, event_date inputs & badges)       │
-│ Admin Authentication (PBKDF2 + HMAC)             │ COMPLETED            │ functions/api/auth/* & functions/api/_middleware.ts    │
-│ DevOps Projects Database API                     │ COMPLETED            │ functions/api/devops/* (queries devops_projects)       │
-│ Portfolio Page Dynamic Projects                  │ PARTIAL / HYBRID     │ ProjectsPage.tsx merges /api/devops with local dataset │
-│ Project Detail Live Data                         │ PENDING              │ ProjectDetailPage.tsx uses hardcoded blueprint modules │
-│ Homepage (Mission Control) Live Data             │ PENDING              │ Uses initialProjects from data/mission-control.ts      │
-│ Dashboard Metrics Live Data                      │ PARTIAL / HYBRID     │ Fetches movie/devops/timeline counts; stats hardcoded  │
-│ Academy & Atlas Dedicated Routes                 │ PENDING              │ APIs exist (/api/academy, /api/atlas); routes unmapped │
-│ Travel Posts API Endpoint                        │ DEFERRED             │ Table exists in Neon (5 rows); no /api/travel handler  │
-│ Cloudflare D1 Full Deprecation                   │ DEFERRED             │ schema.ts preserved for rollback safety                │
+│ Decoupled Projects Architecture                  │ COMPLETED            │ /projects/:id -> ProjectInformationPage (routes.tsx)   │
+│ Project Information Dossier Page                 │ COMPLETED            │ ProjectInformationPage.tsx (Videos, Docs, Arch, Links) │
+│ Project Content Engine & Models                  │ COMPLETED            │ src/lib/projectContent.ts (Highlights JSON persistence)│
+│ Admin Projects Manager + Content Modal           │ COMPLETED            │ ProjectsManager.tsx + ProjectContentManagerModal.tsx   │
+│ DevOps 5-Pillar Laboratory System                │ COMPLETED            │ DevOpsPage.tsx + DevOpsLearningJourney.tsx             │
+│ DevOps Notes & Attached PDF Support              │ COMPLETED            │ DevOpsLearningJourney.tsx + NoteReaderModal.tsx        │
+│ Networking & AWS Video Sessions Masterclasses    │ COMPLETED            │ DevOpsPillarVideoSessions.tsx + VideoPlayerModal.tsx   │
+│ Admin DevOps 5-Pillar Manager                    │ COMPLETED            │ DevOpsManager.tsx + ResourceEditorModal.tsx            │
+│ Admin Cinema Manager with Poster Studio          │ COMPLETED            │ CinemaManager.tsx with live poster fallback validation │
+│ Authenticated CMS Console (Tabs Architecture)    │ COMPLETED            │ AuthenticatedCMS.tsx (Projects, Cinema, DevOps tabs)   │
+│ Cinema Observatory Neon Wiring (Zero Fallback)   │ COMPLETED            │ CinemaPage.tsx, 9 verified records in Neon             │
+│ Timeline Milestones Chronological Ordering       │ COMPLETED            │ TimelinePage.tsx, 5 verified records in Neon           │
+│ Admin PBKDF2 Web Crypto Authentication           │ COMPLETED            │ functions/api/auth/* & functions/api/_middleware.ts    │
+│ Mission Control Favourite Projects Carousel      │ COMPLETED            │ ProjectsShowcase.tsx (Dual picture desktop/mobile)     │
+│ SohailVerse Brand Identity & Avatar              │ COMPLETED            │ BrandAvatar.tsx (profile image with monogram fallback) │
+│ Mobile Responsive Layout & Dock Navigation       │ COMPLETED            │ DevOpsBottomNav.tsx, MobileMenu.tsx, responsive CSS    │
 │ Cloudflare Pages Production Deployment           │ PENDING VERIFICATION │ Cloudflare Pages environment secrets verification      │
-│ Git Branch Verification                          │ NOT VERIFIABLE       │ No .git metadata present in runtime container          │
+│ Academy & Atlas Dedicated Public Page Routes     │ PENDING              │ APIs exist (/api/academy, /api/atlas); routes unmapped │
+│ Travel Posts API Endpoint                        │ DEFERRED             │ Table exists in Neon (5 rows); no /api/travel route    │
+│ Cloudflare D1 Legacy Schema Deprecation          │ DEFERRED             │ src/db/schema.ts retained for rollback reference       │
 └──────────────────────────────────────────────────┴──────────────────────┴────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 15. Documentation Evidence
+## 12. Architectural Evidence & Verified References
 
-The architectural facts in this document were verified from:
-- `package.json`
-- `drizzle.config.ts`
-- `metadata.json`
-- `.dev.vars.example`
-- `.env.example`
-- `vite.config.ts`
-- `src/db/schema.pg.ts`
-- `src/db/schema.ts`
-- `src/db/index.ts`
-- `src/lib/api.ts`
-- `src/app/routes.tsx`
-- `src/app/router.tsx`
-- `src/pages/AdminPage.tsx`
-- `src/pages/CinemaPage.tsx`
-- `src/components/cinema/CinemaFeaturedMovie.tsx`
-- `src/components/cinema/CinemaMovieCarousel.tsx`
-- `src/components/cinema/CinemaHero.tsx`
-- `src/pages/DevOpsPage.tsx`
-- `src/pages/ProjectsPage.tsx`
-- `src/pages/ProjectDetailPage.tsx`
-- `src/pages/TimelinePage.tsx`
-- `src/components/about/AboutJourneyTimeline.tsx`
-- `src/pages/DashboardPage.tsx`
-- `src/pages/MissionControlPage.tsx`
-- `functions/api/_middleware.ts`
-- `functions/api/auth/_utils.ts`
-- `functions/api/auth/login.ts`
-- `functions/api/auth/logout.ts`
-- `functions/api/auth/session.ts`
-- `functions/api/movies/index.ts`
-- `functions/api/movies/[id].ts`
-- `functions/api/devops/index.ts`
-- `functions/api/devops/[id].ts`
-- `functions/api/timeline/index.ts`
-- `functions/api/timeline/[id].ts`
-- `functions/api/atlas/index.ts`
-- `functions/api/atlas/[id].ts`
-- `functions/api/academy/index.ts`
-- `functions/api/academy/[id].ts`
-- `scripts/migrate-d1-to-neon.mjs`
-- `scripts/generate-password-hash.js`
-- `scripts/generate-project-placeholders.cjs`
-- `scripts/generate-space-background.mjs`
-- `drizzle/migrations-pg/0000_bouncy_prowler.sql`
-- `drizzle/migrations-pg/0001_breezy_plazm.sql`
-- `drizzle/migrations-pg/0002_dapper_timeline_events.sql`
-
+This architecture document was compiled directly from empirical repository inspection:
+- Application Entry & Routing: `src/app/routes.tsx`, `src/app/router.tsx`, `src/App.tsx`
+- Project Architecture: `src/pages/ProjectsPage.tsx`, `src/pages/ProjectInformationPage.tsx`, `src/lib/projectContent.ts`, `src/components/projects/*`
+- DevOps Architecture: `src/pages/DevOpsPage.tsx`, `src/components/devops/*`, `src/lib/pillarContent.ts`
+- Admin Console Architecture: `src/pages/AdminPage.tsx`, `src/components/admin/*`, `src/components/admin/devops/*`
+- Cinema Observatory: `src/pages/CinemaPage.tsx`, `src/components/cinema/*`
+- Timeline Milestones: `src/pages/TimelinePage.tsx`, `src/components/about/*`
+- Mission Control & Navigation: `src/pages/MissionControlPage.tsx`, `src/components/mission-control/*`, `src/components/navigation/*`, `src/components/ui/BrandAvatar.tsx`
+- Database & Schemas: `src/db/schema.pg.ts`, `src/db/index.ts`, `drizzle.config.ts`, `drizzle/migrations-pg/*`
+- Edge API Handlers: `functions/api/*`, `functions/api/_middleware.ts`, `functions/api/auth/*`
