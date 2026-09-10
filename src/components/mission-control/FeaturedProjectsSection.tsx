@@ -4,6 +4,7 @@ import { SiArgo, SiKubernetes, SiPostgresql, SiTerraform } from "react-icons/si"
 import { Link } from "react-router-dom";
 import { initialProjects } from "../../data/mission-control";
 import type { UniverseProject } from "../../types/mission-control";
+import { formatProjectStatus } from "../../lib/utils";
 
 interface FeaturedProjectsProps {
   projects?: UniverseProject[];
@@ -38,7 +39,7 @@ export default function FeaturedProjectsSection({
               <div className="flex flex-wrap items-center gap-3">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-lime-400/30 bg-lime-500/10 px-3 py-1 text-xs font-semibold text-lime-400">
                   <span className="h-2 w-2 rounded-full bg-lime-400 animate-pulse" />
-                  {featured.statusLabel}
+                  {formatProjectStatus(featured.statusLabel)}
                 </span>
 
                 <span className="font-mono text-xs uppercase tracking-wider text-slate-400">
@@ -157,7 +158,7 @@ export default function FeaturedProjectsSection({
                   ) : (
                     <Sparkles className="h-3 w-3" />
                   )}
-                  {project.statusLabel}
+                  {formatProjectStatus(project.statusLabel)}
                 </span>
               </div>
 
@@ -177,7 +178,7 @@ export default function FeaturedProjectsSection({
 
             <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs">
               <span className="font-mono text-slate-500">
-                {project.highlightMetric || "Coming soon"}
+                {formatProjectStatus(project.highlightMetric) || "Upcoming"}
               </span>
 
               <Link

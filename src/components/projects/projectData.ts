@@ -8,6 +8,7 @@ import { fetchApi, isValidDevOpsProject, type DevOpsProject } from "../../lib/ap
 import { initialProjects } from "../../data/mission-control";
 import type { UniverseProject } from "../../types/mission-control";
 import { resolveProjectImages } from "../mission-control/ProjectsShowcase";
+import { formatProjectStatus } from "../../lib/utils";
 
 export interface UnifiedProject {
   id: string | number;
@@ -81,8 +82,8 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
         liveUrl: "sohail-shop.sohailverse.com",
         internalUrl: "/projects/1",
         rating: dbFlagship.rating ? Number(dbFlagship.rating) : undefined,
-        status: dbFlagship.status || proj.statusLabel,
-        statusLabel: dbFlagship.status || proj.statusLabel,
+        status: formatProjectStatus(dbFlagship.status || proj.statusLabel),
+        statusLabel: formatProjectStatus(dbFlagship.status || proj.statusLabel),
         tagline: proj.tagline,
         highlight: proj.highlightMetric,
       };
@@ -114,8 +115,8 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
           ? "memories.sohailverse.com"
           : undefined,
       internalUrl: proj.link || "/projects",
-      status: proj.statusLabel,
-      statusLabel: proj.statusLabel,
+      status: formatProjectStatus(proj.statusLabel),
+      statusLabel: formatProjectStatus(proj.statusLabel),
       tagline: proj.tagline,
       highlight: proj.highlightMetric,
     };
@@ -143,8 +144,8 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
         githubUrl: dbP.github_url || undefined,
         internalUrl: `/devops/${dbP.id}`,
         rating: dbP.rating ? Number(dbP.rating) : undefined,
-        status: dbP.status || "Production Ready",
-        statusLabel: dbP.status || "Production Ready",
+        status: formatProjectStatus(dbP.status || "Ready"),
+        statusLabel: formatProjectStatus(dbP.status || "Ready"),
       });
     }
   }

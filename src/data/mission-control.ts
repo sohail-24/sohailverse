@@ -30,7 +30,7 @@ export const initialProjects: UniverseProject[] = [
     description:
       "Scalable e-commerce platform with multi-vendor support, secure payments, and smart order management.",
     status: "live",
-    statusLabel: "Production Ready",
+    statusLabel: "Ready",
     featured: true,
     technologies: [
       "Kubernetes",
@@ -69,12 +69,12 @@ export const initialProjects: UniverseProject[] = [
     description:
       "Groceries and daily essentials delivered fast with real-time tracking and seamless customer experience.",
     status: "building",
-    statusLabel: "In Development",
+    statusLabel: "Active",
     featured: false,
     technologies: ["Automation", "CI/CD", "Cloud", "API Design"],
     link: "/devops",
     complexity: 3,
-    highlightMetric: "In Development",
+    highlightMetric: "Active",
     image: "/projects/temporary/fresh-flow-placeholder.jpg",
   },
   {
@@ -83,12 +83,12 @@ export const initialProjects: UniverseProject[] = [
     tagline: "Crafting Beautiful Memories",
     description: "A digital celebration of love, made with ❤️",
     status: "coming_soon",
-    statusLabel: "Coming Soon",
+    statusLabel: "Upcoming",
     featured: false,
     technologies: ["Next.js", "Framer Motion", "Cloudinary", "UI/UX Design"],
     link: "/timeline",
     complexity: 3,
-    highlightMetric: "Coming Soon",
+    highlightMetric: "Upcoming",
     image: "/projects/temporary/wedding-placeholder.jpg",
   },
   {

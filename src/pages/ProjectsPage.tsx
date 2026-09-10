@@ -42,25 +42,33 @@ export default function ProjectsPage() {
     if (filter === "LIVE") {
       return projects.filter(
         (p) =>
+          p.status?.toLowerCase().includes("ready") ||
           p.status?.toLowerCase().includes("live") ||
           p.status?.toLowerCase().includes("production") ||
           p.status?.toLowerCase().includes("running") ||
+          p.statusLabel?.toLowerCase().includes("ready") ||
           p.statusLabel?.toLowerCase().includes("production")
       );
     }
     if (filter === "BUILDING") {
       return projects.filter(
         (p) =>
+          p.status?.toLowerCase().includes("active") ||
           p.status?.toLowerCase().includes("building") ||
           p.status?.toLowerCase().includes("development") ||
-          p.status?.toLowerCase().includes("progress")
+          p.status?.toLowerCase().includes("progress") ||
+          p.statusLabel?.toLowerCase().includes("active") ||
+          p.statusLabel?.toLowerCase().includes("development")
       );
     }
     if (filter === "UPCOMING") {
       return projects.filter(
         (p) =>
+          p.status?.toLowerCase().includes("upcoming") ||
           p.status?.toLowerCase().includes("coming") ||
-          p.status?.toLowerCase().includes("soon")
+          p.status?.toLowerCase().includes("soon") ||
+          p.statusLabel?.toLowerCase().includes("upcoming") ||
+          p.statusLabel?.toLowerCase().includes("coming")
       );
     }
     return projects;
@@ -127,7 +135,7 @@ export default function ProjectsPage() {
                   : "border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10"
               }`}
             >
-              Production
+              Ready
             </button>
             <button
               type="button"
@@ -138,7 +146,7 @@ export default function ProjectsPage() {
                   : "border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10"
               }`}
             >
-              Building
+              Active
             </button>
             <button
               type="button"

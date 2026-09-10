@@ -1,14 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, User, FolderGit2, Film, Cloud } from "lucide-react";
 import * as THREE from "three";
 
 /**
  * Earth Atmospheric Limb Scatter Shader
- * Recreates the razor-thin luminous blue limb of Earth as seen in NASA photography.
- * The Fresnel glow responds physically to the Sun position:
- * glowing delicately on the sunward crescent and vanishing into the darkness of the night hemisphere.
+ * Subtle, photorealistic electric-cyan limb on the sunlit hemisphere.
  */
 const atmosphereVertexShader = `
   varying vec3 vNormal;
@@ -30,67 +28,68 @@ const atmosphereFragmentShader = `
     vec3 lightDir = normalize(uSunPosition - vWorldPosition);
 
     float nDotV = max(0.0, dot(vNormal, viewDir));
-
-    // Fresnel rim intensity (thin, subtle limb without excessive glow)
     float fresnel = pow(1.0 - nDotV, 3.2);
-
-    // Smooth edge fade: ensures the atmospheric glow smoothly tapers to absolute ZERO
-    // well before the geometry silhouette boundary (nDotV < 0.04), completely eliminating
-    // faceted polygonal chord line artifacts, bright slivers, and harsh geometric lines
     float edgeFade = smoothstep(0.035, 0.22, nDotV);
 
-    // Sunlit hemisphere masking: atmosphere illuminates on the day side
     float sunDot = dot(vNormal, lightDir);
     float sunFactor = smoothstep(-0.15, 0.40, sunDot);
 
-    // Realistic electric cyan-blue atmosphere color gradient
     vec3 atmoColor = mix(vec3(0.12, 0.55, 0.95), vec3(0.42, 0.82, 1.0), fresnel);
-
     float alpha = fresnel * edgeFade * sunFactor * 0.60;
     gl_FragColor = vec4(atmoColor, alpha);
   }
 `;
 
-interface NavDestination {
+export interface NavDestination {
   id: string;
-  number: string;
   title: string;
   tagline: string;
   path: string;
-  icon: React.ComponentType<{ className?: string }>;
+  category: string;
+  accentColor: string;
+  glowColor: string;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
 }
 
-const NAV_DESTINATIONS: NavDestination[] = [
+export const NAV_DESTINATIONS: NavDestination[] = [
   {
     id: "about",
-    number: "01",
     title: "About",
     tagline: "Origin, story, journey...",
     path: "/about",
+    category: "ORIGIN & STORY",
+    accentColor: "#38bdf8",
+    glowColor: "rgba(56, 189, 248, 0.35)",
     icon: User,
   },
   {
     id: "projects",
-    number: "02",
     title: "Projects",
     tagline: "Things I've built, deployed, and learned...",
     path: "/projects",
+    category: "SYSTEMS & BUILDS",
+    accentColor: "#34d399",
+    glowColor: "rgba(52, 211, 153, 0.32)",
     icon: FolderGit2,
   },
   {
     id: "cinema",
-    number: "03",
     title: "Cinema",
     tagline: "Stories, visuals, and imagination...",
     path: "/cinema",
+    category: "CREATIVE HORIZON",
+    accentColor: "#a78bfa",
+    glowColor: "rgba(167, 139, 250, 0.32)",
     icon: Film,
   },
   {
     id: "devops",
-    number: "04",
     title: "DevOps",
     tagline: "Kubernetes, automation, systems...",
     path: "/devops",
+    category: "CLOUD INFRASTRUCTURE",
+    accentColor: "#60a5fa",
+    glowColor: "rgba(96, 165, 250, 0.35)",
     icon: Cloud,
   },
 ];
@@ -101,21 +100,21 @@ export default function CinematicEarthTransition() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const shouldReduceMotion = useReducedMotion();
 
-  // Scroll detection & trigger state
+  // Scroll detection
   const [hasTriggered, setHasTriggered] = useState(false);
-  const [isHoveredOrDragging, setIsHoveredOrDragging] = useState(false);
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Sequential reveal state:
+  // revealedPoints[i] tracks whether point i is visible
+  // revealedCards[i] tracks whether card i is open
+  const [revealedPoints, setRevealedPoints] = useState<boolean[]>([false, false, false, false]);
+  const [revealedCards, setRevealedCards] = useState<boolean[]>([false, false, false, false]);
 
   // Responsive stage measurement
-  const [stageSize, setStageSize] = useState({ width: 900, height: 580 });
+  const [stageSize, setStageSize] = useState({ width: 1000, height: 680 });
 
-  // Repeating one-card animation cycle state (0: About, 1: Projects, 2: Cinema, 3: DevOps)
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [animPhase, setAnimPhase] = useState<"emerge" | "hold" | "retract">("emerge");
-  const [isCardHovered, setIsCardHovered] = useState(false);
-  const [isCardFocused, setIsCardFocused] = useState(false);
-  const isCardActive = isCardHovered || isCardFocused;
-
-  // Interaction tracking refs
+  // Three.js Interaction tracking refs
   const isDraggingRef = useRef(false);
   const lastXRef = useRef(0);
   const lastTimeRef = useRef(0);
@@ -131,10 +130,12 @@ export default function CinematicEarthTransition() {
     locked: "horizontal" | "vertical" | null;
   } | null>(null);
 
-  // If user prefers reduced motion, trigger immediately
+  // If user prefers reduced motion, show everything immediately
   useEffect(() => {
     if (shouldReduceMotion) {
       setHasTriggered(true);
+      setRevealedPoints([true, true, true, true]);
+      setRevealedCards([true, true, true, true]);
     }
   }, [shouldReduceMotion]);
 
@@ -155,7 +156,7 @@ export default function CinematicEarthTransition() {
       },
       {
         threshold: 0.15,
-        rootMargin: "0px 0px -50px 0px",
+        rootMargin: "0px 0px -40px 0px",
       }
     );
 
@@ -163,6 +164,72 @@ export default function CinematicEarthTransition() {
 
     return () => {
       observer.disconnect();
+    };
+  }, [hasTriggered, shouldReduceMotion]);
+
+  // Sequential Reveal Animation Timer Chain
+  // Sequence:
+  // 1. Earth is visible / rotating
+  // 2. Point 0 (About) appears -> Card 0 opens -> Hold
+  // 3. Point 1 (Projects) appears -> Card 1 opens -> Hold
+  // 4. Point 2 (Cinema) appears -> Card 2 opens -> Hold
+  // 5. Point 3 (DevOps) appears -> Card 3 opens
+  // Once all are open, STOP. All 4 remain calmly visible.
+  useEffect(() => {
+    if (!hasTriggered || shouldReduceMotion) return;
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    // Destination 0: ABOUT
+    timers.push(
+      setTimeout(() => {
+        setRevealedPoints((prev) => [true, prev[1], prev[2], prev[3]]);
+      }, 250)
+    );
+    timers.push(
+      setTimeout(() => {
+        setRevealedCards((prev) => [true, prev[1], prev[2], prev[3]]);
+      }, 550)
+    );
+
+    // Destination 1: PROJECTS
+    timers.push(
+      setTimeout(() => {
+        setRevealedPoints((prev) => [prev[0], true, prev[2], prev[3]]);
+      }, 1200)
+    );
+    timers.push(
+      setTimeout(() => {
+        setRevealedCards((prev) => [prev[0], true, prev[2], prev[3]]);
+      }, 1500)
+    );
+
+    // Destination 2: CINEMA
+    timers.push(
+      setTimeout(() => {
+        setRevealedPoints((prev) => [prev[0], prev[1], true, prev[3]]);
+      }, 2150)
+    );
+    timers.push(
+      setTimeout(() => {
+        setRevealedCards((prev) => [prev[0], prev[1], true, prev[3]]);
+      }, 2450)
+    );
+
+    // Destination 3: DEVOPS
+    timers.push(
+      setTimeout(() => {
+        setRevealedPoints((prev) => [prev[0], prev[1], prev[2], true]);
+      }, 3100)
+    );
+    timers.push(
+      setTimeout(() => {
+        setRevealedCards((prev) => [prev[0], prev[1], prev[2], true]);
+      }, 3400)
+    );
+
+    return () => {
+      timers.forEach((t) => clearTimeout(t));
     };
   }, [hasTriggered, shouldReduceMotion]);
 
@@ -190,51 +257,8 @@ export default function CinematicEarthTransition() {
     };
   }, []);
 
-  // Repeating animation sequence:
-  // Each destination has ~2.15s total visible cycle:
-  // 1. emerge (650ms): Anchor appears, connection line extends, card emerges outward from Earth
-  // 2. hold (1100ms): Steady hold for reading and interaction (pauses if hovered/focused)
-  // 3. retract (400ms): Card retracts back toward Earth connection point, line retracts/fades
-  // Then loops to next destination seamlessly: About -> Projects -> Cinema -> DevOps -> repeat
-  useEffect(() => {
-    if (!hasTriggered) return;
-
-    if (shouldReduceMotion) {
-      const timer = setTimeout(() => {
-        setActiveIndex((prev) => (prev + 1) % NAV_DESTINATIONS.length);
-      }, 3500);
-      return () => clearTimeout(timer);
-    }
-
-    if (animPhase === "emerge") {
-      const timer = setTimeout(() => {
-        setAnimPhase("hold");
-      }, 650);
-      return () => clearTimeout(timer);
-    }
-
-    if (animPhase === "hold") {
-      if (isCardActive) {
-        // Paused while hovered or focused
-        return;
-      }
-      const timer = setTimeout(() => {
-        setAnimPhase("retract");
-      }, 1100);
-      return () => clearTimeout(timer);
-    }
-
-    if (animPhase === "retract") {
-      const timer = setTimeout(() => {
-        setActiveIndex((prev) => (prev + 1) % NAV_DESTINATIONS.length);
-        setAnimPhase("emerge");
-      }, 400);
-      return () => clearTimeout(timer);
-    }
-  }, [hasTriggered, animPhase, isCardActive, shouldReduceMotion]);
-
-  // Precise geometry calculation for Earth anchor, connection line, and floating card
-  const geometry = useMemo(() => {
+  // Spatial composition calculation: generous negative space around central Earth
+  const layout = useMemo(() => {
     const { width, height } = stageSize;
     const isMobile = width < 768;
     const isTablet = width >= 768 && width < 1024;
@@ -243,211 +267,188 @@ export default function CinematicEarthTransition() {
     const centerX = width / 2;
     const centerY = height / 2;
 
-    // Real Earth sphere pixel radius in stage coordinates
-    // Mobile Earth size is preserved; desktop Earth size is substantially enlarged
+    // Earth sphere pixel diameter and radius
     const earthDiameter = isMobile
-      ? Math.min(256, width * 0.68)
+      ? Math.min(210, Math.round(width * 0.54))
       : isTablet
-      ? 440
+      ? 330
       : isLg
-      ? 520
-      : Math.min(620, Math.round(width * 0.44));
-    const earthRadius = (earthDiameter / 2) * 0.80;
+      ? 410
+      : Math.min(460, Math.round(width * 0.36));
+    const earthRadius = (earthDiameter / 2) * 0.82;
 
-    // Compact floating card dimensions
-    const cardW = isMobile ? Math.min(236, width - 36) : 244;
-    const cardH = isMobile ? 104 : 114;
-
-    let anchorX = centerX;
-    let anchorY = centerY;
-    let cardX = centerX;
-    let cardY = centerY;
-    let targetX = centerX;
-    let targetY = centerY;
+    // Spatial node dimensions
+    const nodeW = isMobile
+      ? Math.max(148, Math.floor((width - 32) / 2))
+      : isTablet
+      ? 220
+      : 250;
+    const nodeH = isMobile ? 96 : 110;
 
     if (isMobile) {
-      // Mobile Layout: Cards positioned in upper and lower corners, leaving Earth centered
-      if (activeIndex === 0) {
-        // 01 About: Upper-Left
-        anchorX = centerX - earthRadius * 0.50;
-        anchorY = centerY - earthRadius * 0.58;
-        cardX = 16;
-        cardY = 16;
-        targetX = cardX + cardW * 0.72;
-        targetY = cardY + cardH;
-      } else if (activeIndex === 1) {
-        // 02 Projects: Upper-Right
-        anchorX = centerX + earthRadius * 0.58;
-        anchorY = centerY - earthRadius * 0.48;
-        cardX = width - cardW - 16;
-        cardY = 16;
-        targetX = cardX + cardW * 0.28;
-        targetY = cardY + cardH;
-      } else if (activeIndex === 2) {
-        // 03 Cinema: Lower-Left
-        anchorX = centerX - earthRadius * 0.78;
-        anchorY = centerY + earthRadius * 0.22;
-        cardX = 16;
-        cardY = height - cardH - 16;
-        targetX = cardX + cardW * 0.72;
-        targetY = cardY;
-      } else {
-        // 04 DevOps: Lower-Right
-        anchorX = centerX + earthRadius * 0.65;
-        anchorY = centerY + earthRadius * 0.52;
-        cardX = width - cardW - 16;
-        cardY = height - cardH - 16;
-        targetX = cardX + cardW * 0.28;
-        targetY = cardY;
-      }
-    } else {
-      // Desktop Layout: Cards float at orbital positions around Earth (matching reference image)
-      if (activeIndex === 0) {
-        // 01 About: Upper-Left
-        anchorX = centerX - earthRadius * 0.48;
-        anchorY = centerY - earthRadius * 0.58;
-        cardX = Math.max(20, centerX - earthRadius - cardW - 24);
-        cardY = Math.max(20, centerY - earthRadius - 20);
-        targetX = cardX + cardW;
-        targetY = cardY + cardH * 0.68;
-      } else if (activeIndex === 1) {
-        // 02 Projects: Upper-Right
-        anchorX = centerX + earthRadius * 0.62;
-        anchorY = centerY - earthRadius * 0.48;
-        cardX = Math.min(width - cardW - 20, centerX + earthRadius + 24);
-        cardY = Math.max(20, centerY - earthRadius - 20);
-        targetX = cardX;
-        targetY = cardY + cardH * 0.68;
-      } else if (activeIndex === 2) {
-        // 03 Cinema: Left / Lower-Left
-        anchorX = centerX - earthRadius * 0.80;
-        anchorY = centerY + earthRadius * 0.16;
-        cardX = Math.max(20, centerX - earthRadius - cardW - 26);
-        cardY = Math.min(height - cardH - 24, centerY - 10);
-        targetX = cardX + cardW;
-        targetY = cardY + cardH * 0.50;
-      } else {
-        // 04 DevOps: Lower-Right
-        anchorX = centerX + earthRadius * 0.66;
-        anchorY = centerY + earthRadius * 0.48;
-        cardX = Math.min(width - cardW - 20, centerX + earthRadius + 24);
-        cardY = Math.min(height - cardH - 24, centerY + 24);
-        targetX = cardX;
-        targetY = cardY + cardH * 0.50;
-      }
-    }
+      // Mobile Layout:
+      // Earth centered.
+      // Top row: About (left) and Projects (right)
+      // Bottom row: Cinema (left) and DevOps (right)
+      const topY = 16;
+      const bottomY = Math.max(height - nodeH - 16, centerY + earthRadius + 32);
 
-    // 3-Segment Geometric Technical Zig-Zag calculation (2–3 clean straight angled segments joined together)
-    // Earth anchor -> Segment 1 -> Segment 2 (subtle angled/horizontal jog) -> Segment 3 -> Card Target
-    let p1 = { x: anchorX, y: anchorY };
-    let p2 = { x: targetX, y: targetY };
+      const aboutNode = { x: 12, y: topY, width: nodeW, height: nodeH };
+      const projectsNode = { x: width - nodeW - 12, y: topY, width: nodeW, height: nodeH };
+      const cinemaNode = { x: 12, y: bottomY, width: nodeW, height: nodeH };
+      const devopsNode = { x: width - nodeW - 12, y: bottomY, width: nodeW, height: nodeH };
 
-    const dx = targetX - anchorX;
-    const dy = targetY - anchorY;
+      // Subtle celestial beacon points floating between each destination and the Earth
+      const aboutBeacon = {
+        x: aboutNode.x + aboutNode.width * 0.5,
+        y: aboutNode.y + aboutNode.height + 12,
+      };
+      const projectsBeacon = {
+        x: projectsNode.x + projectsNode.width * 0.5,
+        y: projectsNode.y + projectsNode.height + 12,
+      };
+      const cinemaBeacon = {
+        x: cinemaNode.x + cinemaNode.width * 0.5,
+        y: cinemaNode.y - 12,
+      };
+      const devopsBeacon = {
+        x: devopsNode.x + devopsNode.width * 0.5,
+        y: devopsNode.y - 12,
+      };
 
-    if (activeIndex === 0) {
-      // 01 About: Upper-Left (dx < 0, dy < 0)
-      // Diagonally up-left from anchor -> horizontal jog left -> into card target
-      p1 = {
-        x: anchorX + dx * 0.35,
-        y: anchorY + dy * 0.52,
-      };
-      p2 = {
-        x: anchorX + dx * 0.72,
-        y: p1.y + dy * 0.08,
-      };
-    } else if (activeIndex === 1) {
-      // 02 Projects: Upper-Right (dx > 0, dy < 0)
-      // Diagonally up-right from anchor -> horizontal jog right -> into card target
-      p1 = {
-        x: anchorX + dx * 0.35,
-        y: anchorY + dy * 0.52,
-      };
-      p2 = {
-        x: anchorX + dx * 0.72,
-        y: p1.y + dy * 0.08,
-      };
-    } else if (activeIndex === 2) {
-      // 03 Cinema: Left / Lower-Left (dx < 0)
-      // Diagonally down-left from anchor -> horizontal jog left -> into card target
-      const effectiveDy = Math.abs(dy) < 6 ? 16 : dy;
-      p1 = {
-        x: anchorX + dx * 0.35,
-        y: anchorY + effectiveDy * 0.52,
-      };
-      p2 = {
-        x: anchorX + dx * 0.72,
-        y: p1.y + effectiveDy * 0.08,
-      };
-    } else {
-      // 04 DevOps: Lower-Right (dx > 0, dy > 0)
-      // Diagonally down-right from anchor -> horizontal jog right -> into card target
-      p1 = {
-        x: anchorX + dx * 0.35,
-        y: anchorY + dy * 0.52,
-      };
-      p2 = {
-        x: anchorX + dx * 0.72,
-        y: p1.y + dy * 0.08,
+      return {
+        earthRadius,
+        earthDiameter,
+        centerX,
+        centerY,
+        isMobile: true,
+        destinations: [
+          {
+            ...NAV_DESTINATIONS[0],
+            node: aboutNode,
+            beacon: aboutBeacon,
+            initialYOffset: -10,
+          },
+          {
+            ...NAV_DESTINATIONS[1],
+            node: projectsNode,
+            beacon: projectsBeacon,
+            initialYOffset: -10,
+          },
+          {
+            ...NAV_DESTINATIONS[2],
+            node: cinemaNode,
+            beacon: cinemaBeacon,
+            initialYOffset: 10,
+          },
+          {
+            ...NAV_DESTINATIONS[3],
+            node: devopsNode,
+            beacon: devopsBeacon,
+            initialYOffset: 10,
+          },
+        ],
       };
     }
 
-    // Path string for SVG: 3 clean connected straight segments
-    const pathD = `M ${anchorX} ${anchorY} L ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${targetX} ${targetY}`;
+    // Desktop / Tablet Layout:
+    // Earth as the large visual centerpiece.
+    // 4 orbital quadrants with generous spatial negative space.
+    const sideMargin = isTablet ? 24 : Math.max(36, Math.round(width * 0.04));
+    const leftX = sideMargin;
+    const rightX = width - nodeW - sideMargin;
 
-    // Vector from arrival segment (p2 -> target) for physical card emergence
-    const segDx = targetX - p2.x;
-    const segDy = targetY - p2.y;
-    const segDist = Math.hypot(segDx, segDy);
-    const normX = segDist > 0 ? (p2.x - targetX) / segDist : 0;
-    const normY = segDist > 0 ? (p2.y - targetY) / segDist : 0;
+    const topY = Math.max(28, Math.round(centerY - earthRadius * 0.72 - nodeH * 0.5));
+    const bottomY = Math.min(height - nodeH - 28, Math.round(centerY + earthRadius * 0.72 - nodeH * 0.5));
 
-    const visualEarthDiameter = Math.round(earthRadius * 2);
+    const aboutNode = { x: leftX, y: topY, width: nodeW, height: nodeH };
+    const projectsNode = { x: rightX, y: topY, width: nodeW, height: nodeH };
+    const cinemaNode = { x: leftX, y: bottomY, width: nodeW, height: nodeH };
+    const devopsNode = { x: rightX, y: bottomY, width: nodeW, height: nodeH };
+
+    // Beacon Points float just inside toward the space around Earth:
+    // About (top-left) -> beacon on right
+    // Projects (top-right) -> beacon on left
+    // Cinema (bottom-left) -> beacon on right
+    // DevOps (bottom-right) -> beacon on left
+    const beaconGap = 20;
+    const aboutBeacon = {
+      x: aboutNode.x + aboutNode.width + beaconGap,
+      y: aboutNode.y + aboutNode.height * 0.5,
+    };
+    const projectsBeacon = {
+      x: projectsNode.x - beaconGap,
+      y: projectsNode.y + projectsNode.height * 0.5,
+    };
+    const cinemaBeacon = {
+      x: cinemaNode.x + cinemaNode.width + beaconGap,
+      y: cinemaNode.y + cinemaNode.height * 0.5,
+    };
+    const devopsBeacon = {
+      x: devopsNode.x - beaconGap,
+      y: devopsNode.y + devopsNode.height * 0.5,
+    };
 
     return {
       earthRadius,
-      earthDiameter: visualEarthDiameter,
-      anchor: { x: anchorX, y: anchorY },
-      p1,
-      p2,
-      target: { x: targetX, y: targetY },
-      pathD,
-      card: { x: cardX, y: cardY, width: cardW, height: cardH },
-      norm: { x: normX, y: normY },
+      earthDiameter,
+      centerX,
+      centerY,
+      isMobile: false,
+      destinations: [
+        {
+          ...NAV_DESTINATIONS[0],
+          node: aboutNode,
+          beacon: aboutBeacon,
+          initialYOffset: -8,
+        },
+        {
+          ...NAV_DESTINATIONS[1],
+          node: projectsNode,
+          beacon: projectsBeacon,
+          initialYOffset: -8,
+        },
+        {
+          ...NAV_DESTINATIONS[2],
+          node: cinemaNode,
+          beacon: cinemaBeacon,
+          initialYOffset: 8,
+        },
+        {
+          ...NAV_DESTINATIONS[3],
+          node: devopsNode,
+          beacon: devopsBeacon,
+          initialYOffset: 8,
+        },
+      ],
     };
-  }, [stageSize, activeIndex]);
+  }, [stageSize]);
 
-  // Three.js Photorealistic 3D Globe with cinematic deep-space solar system environment
+  // Three.js Photorealistic 3D Globe with cinematic lighting & drag rotation
   useEffect(() => {
     const canvas = canvasRef.current;
     const stage = stageRef.current;
     if (!canvas || !stage) return;
 
-    // Stage dimensions
-    const width = stage.clientWidth || 900;
-    const height = stage.clientHeight || 580;
-    const isMobile = width < 768;
+    const width = stage.clientWidth || 1000;
+    const height = stage.clientHeight || 680;
 
-    // 1. Scene
     const scene = new THREE.Scene();
-
-    // 2. Camera: fixed perspective looking at the center (0, 0, 0)
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 250);
 
-    // Calculate camera distance so Earth diameter perfectly matches geometry.earthRadius on screen
     const updateCameraPosition = (w: number, h: number) => {
       const mobile = w < 768;
       const tablet = w >= 768 && w < 1024;
       const lg = w >= 1024 && w < 1280;
 
       const earthDiam = mobile
-        ? Math.min(256, w * 0.68)
+        ? Math.min(210, Math.round(w * 0.54))
         : tablet
-        ? 440
+        ? 330
         : lg
-        ? 520
-        : Math.min(620, Math.round(w * 0.44));
-      const earthRad = (earthDiam / 2) * 0.80;
+        ? 410
+        : Math.min(460, Math.round(w * 0.36));
+      const earthRad = (earthDiam / 2) * 0.82;
       const desiredDiam = earthRad * 2;
 
       const halfFovRad = THREE.MathUtils.degToRad(camera.fov / 2);
@@ -458,7 +459,6 @@ export default function CinematicEarthTransition() {
 
     updateCameraPosition(width, height);
 
-    // 3. Renderer with transparent background
     const renderer = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
@@ -470,23 +470,23 @@ export default function CinematicEarthTransition() {
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-    // 4. Lighting: Natural astronomical sunlight illuminating Earth from upper-left
+    // Natural sunlight illuminating Earth from upper-left
     const sunLight = new THREE.DirectionalLight(0xfffaee, 2.85);
     sunLight.position.set(-7.0, 4.2, 3.2);
     scene.add(sunLight);
 
-    // Deep space ambient fill (preserves pitch-black astronomical night shadows)
+    // Ambient space fill
     const ambientLight = new THREE.AmbientLight(0x070c18, 0.20);
     scene.add(ambientLight);
 
-    // 5. Earth Group (Strictly locked at 0, 0, 0 in space)
+    // Earth Group
     const earthGroup = new THREE.Group();
     earthGroup.position.set(0, 0, 0);
     earthGroup.rotation.z = THREE.MathUtils.degToRad(23.4);
     earthGroup.rotation.x = THREE.MathUtils.degToRad(8);
     scene.add(earthGroup);
 
-    // Primary Earth Surface Mesh
+    // Earth Surface
     const textureLoader = new THREE.TextureLoader();
     const earthTexture = textureLoader.load("/earth-texture-2048.jpg");
     earthTexture.colorSpace = THREE.SRGBColorSpace;
@@ -501,7 +501,7 @@ export default function CinematicEarthTransition() {
     earthGroup.add(earthMesh);
     earthMeshRef.current = earthMesh;
 
-    // Translucent Clouds Layer
+    // Translucent Clouds
     const cloudsTexture = textureLoader.load("/earth-clouds-1024.png");
     cloudsTexture.colorSpace = THREE.SRGBColorSpace;
     const cloudsGeometry = new THREE.SphereGeometry(1.008, 128, 128);
@@ -517,7 +517,7 @@ export default function CinematicEarthTransition() {
     earthGroup.add(cloudsMesh);
     cloudsMeshRef.current = cloudsMesh;
 
-    // Realistic Atmospheric Limb Scattering (Subtle, photographic blue rim, no excessive glow)
+    // Atmosphere Shader
     const atmosphereGeo = new THREE.SphereGeometry(1.015, 128, 128);
     const atmosphereMat = new THREE.ShaderMaterial({
       vertexShader: atmosphereVertexShader,
@@ -533,7 +533,7 @@ export default function CinematicEarthTransition() {
     const atmosphereMesh = new THREE.Mesh(atmosphereGeo, atmosphereMat);
     earthGroup.add(atmosphereMesh);
 
-    // Resize Observer: adjusts camera aspect, recalculates cameraZ, updates canvas
+    // Resize Observer
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width: newWidth, height: newHeight } = entry.contentRect;
@@ -547,14 +547,13 @@ export default function CinematicEarthTransition() {
     });
     resizeObserver.observe(stage);
 
-    // Animation Loop: Earth fixed at 0, 0, 0; subtle rotation and drag friction decay
+    // Animation Loop
     let animationFrameId: number;
     const autoSpeed = shouldReduceMotion ? 0 : 0.00085;
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
-      // Invariant: Earth center strictly at (0, 0, 0)
       earthGroup.position.set(0, 0, 0);
 
       if (!isDraggingRef.current) {
@@ -587,32 +586,26 @@ export default function CinematicEarthTransition() {
       resizeObserver.disconnect();
       renderer.dispose();
 
-      // Dispose geometries
       earthGeometry.dispose();
       cloudsGeometry.dispose();
       atmosphereGeo.dispose();
 
-      // Dispose materials
       earthMaterial.dispose();
       cloudsMaterial.dispose();
       atmosphereMat.dispose();
 
-      // Dispose textures
       earthTexture.dispose();
       cloudsTexture.dispose();
     };
   }, [shouldReduceMotion]);
 
-  // User Drag Handlers: Click + Drag (Desktop) & Touch + Drag / Swipe (Mobile)
-  // Isolated specifically to the circular Earth hit area; protects normal vertical page scroll.
+  // Pointer drag handlers for Earth rotation
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Check if the click/touch falls within the circular Earth sphere
     const rect = e.currentTarget.getBoundingClientRect();
     const radius = rect.width / 2;
     const clickX = e.clientX - (rect.left + radius);
     const clickY = e.clientY - (rect.top + radius);
-    // Include a comfortable buffer for mobile touch contact
-    const maxRadius = e.pointerType === "mouse" ? radius : radius + 6;
+    const maxRadius = e.pointerType === "mouse" ? radius : radius + 8;
     if (Math.hypot(clickX, clickY) > maxRadius) {
       return;
     }
@@ -629,9 +622,8 @@ export default function CinematicEarthTransition() {
       lastXRef.current = e.clientX;
       lastTimeRef.current = performance.now();
       velocityRef.current = 0;
-      setIsHoveredOrDragging(true);
+      setIsDragging(true);
     } else {
-      // Touch/pen: record start coordinates and wait for quick gesture disambiguation
       touchStateRef.current = {
         pointerId: e.pointerId,
         startX: e.clientX,
@@ -645,9 +637,8 @@ export default function CinematicEarthTransition() {
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const radius = geometry.earthRadius || 120;
+    const radius = layout.earthRadius || 120;
 
-    // Desktop Mouse Drag
     if (e.pointerType === "mouse") {
       if (!isDraggingRef.current) return;
 
@@ -656,7 +647,6 @@ export default function CinematicEarthTransition() {
       const now = performance.now();
       const dt = Math.max(now - lastTimeRef.current, 1);
 
-      // Natural, tangible 1:1 globe rotation scaled to Earth sphere radius
       const rotDelta = (deltaX / radius) * 1.05;
 
       if (earthMeshRef.current) {
@@ -675,7 +665,6 @@ export default function CinematicEarthTransition() {
       return;
     }
 
-    // Mobile / Touch Drag
     const touch = touchStateRef.current;
     if (!touch || touch.pointerId !== e.pointerId) return;
 
@@ -685,28 +674,23 @@ export default function CinematicEarthTransition() {
       const absDx = Math.abs(dx);
       const absDy = Math.abs(dy);
 
-      // Immediate 4px threshold for quick, seamless responsiveness without false triggers
       if (absDx < 4 && absDy < 4) return;
 
       if (absDy > absDx) {
-        // Vertical movement: user wants to scroll the page!
-        // Lock vertical mode, do NOT rotate Earth, let browser handle normal page scroll
         touch.locked = "vertical";
         isDraggingRef.current = false;
-        setIsHoveredOrDragging(false);
+        setIsDragging(false);
         return;
       } else {
-        // Horizontal movement: intentional Earth rotation!
         touch.locked = "horizontal";
         isDraggingRef.current = true;
-        setIsHoveredOrDragging(true);
+        setIsDragging(true);
         try {
           e.currentTarget.setPointerCapture(e.pointerId);
         } catch {
-          // Ignored if capture unsupported
+          // Ignored
         }
 
-        // Apply initial delta immediately so no finger movement is lost
         const now = performance.now();
         const initialDeltaX = e.clientX - touch.lastX;
         const dt = Math.max(now - touch.lastTime, 1);
@@ -762,7 +746,6 @@ export default function CinematicEarthTransition() {
     }
 
     const now = performance.now();
-    // If the user dragged and paused before lifting, release cleanly without momentum jump
     if (e.pointerType === "mouse") {
       if (now - lastTimeRef.current > 70) {
         velocityRef.current = 0;
@@ -775,27 +758,22 @@ export default function CinematicEarthTransition() {
 
     touchStateRef.current = null;
     isDraggingRef.current = false;
-    setIsHoveredOrDragging(false);
+    setIsDragging(false);
   };
 
   const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
     handlePointerUp(e);
   };
 
-  const activeDest = NAV_DESTINATIONS[activeIndex];
-  const ActiveIcon = activeDest.icon;
-
   return (
     <section
       ref={sectionRef}
       id="cinematic-earth-transition"
-      aria-label="Earth and Navigation Transition"
-      className="relative w-full overflow-hidden bg-[#020409] isolate text-white pt-2 sm:pt-4 pb-10 sm:pb-14 mt-1 sm:mt-2 mb-8 sm:mb-12"
+      aria-label="Earth and Navigation Destinations"
+      className="relative w-full overflow-hidden bg-[#020409] isolate text-white py-6 sm:py-10 my-4 sm:my-8"
     >
       {/* ========================================================================= */}
-      {/* 1. PHOTOREALISTIC DEEP-SPACE UNIVERSE BACKGROUND (Z-INDEX: 0)             */}
-      {/* High-quality astronomy space scene: distant galaxies, star clusters,      */}
-      {/* cosmic dust lanes, and deep void. Positioned in front of base background.  */}
+      {/* 1. CINEMATIC DEEP-SPACE WALLPAPER BACKGROUND                              */}
       {/* ========================================================================= */}
       <div
         className="pointer-events-none absolute inset-0 z-0 overflow-hidden select-none bg-cover bg-center bg-no-repeat"
@@ -810,28 +788,24 @@ export default function CinematicEarthTransition() {
             alt=""
             aria-hidden="true"
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover object-center max-sm:object-center"
+            className="w-full h-full object-cover object-center"
           />
         </picture>
 
-        {/* Soft, minimal top & bottom edge transition into adjacent sections */}
-        <div className="absolute inset-x-0 top-0 h-6 sm:h-8 bg-gradient-to-b from-[#020409] to-transparent pointer-events-none" />
-        <div className="absolute inset-x-0 bottom-0 h-6 sm:h-8 bg-gradient-to-t from-[#020409] to-transparent pointer-events-none" />
+        {/* Soft edge fade into adjacent sections */}
+        <div className="absolute inset-x-0 top-0 h-10 sm:h-16 bg-gradient-to-b from-[#020409] to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-10 sm:h-16 bg-gradient-to-t from-[#020409] to-transparent pointer-events-none" />
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. FIXED CENTERED REALISTIC EARTH + FLOATING NAVIGATION OVERLAY (Z-10)    */}
-      {/* Earth remains completely fixed in center. Single card emerges via glowing */}
-      {/* connection line from Earth anchor point, holds, and smoothly retracts.     */}
-      {/* Sequence: About -> Projects -> Cinema -> DevOps -> repeat                */}
+      {/* 2. EARTH & SPACIOUS CELESTIAL STAGE                                       */}
       {/* ========================================================================= */}
       <div
         ref={stageRef}
         id="earth-floating-navigation-stage"
-        className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto min-h-[480px] sm:min-h-[520px] md:min-h-[580px] lg:min-h-[680px] xl:min-h-[740px] flex items-center justify-center select-none px-4 sm:px-6 lg:px-8"
+        className="relative z-10 w-full max-w-6xl xl:max-w-7xl mx-auto min-h-[560px] sm:min-h-[620px] md:min-h-[660px] lg:min-h-[700px] xl:min-h-[720px] flex items-center justify-center select-none px-3 sm:px-6 lg:px-8"
       >
-        {/* Full-Stage WebGL Canvas: purely visual 3D render layer (pointer-events-none) */}
-        {/* Renders Earth centered at (0, 0, 0) inside vast cosmic deep-space environment  */}
+        {/* Full-Stage WebGL Canvas: 3D Earth render layer */}
         <canvas
           ref={canvasRef}
           id="earth-webgl-canvas"
@@ -839,8 +813,7 @@ export default function CinematicEarthTransition() {
           aria-hidden="true"
         />
 
-        {/* Isolated Interactive Earth Hit Surface: strictly bounds interaction to Earth sphere */}
-        {/* Preserves normal page scrolling outside the Earth and on vertical swipe gestures    */}
+        {/* Interactive Earth Drag Hit Surface */}
         <div
           id="earth-interactive-surface"
           role="region"
@@ -851,11 +824,11 @@ export default function CinematicEarthTransition() {
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
           className={`absolute rounded-full z-20 select-none outline-none focus:outline-none focus-visible:outline-none ${
-            isHoveredOrDragging ? "cursor-grabbing" : "cursor-grab"
+            isDragging ? "cursor-grabbing" : "cursor-grab"
           }`}
           style={{
-            width: `${geometry.earthDiameter}px`,
-            height: `${geometry.earthDiameter}px`,
+            width: `${layout.earthDiameter}px`,
+            height: `${layout.earthDiameter}px`,
             left: "50%",
             top: "50%",
             transform: "translate(-50%, -50%)",
@@ -865,218 +838,162 @@ export default function CinematicEarthTransition() {
         />
 
         {/* ===================================================================== */}
-        {/* 2. DYNAMIC CONNECTION LINE & ANCHOR POINT (SVG LAYER)                 */}
-        {/* Pointer-events-none so drags pass straight through to the Earth       */}
+        {/* 3. SUBTLE GLOWING CELESTIAL BEACON POINTS (NO CONNECTOR LINES)        */}
+        {/* Small, luminous markers floating peacefully in space near each node. */}
         {/* ===================================================================== */}
-        <svg
-          className="absolute inset-0 w-full h-full pointer-events-none z-20 overflow-visible"
-          aria-hidden="true"
-        >
-          <defs>
-            {/* Luminous cyan filter for connection beam */}
-            <filter id="cyan-beam-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2.5" result="glow" />
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+        <div className="absolute inset-0 pointer-events-none z-20">
+          {layout.destinations.map((dest, idx) => {
+            const isPointVisible = revealedPoints[idx];
+            const isHovered = hoveredNodeId === dest.id;
 
-            {/* Radial gradient for anchor point surface glow */}
-            <radialGradient id="anchor-surface-glow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
-              <stop offset="45%" stopColor="#0284c7" stopOpacity="0.45" />
-              <stop offset="100%" stopColor="#0369a1" stopOpacity="0" />
-            </radialGradient>
-          </defs>
-
-          {/* Connection line from Earth anchor point to the card */}
-          {hasTriggered && (
-            <g>
-              {/* Outer soft glow line along the 3-segment zig-zag */}
-              <motion.path
-                d={geometry.pathD}
-                stroke="#38bdf8"
-                strokeWidth="2.75"
-                strokeOpacity="0.28"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                fill="none"
-                filter="url(#cyan-beam-glow)"
-                initial={shouldReduceMotion ? { pathLength: 1, opacity: 0.28 } : { pathLength: 0, opacity: 0 }}
-                animate={{
-                  pathLength: animPhase === "retract" ? 0 : 1,
-                  opacity: animPhase === "retract" ? 0 : 0.32,
-                }}
-                transition={{
-                  duration: animPhase === "retract" ? 0.32 : 0.45,
-                  ease: animPhase === "retract" ? "easeIn" : "easeOut",
-                }}
-              />
-
-              {/* Crisp central beam line (thin, elegant, luminous blue-white/cyan technical zig-zag) */}
-              <motion.path
-                d={geometry.pathD}
-                stroke="#bae6fd"
-                strokeWidth="1.25"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                strokeOpacity="0.95"
-                fill="none"
-                initial={shouldReduceMotion ? { pathLength: 1, opacity: 0.95 } : { pathLength: 0, opacity: 0 }}
-                animate={{
-                  pathLength: animPhase === "retract" ? 0 : 1,
-                  opacity: animPhase === "retract" ? 0 : 0.95,
-                }}
-                transition={{
-                  duration: animPhase === "retract" ? 0.32 : 0.45,
-                  ease: animPhase === "retract" ? "easeIn" : "easeOut",
-                }}
-              />
-
-              {/* Glowing anchor point on Earth surface */}
-              {/* Outer halo */}
-              <motion.circle
-                cx={geometry.anchor.x}
-                cy={geometry.anchor.y}
-                r="13"
-                fill="url(#anchor-surface-glow)"
-                initial={shouldReduceMotion ? { scale: 1, opacity: 0.8 } : { scale: 0, opacity: 0 }}
-                animate={{
-                  scale: animPhase === "retract" ? 0 : [0.9, 1.15, 0.9],
-                  opacity: animPhase === "retract" ? 0 : 0.85,
-                }}
-                transition={{
-                  duration: animPhase === "retract" ? 0.25 : 1.8,
-                  repeat: animPhase === "retract" ? 0 : Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-
-              {/* Inner bright beacon marker */}
-              <motion.circle
-                cx={geometry.anchor.x}
-                cy={geometry.anchor.y}
-                r="3.5"
-                fill="#38bdf8"
-                stroke="#ffffff"
-                strokeWidth="1.5"
-                initial={shouldReduceMotion ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
-                animate={{
-                  scale: animPhase === "retract" ? 0 : 1,
-                  opacity: animPhase === "retract" ? 0 : 1,
-                }}
-                transition={{
-                  duration: animPhase === "retract" ? 0.25 : 0.35,
-                  ease: "easeOut",
-                }}
-              />
-
-              {/* Pinpoint terminal connector dot touching the card */}
-              <motion.circle
-                cx={geometry.target.x}
-                cy={geometry.target.y}
-                r="2.5"
-                fill="#38bdf8"
-                initial={shouldReduceMotion ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
-                animate={{
-                  scale: animPhase === "retract" ? 0 : 1,
-                  opacity: animPhase === "retract" ? 0 : 1,
-                }}
-                transition={{
-                  duration: animPhase === "retract" ? 0.2 : 0.4,
-                  delay: animPhase === "retract" ? 0 : 0.2,
-                }}
-              />
-            </g>
-          )}
-        </svg>
-
-        {/* ===================================================================== */}
-        {/* 3. FLOATING ACTIVE NAVIGATION CARD (ONLY ONE AT A TIME)               */}
-        {/* Emerges along vector from Earth, holds for reading/hover, retracts    */}
-        {/* ===================================================================== */}
-        <div className="absolute inset-0 pointer-events-none z-30">
-          <AnimatePresence mode="wait">
-            {hasTriggered && (
+            return (
               <motion.div
-                key={activeDest.id}
-                id={`floating-nav-${activeDest.id}`}
-                className="absolute pointer-events-auto"
+                key={`beacon-${dest.id}`}
+                id={`beacon-${dest.id}`}
+                className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                 style={{
-                  left: geometry.card.x,
-                  top: geometry.card.y,
-                  width: geometry.card.width,
+                  left: dest.beacon.x,
+                  top: dest.beacon.y,
                 }}
                 initial={
                   shouldReduceMotion
-                    ? { opacity: 0 }
+                    ? { opacity: 1, scale: 1 }
+                    : { opacity: 0, scale: 0.3 }
+                }
+                animate={{
+                  opacity: isPointVisible ? (isHovered ? 1 : 0.85) : 0,
+                  scale: isPointVisible ? (isHovered ? 1.3 : 1.0) : 0.3,
+                }}
+                transition={{
+                  duration: 0.45,
+                  ease: "easeOut",
+                }}
+              >
+                {/* Luminous outer aura */}
+                <div
+                  className="absolute -inset-2.5 rounded-full transition-all duration-300 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(circle, ${dest.accentColor} 0%, transparent 70%)`,
+                    opacity: isHovered ? 0.9 : 0.45,
+                    filter: "blur(4px)",
+                  }}
+                />
+
+                {/* Core luminous point */}
+                <div
+                  className="relative w-2.5 h-2.5 rounded-full transition-transform duration-300 shadow-[0_0_12px_currentColor]"
+                  style={{
+                    backgroundColor: "#ffffff",
+                    border: `1.5px solid ${dest.accentColor}`,
+                    boxShadow: isHovered
+                      ? `0 0 16px ${dest.accentColor}, 0 0 28px ${dest.accentColor}`
+                      : `0 0 10px ${dest.accentColor}`,
+                  }}
+                />
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* ===================================================================== */}
+        {/* 4. BORDERLESS NAVIGATION DESTINATIONS (SEQUENTIAL REVEAL)              */}
+        {/* Zero rectangular borders, zero numbers (no 01/02/03/04), generous    */}
+        {/* breathing room, clean typography, translucent atmospheric glass.      */}
+        {/* ===================================================================== */}
+        <div className="absolute inset-0 pointer-events-none z-30">
+          {layout.destinations.map((dest, idx) => {
+            const isCardVisible = revealedCards[idx];
+            const isHovered = hoveredNodeId === dest.id;
+            const Icon = dest.icon;
+
+            return (
+              <motion.div
+                key={`dest-${dest.id}`}
+                id={`dest-${dest.id}`}
+                className="absolute pointer-events-auto"
+                style={{
+                  left: dest.node.x,
+                  top: dest.node.y,
+                  width: dest.node.width,
+                }}
+                initial={
+                  shouldReduceMotion
+                    ? { opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }
                     : {
                         opacity: 0,
-                        scale: 0.94,
-                        x: geometry.norm.x * 20,
-                        y: geometry.norm.y * 20,
+                        scale: 0.96,
+                        y: dest.initialYOffset,
+                        filter: "blur(8px)",
                       }
                 }
                 animate={{
-                  opacity: animPhase === "retract" ? 0 : 1,
-                  scale: animPhase === "retract" ? 0.94 : 1,
-                  x: animPhase === "retract" ? geometry.norm.x * 16 : 0,
-                  y: animPhase === "retract" ? geometry.norm.y * 16 : 0,
+                  opacity: isCardVisible ? 1 : 0,
+                  scale: isCardVisible ? (isHovered ? 1.02 : 1) : 0.96,
+                  y: isCardVisible ? (isHovered ? -3 : 0) : dest.initialYOffset,
+                  filter: isCardVisible ? "blur(0px)" : "blur(8px)",
                 }}
-                exit={
-                  shouldReduceMotion
-                    ? { opacity: 0 }
-                    : {
-                        opacity: 0,
-                        scale: 0.94,
-                        x: geometry.norm.x * 16,
-                        y: geometry.norm.y * 16,
-                      }
-                }
                 transition={{
-                  duration: animPhase === "retract" ? 0.32 : 0.45,
-                  ease: animPhase === "retract" ? [0.4, 0, 1, 1] : [0.16, 1, 0.3, 1],
+                  duration: 0.65,
+                  ease: [0.16, 1, 0.3, 1], // refined easeOutExpo
                 }}
               >
                 <Link
-                  to={activeDest.path}
-                  aria-label={`Navigate to ${activeDest.title} (${activeDest.tagline})`}
-                  onMouseEnter={() => setIsCardHovered(true)}
-                  onMouseLeave={() => setIsCardHovered(false)}
-                  onFocus={() => setIsCardFocused(true)}
-                  onBlur={() => setIsCardFocused(false)}
-                  className="group relative block rounded-2xl border border-sky-400/35 bg-[#09101f]/85 backdrop-blur-xl p-3.5 sm:p-4 shadow-[0_0_24px_rgba(14,165,233,0.18)] hover:border-sky-300/60 hover:shadow-[0_0_32px_rgba(56,189,248,0.32)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 select-none active:scale-[0.98]"
+                  to={dest.path}
+                  aria-label={`Navigate to ${dest.title} — ${dest.tagline}`}
+                  onMouseEnter={() => setHoveredNodeId(dest.id)}
+                  onMouseLeave={() => setHoveredNodeId(null)}
+                  onFocus={() => setHoveredNodeId(dest.id)}
+                  onBlur={() => setHoveredNodeId(null)}
+                  className="group relative block rounded-2xl p-3 sm:p-3.5 md:p-4 bg-slate-950/40 hover:bg-slate-900/50 backdrop-blur-md transition-all duration-300 select-none shadow-[0_4px_24px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                  style={{
+                    boxShadow: isHovered
+                      ? `0 0 32px ${dest.glowColor}, 0 8px 32px rgba(0, 0, 0, 0.5)`
+                      : "0 4px 24px rgba(0, 0, 0, 0.35)",
+                  }}
                 >
-                  {/* Ambient internal card corner highlight */}
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-radial from-sky-400/10 to-transparent rounded-tr-2xl pointer-events-none" />
+                  {/* Subtle ambient diffuse glow on hover */}
+                  <div
+                    className="absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-300"
+                    style={{
+                      background: `radial-gradient(ellipse at center, ${dest.glowColor} 0%, transparent 70%)`,
+                      opacity: isHovered ? 0.25 : 0,
+                    }}
+                  />
 
-                  {/* Top Row: Index number (01, 02, 03, 04) + Arrow in rounded box */}
+                  {/* Top Row: Category domain indicator + Arrow Glyph */}
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-semibold text-slate-400 tracking-wider group-hover:text-slate-300 transition-colors">
-                      {activeDest.number}
+                    <span className="inline-flex items-center gap-1.5 font-mono text-[9px] sm:text-[10px] font-semibold tracking-wider text-slate-400 group-hover:text-slate-300 uppercase transition-colors">
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: dest.accentColor }}
+                      />
+                      <span>{dest.category}</span>
                     </span>
-                    <div className="flex items-center justify-center w-5 h-5 rounded-md bg-slate-900/90 border border-slate-800 text-slate-300 group-hover:text-white group-hover:border-sky-400/50 group-hover:bg-sky-950/40 transition-colors">
-                      <ArrowUpRight className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+
+                    <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/5 text-slate-400 group-hover:text-white group-hover:bg-sky-500/20 transition-all duration-200">
+                      <ArrowUpRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </div>
                   </div>
 
-                  {/* Middle Row: Destination Icon + Bold Title */}
+                  {/* Middle Row: Domain Icon + Destination Title */}
                   <div className="flex items-center gap-2 mt-1.5 sm:mt-2">
-                    <ActiveIcon className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-sky-400 shrink-0 group-hover:text-sky-300 transition-colors" />
-                    <h3 className="font-display text-base sm:text-lg font-bold tracking-wide text-white group-hover:text-cyan-300 transition-colors leading-none">
-                      {activeDest.title}
+                    <Icon
+                      className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-colors"
+                      style={{ color: dest.accentColor }}
+                    />
+                    <h3 className="font-display text-base sm:text-lg md:text-xl font-bold tracking-wide text-white group-hover:text-sky-200 transition-colors leading-tight">
+                      {dest.title}
                     </h3>
                   </div>
 
                   {/* Bottom: Subtitle / Destination Tagline */}
-                  <p className="text-[11px] sm:text-xs text-slate-300 font-sans mt-1.5 leading-snug line-clamp-2 group-hover:text-slate-200 transition-colors">
-                    {activeDest.tagline}
+                  <p className="text-[11px] sm:text-xs text-slate-300/90 font-sans mt-1 sm:mt-1.5 leading-snug line-clamp-2 group-hover:text-slate-100 transition-colors">
+                    {dest.tagline}
                   </p>
                 </Link>
               </motion.div>
-            )}
-          </AnimatePresence>
+            );
+          })}
         </div>
       </div>
     </section>

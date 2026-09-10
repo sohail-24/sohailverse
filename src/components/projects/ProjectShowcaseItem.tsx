@@ -26,6 +26,7 @@ import {
 } from "react-icons/si";
 import { FaAws, FaGithub } from "react-icons/fa";
 import type { UnifiedProject } from "./projectData";
+import { formatProjectStatus } from "../../lib/utils";
 
 interface ProjectShowcaseItemProps {
   project: UnifiedProject;
@@ -190,7 +191,7 @@ export default function ProjectShowcaseItem({
               ) : project.status ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-950/20 px-2 sm:px-2.5 py-0.5 text-[10px] sm:text-[11px] font-mono text-emerald-400 shrink-0">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  <span className="truncate max-w-[75px] sm:max-w-none">{project.status}</span>
+                  <span className="truncate max-w-[75px] sm:max-w-none">{formatProjectStatus(project.status)}</span>
                 </span>
               ) : null}
             </div>

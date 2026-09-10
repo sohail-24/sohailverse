@@ -2,7 +2,11 @@ import { ArrowRight } from "lucide-react";
 
 export default function ConnectCtaBanner() {
   return (
-    <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-950 p-8 sm:p-12 lg:p-14 shadow-2xl">
+    <section
+      id="connect-cta-banner"
+      aria-label="Connect & Collaborate"
+      className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-950 p-6 sm:p-10 lg:p-14 shadow-2xl"
+    >
       {/* Planetary Horizon Glow at Bottom */}
       <div className="pointer-events-none absolute inset-x-0 -bottom-28 flex justify-center overflow-hidden">
         <div className="h-64 w-[160%] rounded-[100%] bg-gradient-to-t from-cyan-500/25 via-blue-600/15 to-transparent blur-xl" />
@@ -30,8 +34,11 @@ export default function ConnectCtaBanner() {
         {/* Right Side: CTA Button & Handwritten Accent */}
         <div className="flex flex-col sm:flex-row items-center gap-6">
           <a
-            href="mailto:mdsohail88008@gmail.com"
-            className="inline-flex min-h-[50px] items-center justify-center gap-3 rounded-2xl border border-cyan-400/50 bg-slate-900/90 px-8 py-3.5 text-sm sm:text-base font-semibold text-white shadow-[0_0_25px_rgba(6,182,212,0.25)] transition hover:border-cyan-400 hover:bg-slate-800 hover:text-cyan-200 active:scale-[0.98]"
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=mdsohail88008@gmail.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Connect with Sohail on Google Gmail"
+            className="inline-flex min-h-[50px] items-center justify-center gap-3 rounded-2xl border border-cyan-400/50 bg-slate-900/90 px-8 py-3.5 text-sm sm:text-base font-semibold text-white shadow-[0_0_25px_rgba(6,182,212,0.25)] transition hover:border-cyan-400 hover:bg-slate-800 hover:text-cyan-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
           >
             <span>Let&apos;s Connect</span>
             <ArrowRight className="h-4 w-4 text-cyan-400" />

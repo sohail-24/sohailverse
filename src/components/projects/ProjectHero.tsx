@@ -1,4 +1,5 @@
 import type { DevOpsProject } from "../../lib/api";
+import { formatProjectStatus } from "../../lib/utils";
 
 interface ProjectHeroProps {
   project: DevOpsProject;
@@ -28,7 +29,7 @@ export default function ProjectHero({ project }: ProjectHeroProps) {
 
           {project.status && (
             <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm text-emerald-400">
-              ● {project.status}
+              ● {formatProjectStatus(project.status)}
             </span>
           )}
         </div>

@@ -131,7 +131,7 @@ const FALLBACK_DATA: Record<string, any[]> = {
       category: "Cloud Native Architecture",
       description: "Production-grade e-commerce microservices platform with high availability, automated rollback, and real-time monitoring on AWS EKS.",
       technologies: "Kubernetes, AWS EKS, Terraform, ArgoCD, Docker, PostgreSQL",
-      status: "Production Ready",
+      status: "Ready",
     },
     {
       id: 2,
@@ -147,7 +147,7 @@ const FALLBACK_DATA: Record<string, any[]> = {
       category: "Automation",
       description: "Modular Infrastructure as Code repository defining VPCs, subnets, IAM policies, and compute instances across AWS.",
       technologies: "Terraform, AWS, GitHub Actions, HashiCorp HCL",
-      status: "Production Ready",
+      status: "Ready",
     },
   ],
   atlas: [

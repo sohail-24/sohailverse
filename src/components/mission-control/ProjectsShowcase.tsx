@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { initialProjects } from "../../data/mission-control";
 import type { UniverseProject } from "../../types/mission-control";
+import { formatProjectStatus } from "../../lib/utils";
 
 interface ProjectsShowcaseProps {
   projects?: UniverseProject[];
@@ -372,7 +373,7 @@ export default function ProjectsShowcase({
                           statusStyle.pulse ? "animate-pulse" : ""
                         }`}
                       />
-                      <span className="leading-none">{project.statusLabel}</span>
+                      <span className="leading-none">{formatProjectStatus(project.statusLabel)}</span>
                     </span>
                   </div>
 

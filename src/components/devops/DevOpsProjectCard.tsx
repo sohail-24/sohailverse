@@ -3,6 +3,7 @@ import { SiKubernetes, SiTerraform } from "react-icons/si";
 import { FaAws } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import type { DevOpsProject } from "../../types/devops";
+import { formatProjectStatus } from "../../lib/utils";
 
 interface DevOpsProjectCardProps {
   project: DevOpsProject;
@@ -114,7 +115,7 @@ export default function DevOpsProjectCard({ project, customIcon }: DevOpsProject
         {/* Status pill */}
         <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-mono">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>{project.status || "Production Ready"}</span>
+          <span>{formatProjectStatus(project.status || "Ready")}</span>
         </div>
       </div>
     </div>
