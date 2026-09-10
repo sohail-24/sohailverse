@@ -72,4 +72,5 @@ export interface DevOpsNote {
     description: string;
   }[];
   keyPrinciples: string[];
+  pdf_url?: string;
 }

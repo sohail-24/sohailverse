@@ -66,8 +66,8 @@ const mockStore = {
       genre: "Sci-Fi",
       rating: 9.5,
       trailer_url: "https://www.youtube.com/watch?v=zSWdZVtXT7E",
-      poster_url: null,
-      synopsis: null,
+      poster_url: "/cinema/posters/interstellar.jpg",
+      synopsis: "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft, along with a team of researchers, to find a new planet for humans.",
       is_featured: false,
     },
     {
@@ -76,8 +76,8 @@ const mockStore = {
       genre: "Sci-Fi",
       rating: 9.2,
       trailer_url: "https://www.youtube.com/watch?v=YoHD9XEInc0",
-      poster_url: null,
-      synopsis: null,
+      poster_url: "/cinema/posters/inception.jpg",
+      synopsis: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
       is_featured: false,
     },
     {
@@ -86,8 +86,8 @@ const mockStore = {
       genre: "Sci-Fi",
       rating: 9.0,
       trailer_url: "https://www.youtube.com/watch?v=vKQi3bBA1y8",
-      poster_url: null,
-      synopsis: null,
+      poster_url: "/cinema/posters/matrix.jpg",
+      synopsis: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
       is_featured: false,
     },
     {
@@ -96,8 +96,8 @@ const mockStore = {
       genre: "Action",
       rating: 9.4,
       trailer_url: "https://www.youtube.com/watch?v=EXeTwQWrcwY",
-      poster_url: null,
-      synopsis: null,
+      poster_url: "/cinema/posters/dark-knight.jpg",
+      synopsis: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
       is_featured: false,
     },
     {
@@ -106,9 +106,9 @@ const mockStore = {
       genre: "Drama",
       rating: 8.9,
       trailer_url: "https://www.youtube.com/watch?v=uYPbbksJxIg",
-      poster_url: null,
-      synopsis: null,
-      is_featured: false,
+      poster_url: "/cinema/posters/oppenheimer.jpg",
+      synopsis: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
+      is_featured: true,
     },
     {
       id: 6,
@@ -116,8 +116,8 @@ const mockStore = {
       genre: "Sci-Fi",
       rating: 8.8,
       trailer_url: "https://www.youtube.com/watch?v=gCcx85zbxz4",
-      poster_url: null,
-      synopsis: null,
+      poster_url: "/cinema/posters/blade-runner.jpg",
+      synopsis: "Young Blade Runner K's discovery of a long-buried secret leads him to track down former Blade Runner Rick Deckard, who's been missing for thirty years.",
       is_featured: false,
     },
   ],
@@ -134,39 +134,127 @@ const mockStore = {
   devops: [
     {
       id: 1,
-      title: "Sohail-Shop: Multi-Vendor Platform",
-      category: "Cloud Native Architecture",
-      description: "Production-grade e-commerce microservices platform with high availability, automated rollback, and real-time monitoring on AWS EKS.",
-      image_url: "/dev-real-1779487.jpg",
-      ppt_url: "https://github.com/sohail-24",
-      github_url: "https://github.com/sohail-24/sohail-shop",
-      technologies: "Kubernetes, AWS EKS, Terraform, ArgoCD, Docker, PostgreSQL",
-      highlights: "Multi-cluster GitOps deployment with zero-downtime rolling updates and automated scaling.",
-      status: "Production Ready",
+      title: "Networking & OSI Model Master Notes",
+      category: "Notes",
+      description: "Comprehensive engineering notebook covering Layer 2 to Layer 7 packet transport, TCP handshakes, NAT traversal, and common networking diagnostics with curl and dig.",
+      image_url: "/dev-real-2102415.jpg",
+      ppt_url: "https://www.youtube.com/watch?v=0k5G6FmE3s4",
+      pdf_url: "/resume.pdf",
+      github_url: "https://github.com/sohail-24/networking-runbooks",
+      technologies: "TCP/IP, OSI 7-Layer, DNS, NAT, Wireshark, BGP",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=0k5G6FmE3s4",
+        video_duration: "14:20",
+        pdf_url: "/resume.pdf",
+        takeaways: "Understand packet lifecycles, ARP tables, and why 80% of distributed system outages trace back to DNS and MTU misconfigurations.",
+        links: [
+          { title: "GitHub Runbook Repo", url: "https://github.com/sohail-24/networking-runbooks", type: "github" },
+          { title: "RFC 1918 Private Addressing", url: "https://datatracker.ietf.org/doc/html/rfc1918", type: "docs" },
+          { title: "OSI Architecture Slides", url: "https://slides.com/sohail/osi-model", type: "slides" }
+        ]
+      }),
+      status: "Published Note",
     },
     {
       id: 2,
-      title: "Kubernetes Production Cluster Lab",
-      category: "Infrastructure",
-      description: "Bare-metal and cloud Kubernetes deployment equipped with Prometheus, Grafana, and Traefik ingress controller.",
-      image_url: "/dev-real-2102415.jpg",
-      ppt_url: "https://github.com/sohail-24",
-      github_url: "https://github.com/sohail-24",
-      technologies: "Kubernetes, Helm, Prometheus, Grafana, Traefik",
-      highlights: "Custom dashboards for CPU/Memory cluster monitoring and automated alert managers.",
-      status: "Running",
+      title: "VPC Subnetting & CIDR Calculation Deep Dive",
+      category: "Networking",
+      description: "Step-by-step architectural breakdown of calculating subnets, public vs private routing tables, internet gateways, and NAT gateway placement for zero-trust VPC design.",
+      image_url: "/dev-real-3183150.jpg",
+      ppt_url: "https://www.youtube.com/watch?v=s_Ntt6eTn94",
+      github_url: "https://github.com/sohail-24/terraform-aws-vpc-modular",
+      technologies: "VPC, CIDR, Subnets, Route Tables, IGW, NAT",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=s_Ntt6eTn94",
+        video_duration: "18:45",
+        takeaways: "Master slash-notation subnetting (/24 vs /28), understand AWS reserved IPs (.0 to .3 and .255), and enforce strict egress filtering.",
+        links: [
+          { title: "Terraform VPC Module", url: "https://github.com/sohail-24/terraform-aws-vpc-modular", type: "github" },
+          { title: "AWS VPC Architecture Guide", url: "https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html", type: "docs" }
+        ]
+      }),
+      status: "Active",
     },
     {
       id: 3,
-      title: "Automated Multi-Cloud Terraform Forge",
-      category: "Automation",
-      description: "Modular Infrastructure as Code repository defining VPCs, subnets, IAM policies, and compute instances across AWS.",
+      title: "Multi-AZ High Availability Architecture on AWS",
+      category: "AWS",
+      description: "Production multi-availability zone infrastructure deploying Application Load Balancers, auto-scaling EC2 groups, and Amazon Aurora multi-master databases with automated failover.",
       image_url: "/dev-real-2582937.jpg",
-      ppt_url: "https://github.com/sohail-24",
-      github_url: "https://github.com/sohail-24",
-      technologies: "Terraform, AWS, GitHub Actions, HashiCorp HCL",
-      highlights: "State-locking with DynamoDB and S3 remote backend with automated linting in CI.",
+      ppt_url: "https://www.youtube.com/watch?v=Ia-UEYYR44s",
+      github_url: "https://github.com/sohail-24/aws-multi-az-reference",
+      technologies: "AWS, EC2, ALB, Auto Scaling, Aurora, CloudWatch",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=Ia-UEYYR44s",
+        video_duration: "22:10",
+        takeaways: "Eliminate single points of failure across data centers with multi-region health checks and sub-minute database replica failovers.",
+        links: [
+          { title: "Infrastructure Blueprint Repo", url: "https://github.com/sohail-24/aws-multi-az-reference", type: "github" },
+          { title: "AWS Well-Architected Framework", url: "https://aws.amazon.com/architecture/well-architected/", type: "docs" }
+        ]
+      }),
       status: "Production Ready",
+    },
+    {
+      id: 4,
+      title: "Sohail-Shop: Multi-Vendor Platform on EKS",
+      category: "DevOps",
+      description: "Production-grade e-commerce microservices platform with high availability, automated rollback, and real-time monitoring on AWS EKS.",
+      image_url: "/dev-real-1779487.jpg",
+      ppt_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
+      github_url: "https://github.com/sohail-24/django_ecommerce",
+      technologies: "Kubernetes, AWS EKS, Terraform, ArgoCD, Docker, PostgreSQL",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
+        video_duration: "25:30",
+        takeaways: "Multi-cluster GitOps deployment with zero-downtime rolling updates, ArgoCD sync waves, and automated cluster autoscaling.",
+        links: [
+          { title: "Main Application Repo", url: "https://github.com/sohail-24/django_ecommerce", type: "github" },
+          { title: "Kubeadm & Helm Manifests", url: "https://github.com/sohail-24/devops-ecommerce-kubeadm", type: "github" },
+          { title: "Terraform EKS Platform", url: "https://github.com/sohail-24/terraform-eks-platform", type: "github" }
+        ]
+      }),
+      status: "Production Ready",
+    },
+    {
+      id: 5,
+      title: "Deploy a Static Website on AWS S3 & CloudFront",
+      category: "Learn & Test Projects",
+      description: "Hands-on guided lab: Provision an S3 bucket configured for static hosting, associate an ACM SSL certificate, route custom DNS with Route 53, and enable edge caching via CloudFront CDN.",
+      image_url: "/dev-desk-1.jpg",
+      ppt_url: "https://www.youtube.com/watch?v=mls8tii06cE",
+      github_url: "https://github.com/sohail-24/s3-cloudfront-starter",
+      technologies: "AWS S3, CloudFront, Route 53, ACM SSL, OAC",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=mls8tii06cE",
+        video_duration: "16:05",
+        takeaways: "Enforce Origin Access Control (OAC) to completely disallow public S3 bucket reads while serving global visitors in under 30ms.",
+        links: [
+          { title: "Starter Lab Code", url: "https://github.com/sohail-24/s3-cloudfront-starter", type: "github" },
+          { title: "CloudFront OAC Guide", url: "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html", type: "docs" }
+        ]
+      }),
+      status: "Beginner Lab",
+    },
+    {
+      id: 6,
+      title: "Deploy on Kubernetes: Rolling Zero-Downtime Updates",
+      category: "Learn & Test Projects",
+      description: "Hands-on guided lab: Containerize a Python web application, craft Kubernetes Deployment and Service YAMLs, configure readiness and liveness probes, and test zero-downtime rolling updates with Apache Bench.",
+      image_url: "/dev-real-2102415.jpg",
+      ppt_url: "https://www.youtube.com/watch?v=VnvRFRk_51k",
+      github_url: "https://github.com/sohail-24/k8s-rolling-deploy-lab",
+      technologies: "Kubernetes, Docker, Readiness Probes, Rolling Updates, Helm",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=VnvRFRk_51k",
+        video_duration: "20:15",
+        takeaways: "Configure maxSurge and maxUnavailable, observe pod replacement in real-time with kubectl rollout status, and benchmark with zero HTTP 502 errors.",
+        links: [
+          { title: "Lab Kubernetes Manifests", url: "https://github.com/sohail-24/k8s-rolling-deploy-lab", type: "github" },
+          { title: "Kubernetes Rolling Update Docs", url: "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment", type: "docs" }
+        ]
+      }),
+      status: "Hands-on Lab",
     },
   ],
   timeline: [
@@ -578,6 +666,55 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                   });
                 }
 
+                if (method === "PUT" && resourceId !== null) {
+                  const body = await readJsonBody();
+                  const title = body.title !== undefined ? String(body.title).trim() : null;
+                  const category = body.category !== undefined ? String(body.category).trim() : null;
+                  const description = body.description !== undefined ? String(body.description).trim() : null;
+                  const imageUrl = (body.image_url !== undefined || body.imageUrl !== undefined) ? String(body.image_url || body.imageUrl || "").trim() : null;
+                  const pptUrl = (body.ppt_url !== undefined || body.pptUrl !== undefined) ? String(body.ppt_url || body.pptUrl || "").trim() : null;
+                  const githubUrl = (body.github_url !== undefined || body.githubUrl !== undefined) ? String(body.github_url || body.githubUrl || "").trim() : null;
+                  const technologies = body.technologies !== undefined ? String(body.technologies).trim() : null;
+                  const highlights = body.highlights !== undefined ? String(body.highlights).trim() : null;
+                  const status = body.status !== undefined ? String(body.status).trim() : null;
+
+                  const rows = await querySql`
+                    UPDATE devops_projects
+                    SET
+                      title = COALESCE(${title}, title),
+                      category = COALESCE(${category}, category),
+                      description = COALESCE(${description}, description),
+                      image_url = COALESCE(${imageUrl}, image_url),
+                      ppt_url = COALESCE(${pptUrl}, ppt_url),
+                      github_url = COALESCE(${githubUrl}, github_url),
+                      technologies = COALESCE(${technologies}, technologies),
+                      highlights = COALESCE(${highlights}, highlights),
+                      status = COALESCE(${status}, status)
+                    WHERE id = ${resourceId}
+                    RETURNING *
+                  `;
+                  if (rows && rows.length > 0) {
+                    const r = rows[0];
+                    return sendJson(200, {
+                      success: true,
+                      message: "Updated successfully",
+                      data: {
+                        id: r.id,
+                        title: r.title || "",
+                        category: r.category || "",
+                        description: r.description || "",
+                        image_url: r.image_url || "",
+                        ppt_url: r.ppt_url || "",
+                        github_url: r.github_url || "",
+                        technologies: r.technologies || "",
+                        highlights: r.highlights || "",
+                        status: r.status || "Production Ready",
+                      },
+                    });
+                  }
+                  return sendJson(404, { error: "Devops project not found" });
+                }
+
                 if (method === "DELETE" && resourceId !== null) {
                   await querySql`DELETE FROM devops_projects WHERE id = ${resourceId}`;
                   return sendJson(200, { success: true, message: "Deleted successfully" });
@@ -882,6 +1019,7 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                   description: String(body.description || "").trim(),
                   image_url: String(body.image_url || body.imageUrl || "").trim(),
                   ppt_url: String(body.ppt_url || body.pptUrl || "").trim(),
+                  pdf_url: String(body.pdf_url || body.pdfUrl || "").trim(),
                   github_url: String(body.github_url || body.githubUrl || "").trim(),
                   technologies: String(body.technologies || "").trim(),
                   highlights: String(body.highlights || "").trim(),
@@ -893,6 +1031,46 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                   message: "Created successfully",
                   data: newItem,
                 });
+              }
+
+              if (method === "PUT" && resourceId !== null) {
+                const body = await readJsonBody();
+                const idx = mockStore.devops.findIndex((d) => d.id === resourceId);
+                if (idx !== -1) {
+                  mockStore.devops[idx] = {
+                    ...mockStore.devops[idx],
+                    ...(body.title !== undefined && { title: String(body.title).trim() }),
+                    ...(body.category !== undefined && { category: String(body.category).trim() }),
+                    ...(body.description !== undefined && { description: String(body.description).trim() }),
+                    ...((body.image_url !== undefined || body.imageUrl !== undefined) && {
+                      image_url: String(body.image_url || body.imageUrl || "").trim(),
+                    }),
+                    ...((body.ppt_url !== undefined || body.pptUrl !== undefined) && {
+                      ppt_url: String(body.ppt_url || body.pptUrl || "").trim(),
+                    }),
+                    ...((body.pdf_url !== undefined || body.pdfUrl !== undefined) && {
+                      pdf_url: String(body.pdf_url || body.pdfUrl || "").trim(),
+                    }),
+                    ...((body.github_url !== undefined || body.githubUrl !== undefined) && {
+                      github_url: String(body.github_url || body.githubUrl || "").trim(),
+                    }),
+                    ...(body.technologies !== undefined && {
+                      technologies: String(body.technologies).trim(),
+                    }),
+                    ...(body.highlights !== undefined && {
+                      highlights: String(body.highlights).trim(),
+                    }),
+                    ...(body.status !== undefined && {
+                      status: String(body.status).trim(),
+                    }),
+                  };
+                  return sendJson(200, {
+                    success: true,
+                    message: "Updated successfully",
+                    data: mockStore.devops[idx],
+                  });
+                }
+                return sendJson(404, { error: "Devops project not found" });
               }
 
               if (method === "DELETE" && resourceId !== null) {
@@ -1010,10 +1188,12 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 3000,
+    strictPort: true,
   },
   preview: {
     host: "0.0.0.0",
     port: 3000,
+    strictPort: true,
   },
 });
 

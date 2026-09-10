@@ -443,6 +443,7 @@ export const devopsNotes: DevOpsNote[] = [
     accentColor: "pink",
     tags: ["CIDR", "DNS", "Ports", "TCP/UDP", "Firewalls"],
     lastUpdated: "Updated 2026",
+    pdf_url: "/resume.pdf",
     summary:
       "Sohail's curated engineering notes on computer networking, OSI layers, IP routing, subnet calculators, and network diagnostics for cloud and DevOps engineers.",
     keyPrinciples: [
@@ -487,6 +488,7 @@ cat /etc/resolv.conf`,
     accentColor: "lime",
     tags: ["IAM", "S3", "VPC", "EC2", "RDS"],
     lastUpdated: "Updated 2026",
+    pdf_url: "/resume.pdf",
     summary:
       "Personal architecture cheat sheets for AWS services, multi-AZ high availability patterns, IAM policy structures, and cloud cost management guidelines.",
     keyPrinciples: [
@@ -534,6 +536,7 @@ Database Subnet 2 (AZ-b): 10.0.40.0/24 (RDS PostgreSQL Standby)`,
     accentColor: "cyan",
     tags: ["Docker", "Helm", "GitOps", "Bash", "ArgoCD"],
     lastUpdated: "Updated 2026",
+    pdf_url: "/resume.pdf",
     summary:
       "Production-ready snippets for Docker multi-stage builds, Kubernetes troubleshooting manifests, Helm chart structures, and Linux system administration.",
     keyPrinciples: [

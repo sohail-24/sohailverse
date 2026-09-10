@@ -23,7 +23,7 @@ import {
   SiArgo,
 } from "react-icons/si";
 import { VscSparkle } from "react-icons/vsc";
-import { ArrowRight, Rocket } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 // Canonical DevOps & Software Engineering tools list (20 tools)
@@ -52,13 +52,6 @@ const DEV_TOOLS = [
 
 export default function CinematicHero() {
   const shouldReduceMotion = useReducedMotion();
-
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
-  };
 
   return (
     <section className="relative w-full space-y-4 sm:space-y-6">
@@ -237,31 +230,39 @@ export default function CinematicHero() {
       </motion.div>
 
       {/* ========================================================================= */}
-      {/* 4. TWO CTA OPTIONS (Side-by-side on mobile, balanced on desktop)          */}
+      {/* 4. ACTIONS & CINEMA DESTINATION                                          */}
       {/* ========================================================================= */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
-        className="w-full max-w-xl mx-auto px-2 sm:px-4 flex flex-row items-center justify-center gap-2 sm:gap-4 pt-1 sm:pt-2"
+        className="w-full max-w-xl mx-auto px-2 sm:px-4 flex flex-col items-center gap-2.5 pt-1 sm:pt-2"
       >
-        <button
-          type="button"
-          onClick={() => scrollTo("what-i-love-to-do")}
-          className="flex-1 sm:flex-initial inline-flex min-h-[44px] sm:min-h-[46px] items-center justify-center gap-1.5 sm:gap-2 rounded-full border border-lime-400/60 bg-slate-950/90 px-3 sm:px-6 py-2.5 text-[11px] sm:text-sm font-semibold text-white shadow-[0_0_22px_rgba(163,230,53,0.3)] transition-all duration-300 hover:border-lime-400 hover:bg-slate-900 hover:text-lime-300 active:scale-[0.98] min-w-0"
-        >
-          <Rocket className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-lime-400 shrink-0" />
-          <span className="truncate">Explore My Universe</span>
-        </button>
+        <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 w-full">
+          <Link
+            to="/cinema"
+            id="hero-cta-cinema"
+            className="group flex-1 sm:flex-initial inline-flex min-h-[44px] sm:min-h-[46px] items-center justify-center gap-1.5 sm:gap-2 rounded-full border border-lime-400/60 bg-slate-950/90 px-4 sm:px-6 py-2.5 text-[11px] sm:text-sm font-semibold text-white shadow-[0_0_22px_rgba(163,230,53,0.3)] transition-all duration-300 hover:border-lime-400 hover:bg-slate-900 hover:text-lime-300 active:scale-[0.98] min-w-0"
+          >
+            <span className="truncate">Watch Movies</span>
+            <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-lime-400/90 shrink-0 transition-transform group-hover:translate-x-0.5" />
+          </Link>
 
-        <Link
-          to="/timeline"
-          className="flex-1 sm:flex-initial inline-flex min-h-[44px] sm:min-h-[46px] items-center justify-center gap-1 sm:gap-2 rounded-full border border-white/20 bg-slate-950/70 px-3 sm:px-6 py-2.5 text-[11px] sm:text-sm font-semibold text-slate-200 transition-all duration-200 hover:border-white/40 hover:bg-slate-900 hover:text-white active:scale-[0.98] min-w-0"
-        >
-          <span className="truncate">Know My Journey</span>
-          <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-400 shrink-0" />
-        </Link>
+          <Link
+            to="/timeline"
+            id="hero-cta-journey"
+            className="flex-1 sm:flex-initial inline-flex min-h-[44px] sm:min-h-[46px] items-center justify-center gap-1 sm:gap-2 rounded-full border border-white/20 bg-slate-950/70 px-3 sm:px-6 py-2.5 text-[11px] sm:text-sm font-semibold text-slate-200 transition-all duration-200 hover:border-white/40 hover:bg-slate-900 hover:text-white active:scale-[0.98] min-w-0"
+          >
+            <span className="truncate">Know My Journey</span>
+            <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-400 shrink-0" />
+          </Link>
+        </div>
+
+        {/* Cinematic supporting phrase */}
+        <p className="text-[11px] sm:text-xs text-slate-400/90 tracking-wide text-center font-normal">
+          Stories, frames &amp; unforgettable journeys.
+        </p>
       </motion.div>
 
       {/* ========================================================================= */}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Copy, Check, FileText, Sparkles, Code2 } from "lucide-react";
+import { X, Copy, Check, FileText, Sparkles, Code2, ExternalLink } from "lucide-react";
 import type { DevOpsNote } from "../../types/devops";
 
 interface DevOpsNoteModalProps {
@@ -70,6 +70,35 @@ export default function DevOpsNoteModal({ note, onClose }: DevOpsNoteModalProps)
 
         {/* Note Summary */}
         <p className="mt-4 text-sm sm:text-base text-slate-300 leading-relaxed">{note.summary}</p>
+
+        {/* Associated PDF Document */}
+        {note.pdf_url && (
+          <div className="mt-5 p-3.5 sm:p-4 rounded-xl border border-purple-500/30 bg-purple-950/30 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="h-8 w-8 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0">
+                <FileText className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-white truncate">
+                  Engineering Runbook / PDF Cheat Sheet
+                </div>
+                <div className="text-[11px] text-purple-300 font-mono truncate max-w-xs sm:max-w-md">
+                  {note.pdf_url}
+                </div>
+              </div>
+            </div>
+            <a
+              href={note.pdf_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-400 text-slate-950 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+              title="Open and read PDF document"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span>Read PDF</span>
+            </a>
+          </div>
+        )}
 
         {/* Engineering Principles */}
         <div className="mt-6 p-4 rounded-xl border border-white/10 bg-white/[0.02]">

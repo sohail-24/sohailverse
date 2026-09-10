@@ -16,6 +16,8 @@ import {
   CheckCircle2,
   BarChart3,
   Rocket,
+  ArrowUpRight,
+  FileWarning,
 } from "lucide-react";
 import { FaAws } from "react-icons/fa";
 import { SiKubernetes } from "react-icons/si";
@@ -24,6 +26,8 @@ import type { LearningPathStage, LearningPathChip } from "../../types/devops";
 interface DevOpsLearningPathCardProps {
   stage: LearningPathStage;
   onClick: () => void;
+  pdfUrl?: string | null;
+  noPdfNotice?: boolean;
 }
 
 function renderChipIcon(iconName: LearningPathChip["iconName"]) {
@@ -61,12 +65,18 @@ function renderChipIcon(iconName: LearningPathChip["iconName"]) {
   }
 }
 
-export default function DevOpsLearningPathCard({ stage, onClick }: DevOpsLearningPathCardProps) {
+export default function DevOpsLearningPathCard({
+  stage,
+  onClick,
+  pdfUrl,
+  noPdfNotice,
+}: DevOpsLearningPathCardProps) {
   const isCyan = stage.accentColor === "cyan";
   const isOrange = stage.accentColor === "orange";
   const isLime = stage.accentColor === "lime";
   const isPurple = stage.accentColor === "purple";
   const isAmber = stage.accentColor === "amber";
+  const isNotes = stage.id === "notes";
 
   // Badge styling with glowing outer ring
   const badgeStyle = isCyan
@@ -168,15 +178,54 @@ export default function DevOpsLearningPathCard({ stage, onClick }: DevOpsLearnin
               </div>
             )}
 
-            {/* Circular action button */}
-            <div
-              className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-slate-300 transition-all duration-200 ${buttonArrowStyle}`}
-              aria-label={`Explore ${stage.title}`}
-            >
-              <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-            </div>
+            {/* Action button: Distinct PDF direct-open for Notes, standard drill-down for others */}
+            {isNotes ? (
+              <div className="flex items-center gap-2">
+                {pdfUrl ? (
+                  <>
+                    <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[11px] sm:text-xs font-mono font-bold tracking-wider uppercase bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.25)]">
+                      PDF
+                    </span>
+                    <div
+                      className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-purple-500/40 bg-purple-500/20 flex items-center justify-center text-purple-200 group-hover:bg-purple-500 group-hover:text-slate-950 transition-all duration-200 shadow-[0_0_12px_rgba(168,85,247,0.3)]"
+                      aria-label="Open attached Notes PDF"
+                      title="Open attached PDF in new tab"
+                    >
+                      <ArrowUpRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono text-slate-400 bg-white/5 border border-white/10">
+                      PDF unavailable
+                    </span>
+                    <div
+                      className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-slate-500"
+                      aria-label="PDF unavailable"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div
+                className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-slate-300 transition-all duration-200 ${buttonArrowStyle}`}
+                aria-label={`Explore ${stage.title}`}
+              >
+                <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Notice if user clicked Notes with no PDF attached */}
+        {isNotes && noPdfNotice && (
+          <div className="mt-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-xs font-mono text-amber-300 animate-fadeIn">
+            <FileWarning className="h-3.5 w-3.5 shrink-0" />
+            <span>PDF unavailable — no PDF document is currently attached to Notes in CMS.</span>
+          </div>
+        )}
       </div>
 
       {/* Bottom Row: Knowledge Chips Bar with clean vertical dividers */}

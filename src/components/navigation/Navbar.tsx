@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import MobileMenu from "./MobileMenu";
 import { primaryNavItems } from "../../data/navigation";
+import BrandAvatar from "../ui/BrandAvatar";
 
 export function isNavLinkActive(pathname: string, targetPath: string): boolean {
   if (targetPath === "/") {
@@ -40,11 +41,16 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full relative transition-all duration-200 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
-        {/* Left: Brand logo treatment </> sohaildevops */}
-        <NavLink to="/" end className="flex items-center gap-2 group flex-shrink-0">
-          <span className="font-mono text-base font-bold text-lime-400">&lt;/&gt;</span>
-          <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-white group-hover:text-lime-300 transition-colors">
-            sohail<span className="text-lime-400">devops</span>
+        {/* Left: Brand identity with avatar + SohailVerse */}
+        <NavLink
+          to="/"
+          end
+          className="flex items-center gap-2.5 sm:gap-3 group flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 rounded-xl"
+          aria-label="SohailVerse homepage"
+        >
+          <BrandAvatar />
+          <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-white group-hover:text-slate-100 transition-colors">
+            Sohail<span className="text-lime-400">Verse</span>
           </span>
         </NavLink>
 

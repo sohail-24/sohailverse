@@ -1,4 +1,4 @@
-import { FileText, ArrowRight } from "lucide-react";
+import { FileText, ArrowRight, ExternalLink } from "lucide-react";
 import type { DevOpsNote } from "../../types/devops";
 
 interface DevOpsNoteCardProps {
@@ -71,6 +71,26 @@ export default function DevOpsNoteCard({ note, onClick }: DevOpsNoteCardProps) {
         <p className="mt-4 text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-2">
           {note.summary}
         </p>
+
+        {/* Dedicated PDF Document Action */}
+        {note.pdf_url && (
+          <div className="mt-3.5 p-2 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 text-xs text-purple-200 font-medium">
+              <FileText className="h-3.5 w-3.5 text-purple-300" />
+              <span>PDF Cheat Sheet</span>
+            </span>
+            <a
+              href={note.pdf_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="px-2.5 py-1 rounded-lg bg-purple-500 hover:bg-purple-400 text-slate-950 text-xs font-bold inline-flex items-center gap-1 transition-colors"
+            >
+              <span>Read PDF</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Tags bottom strip */}

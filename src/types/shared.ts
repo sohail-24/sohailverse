@@ -9,5 +9,6 @@ export interface ProfileSummary {
   role: string;
   motto: string;
   status: string;
+  avatarUrl?: string;
 }
 

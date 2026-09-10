@@ -38,6 +38,7 @@ export interface DevOpsProject {
   ppt_url?: string | null;
   github_url?: string | null;
   highlights?: string | null;
+  pdf_url?: string | null;
   rating?: number | null;
 }
 

@@ -270,7 +270,7 @@ export default function ProjectsShowcase({
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Desktop "View All Projects →" Link */}
           <Link
-            to="/devops"
+            to="/projects"
             className="hidden md:inline-flex items-center gap-1.5 font-mono text-xs text-slate-300 hover:text-lime-300 transition-colors whitespace-nowrap py-2 px-3.5 rounded-xl border border-white/10 hover:border-lime-400/40 bg-slate-900/80 shadow-sm"
           >
             <span>View All Projects</span>
@@ -505,13 +505,14 @@ export default function ProjectsShowcase({
         <div className="h-[1px] bg-slate-800/80 w-8 sm:w-16 rounded-full" />
       </div>
 
-      {/* ================= [ View all projects in DevOps Forge → ] ================= */}
+      {/* ================= [ View All Projects → ] ================= */}
       <div className="flex justify-center pt-1 sm:pt-2">
         <Link
-          to="/devops"
-          className="group inline-flex min-h-[40px] sm:min-h-[44px] items-center justify-center gap-2 rounded-full border border-slate-800/90 bg-[#0d1526]/90 px-5 sm:px-7 py-2 text-xs sm:text-sm font-mono text-slate-200 hover:text-white hover:border-lime-400/50 hover:bg-slate-800/90 hover:shadow-[0_0_20px_rgba(163,230,53,0.15)] transition-all shadow-md active:scale-98"
+          to="/projects"
+          id="view-all-projects-bottom-cta"
+          className="group inline-flex min-h-[42px] sm:min-h-[46px] items-center justify-center gap-2 rounded-full border border-slate-800/90 bg-[#0d1526]/90 px-6 sm:px-8 py-2.5 text-xs sm:text-sm font-semibold text-slate-200 hover:text-white hover:border-lime-400/50 hover:bg-slate-800/90 hover:shadow-[0_0_20px_rgba(163,230,53,0.15)] transition-all shadow-md active:scale-98"
         >
-          <span>View all projects in DevOps Forge</span>
+          <span>View All Projects</span>
           <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-lime-400 transition-transform group-hover:translate-x-1" />
         </Link>
       </div>

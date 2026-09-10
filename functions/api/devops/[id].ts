@@ -79,6 +79,7 @@ export async function onRequestGet({
       github_url: r.githubUrl || r.github_url || "",
       technologies: r.technologies || "",
       highlights: r.highlights || "",
+      pdf_url: r.pdfUrl || r.pdf_url || "",
       status: r.status || "Production Ready",
     };
 

@@ -5,10 +5,10 @@ export default function DevOpsBottomNav() {
   const location = useLocation();
 
   const scrollToNotes = (e: React.MouseEvent) => {
-    const el = document.getElementById("devops-notes");
+    const el = document.getElementById("learning-journey");
     if (el) {
       e.preventDefault();
-      el.scrollIntoView({ behavior: "smooth" });
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 

@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="flex items-center gap-2">
           <span>&copy; {new Date().getFullYear()}</span>
           <span className="font-display font-bold text-white">
-            sohail<span className="text-lime-400">devops</span>
+            Sohail<span className="text-lime-400">Verse</span>
           </span>
         </div>
 

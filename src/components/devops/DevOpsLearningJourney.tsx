@@ -1,28 +1,62 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ArrowDown } from "lucide-react";
 import DevOpsLearningPathCard from "./DevOpsLearningPathCard";
 import DevOpsPathModal from "./DevOpsPathModal";
-import { learningPathStages } from "../../data/devopsData";
-import type { LearningPathStage } from "../../types/devops";
+import { learningPathStages, devopsNotes } from "../../data/devopsData";
+import { parsePillarResource, detectPillar } from "../../lib/pillarContent";
+import type { LearningPathStage, DevOpsProject } from "../../types/devops";
 
-export default function DevOpsLearningJourney() {
+interface DevOpsLearningJourneyProps {
+  projects?: DevOpsProject[];
+}
+
+export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJourneyProps) {
   const [selectedStage, setSelectedStage] = useState<LearningPathStage | null>(null);
+  const [noPdfNotice, setNoPdfNotice] = useState(false);
+
+  // Retrieve attached PDF from real persisted Notes data:
+  // 1. First look in dynamic database records from /api/devops
+  // 2. Fall back to curated notes data if no dynamic notes exist
+  const notesPdfUrl = useMemo(() => {
+    if (projects && projects.length > 0) {
+      // Find note by category / title or pillar detection
+      const dynamicNote =
+        projects.find((p) => {
+          const cat = (p.category || "").toLowerCase();
+          const title = (p.title || "").toLowerCase();
+          return cat === "notes" || cat.includes("note") || title.includes("note");
+        }) || projects.find((p) => detectPillar(p.category, p.title) === "Notes");
+
+      if (dynamicNote) {
+        const parsed = parsePillarResource(dynamicNote);
+        if (parsed.pdf_url && parsed.pdf_url.trim()) {
+          return parsed.pdf_url.trim();
+        }
+      }
+    }
+
+    // Fall back to curated devopsNotes in static definitions
+    const curatedNoteWithPdf = devopsNotes.find((n) => n.pdf_url && n.pdf_url.trim());
+    if (curatedNoteWithPdf?.pdf_url) {
+      return curatedNoteWithPdf.pdf_url.trim();
+    }
+
+    return null;
+  }, [projects]);
 
   const handleStageClick = (stage: LearningPathStage) => {
+    // 1. NOTES: Click card -> Open attached PDF directly in a new tab
     if (stage.id === "notes") {
-      const el = document.getElementById("devops-notes");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
+      if (notesPdfUrl) {
+        window.open(notesPdfUrl, "_blank", "noopener,noreferrer");
+      } else {
+        setNoPdfNotice(true);
+        setTimeout(() => setNoPdfNotice(false), 3500);
       }
+      return;
     }
-    if (stage.id === "learn-test-projects") {
-      const el = document.getElementById("devops-projects");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
-    }
+
+    // 2. Networking, AWS, DevOps, Learn & Test Projects: Existing masterclass detail view
     setSelectedStage(stage);
   };
 
@@ -46,6 +80,8 @@ export default function DevOpsLearningJourney() {
             <DevOpsLearningPathCard
               stage={stage}
               onClick={() => handleStageClick(stage)}
+              pdfUrl={stage.id === "notes" ? notesPdfUrl : undefined}
+              noPdfNotice={stage.id === "notes" ? noPdfNotice : false}
             />
 
             {/* Downward Progression Arrow centered between boxes */}

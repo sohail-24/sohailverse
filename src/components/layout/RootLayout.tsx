@@ -1,8 +1,24 @@
-import { Outlet, ScrollRestoration } from "react-router-dom";
+import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
 import Footer from "../navigation/Footer";
 import Navbar from "../navigation/Navbar";
 
 export default function RootLayout() {
+  const location = useLocation();
+  const isAdmin =
+    location.pathname === "/admin" ||
+    location.pathname === "/console" ||
+    location.pathname.startsWith("/admin/") ||
+    location.pathname.startsWith("/console/");
+
+  if (isAdmin) {
+    return (
+      <div className="relative min-h-screen bg-[#02050f] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
+        <Outlet />
+        <ScrollRestoration />
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-[#050811] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
       {/* Ambient background glow & atmospheric star lighting */}

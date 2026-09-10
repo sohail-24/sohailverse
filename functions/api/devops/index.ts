@@ -48,6 +48,7 @@ export async function onRequestGet({ env }: PagesContext): Promise<Response> {
       github_url: r.githubUrl || r.github_url || "",
       technologies: r.technologies || "",
       highlights: r.highlights || "",
+      pdf_url: r.pdfUrl || r.pdf_url || "",
       status: r.status || "Production Ready",
     }));
 

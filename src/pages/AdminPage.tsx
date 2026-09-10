@@ -1,31 +1,14 @@
-import { useEffect, useState } from "react";
-import PageShell from "../components/layout/PageShell";
-import GlassPanel from "../components/ui/GlassPanel";
-
-type Movie = {
-  id: number;
-  title: string;
-  genre: string;
-  rating: number;
-  trailer_url: string;
-  movie_url?: string;
-};
-
-type DevOpsPost = {
-  id: number;
-  title: string;
-  category: string;
-  description: string;
-};
-
-type TimelinePost = {
-  id: number;
-  title: string;
-  category: string;
-  description: string;
-  year?: string | null;
-  event_date?: string | null;
-};
+import { useEffect, useState, type FormEvent } from "react";
+import SpaceEarthBackground from "../components/admin/SpaceEarthBackground";
+import AdminHeader from "../components/admin/AdminHeader";
+import AdminModuleCards from "../components/admin/AdminModuleCards";
+import AdminAccessPanel from "../components/admin/AdminAccessPanel";
+import AdminFooter from "../components/admin/AdminFooter";
+import AuthenticatedCMS, {
+  type Movie,
+  type DevOpsPost,
+  type TimelinePost,
+} from "../components/admin/AuthenticatedCMS";
 
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -84,7 +67,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleLogin = async (e?: React.FormEvent) => {
+  const handleLogin = async (e?: FormEvent) => {
     if (e) e.preventDefault();
     if (!password) {
       setLoginError("Please enter your admin password.");
@@ -333,383 +316,160 @@ export default function AdminPage() {
     }
   };
 
+  // State 1: Verifying active administrator session
   if (authChecking) {
     return (
-      <PageShell
-        eyebrow="Protected Area"
-        title="Admin Access"
-        description="Verifying administrator session..."
-      >
-        <GlassPanel className="p-8 max-w-xl mx-auto text-center">
-          <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-            <p className="text-sm text-slate-400">Verifying session...</p>
+      <div className="relative min-h-screen flex flex-col justify-between text-slate-100 overflow-x-hidden">
+        <SpaceEarthBackground />
+        <AdminHeader />
+
+        <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-16">
+          <div className="rounded-3xl border border-white/10 bg-slate-950/80 backdrop-blur-2xl p-8 max-w-md w-full text-center shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="h-10 w-10 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent shadow-[0_0_20px_rgba(56,189,248,0.4)]" />
+              <div className="space-y-1">
+                <p className="font-display text-base font-semibold text-white">
+                  Verifying Session
+                </p>
+                <p className="text-xs text-slate-400">
+                  Connecting to SohailVerse secure control center...
+                </p>
+              </div>
+            </div>
           </div>
-        </GlassPanel>
-      </PageShell>
+        </main>
+
+        <AdminFooter />
+      </div>
     );
   }
 
-  // Not authenticated view: Simple, reliable Admin password login
+  // State 2: Unauthenticated view - Full-Width Left-Anchored Mission Control Landing
   if (!authenticated) {
     return (
-      <PageShell
-        eyebrow="Protected Area"
-        title="Admin Access"
-        description="Enter administrator password to access SohailVerse CMS."
-      >
-        <GlassPanel className="p-5 sm:p-8 max-w-xl mx-auto">
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Administrator Password
-              </label>
-              <input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loginLoading}
-                className="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-3 text-base text-white placeholder-slate-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-              />
+      <div className="relative min-h-screen flex flex-col justify-between text-slate-100 overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
+        <SpaceEarthBackground />
+        <AdminHeader />
+
+        <main className="relative z-10 flex-1 px-4 sm:px-8 lg:px-12 xl:px-16 pt-5 sm:pt-7 md:pt-8 pb-8 sm:pb-12 max-w-6xl mx-auto w-full flex flex-col items-start text-left">
+          {/* Main Hero Header - Left-Anchored & Close to Header */}
+          <section className="w-full text-left mb-4 sm:mb-5">
+            {/* Pill Eyebrow */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-950/50 backdrop-blur-md mb-2 sm:mb-2.5 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="font-mono text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">
+                ADMIN SOHAIL CONSOLE
+              </span>
             </div>
 
-            {loginError && (
-              <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
-                {loginError}
-              </div>
-            )}
+            {/* Main Heading */}
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl xl:text-[2.65rem] font-extrabold tracking-tight text-white mb-1.5 leading-tight">
+              Manage{" "}
+              <span className="bg-gradient-to-r from-cyan-300 via-sky-200 to-lime-300 bg-clip-text text-transparent">
+                Your Universe
+              </span>
+            </h1>
 
-            <button
-              type="submit"
-              disabled={loginLoading || !password}
-              className="w-full rounded-xl bg-accent px-4 py-3 font-semibold text-slate-950 transition hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-            >
-              {loginLoading ? "Authenticating..." : "Access Control Center"}
-            </button>
-          </form>
-        </GlassPanel>
-      </PageShell>
+            {/* Supporting Copy */}
+            <p className="text-xs sm:text-sm lg:text-base text-slate-300 max-w-xl leading-relaxed">
+              Add, edit, and remove content across SohailVerse.
+            </p>
+          </section>
+
+          {/* 1. Secure Admin Access Panel (Wide Horizontal Command Gateway - Immediately below Hero) */}
+          <section className="w-full mb-5 sm:mb-6">
+            <AdminAccessPanel
+              password={password}
+              setPassword={setPassword}
+              loginError={loginError}
+              loginLoading={loginLoading}
+              onSubmit={handleLogin}
+            />
+          </section>
+
+          {/* 2. 4 Admin Module Navigation Cards (Strict 2x2 Grid below Admin Access) */}
+          <section className="w-full mb-6 sm:mb-8">
+            <AdminModuleCards />
+          </section>
+        </main>
+
+        <AdminFooter />
+      </div>
     );
   }
 
-  // Authenticated CMS view
+  // State 3: Authenticated view - Active Universe Management CMS
   return (
-    <PageShell
-      eyebrow="Control Center"
-      title="SohailVerse Admin"
-      description="Manage SohailVerse movies, DevOps projects, and milestone timeline."
-    >
-      <div className="space-y-6">
-        {/* Top Control Bar */}
-        <GlassPanel className="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-lime-400 animate-pulse" />
-            <span className="text-xs sm:text-sm font-mono text-slate-300">
-              Authenticated Administrator Session
-            </span>
-          </div>
+    <div className="relative min-h-screen flex flex-col justify-between text-slate-100 overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
+      <SpaceEarthBackground />
+      <AdminHeader isAuthenticated onLogout={handleLogout} />
 
+      <main className="relative z-10 flex-1 px-4 sm:px-6 lg:px-8 py-8 sm:py-10 max-w-6xl mx-auto w-full">
+        {/* Authenticated Title Bar */}
+        <div className="mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/10 pb-6">
           <div>
-            <button
-              onClick={handleLogout}
-              className="rounded-xl bg-red-500/80 hover:bg-red-500 px-4 py-2 text-white font-medium transition text-xs sm:text-sm min-h-[38px]"
-            >
-              Logout
-            </button>
-          </div>
-        </GlassPanel>
-
-        {message && (
-          <div className="rounded-xl border border-white/10 bg-slate-900/80 p-3 text-xs sm:text-sm font-medium text-slate-200">
-            {message}
-          </div>
-        )}
-
-        {/* Movie Manager */}
-        <GlassPanel className="p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-semibold">🎬 Movie Manager</h2>
-          </div>
-          <div className="grid gap-3 sm:gap-4">
-            <input
-              type="text"
-              placeholder="Movie Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-            />
-            <input
-              type="text"
-              placeholder="Genre"
-              value={genre}
-              onChange={(e) => setGenre(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-            />
-            <input
-              type="number"
-              step="0.1"
-              placeholder="Rating (e.g. 9.2)"
-              value={rating}
-              onChange={(e) => setRating(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-            />
-            <input
-              type="text"
-              placeholder="Movie URL"
-              value={trailerUrl}
-              onChange={(e) => setTrailerUrl(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-            />
-
-            <button
-              onClick={addMovie}
-              disabled={actionLoading}
-              className="rounded-xl bg-cyan-500 hover:bg-cyan-400 font-semibold px-4 py-3 text-slate-950 min-h-[44px] transition disabled:opacity-50"
-            >
-              {actionLoading ? "Adding..." : "Add Movie"}
-            </button>
-          </div>
-        </GlassPanel>
-
-        {/* Movie Library */}
-        <GlassPanel className="p-5 sm:p-6">
-          <h2 className="mb-4 text-xl sm:text-2xl font-semibold">🎞️ Movie Library</h2>
-          {moviesLoading ? (
-            <p className="text-sm text-slate-400">Loading movies...</p>
-          ) : (
-            <div className="grid gap-3 sm:gap-4">
-              {movies.map((movie) => (
-                <div key={movie.id} className="rounded-xl border border-white/10 bg-slate-900/40 p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold text-base sm:text-lg">
-                        #{movie.id} - {movie.title}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-slate-300">Genre: {movie.genre}</p>
-                      <p className="text-xs sm:text-sm text-slate-300">Rating: ⭐ {movie.rating}</p>
-                      <p className="text-xs sm:text-sm text-slate-300">
-                        Movie:
-                        <a
-                          href={movie.movie_url || movie.trailer_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="ml-2 text-cyan-400 underline break-all"
-                        >
-                          Open Movie
-                        </a>
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => deleteMovie(movie.id)}
-                      className="rounded-xl bg-red-500 hover:bg-red-600 px-4 py-2 text-white text-sm font-medium transition min-h-[40px] self-start sm:self-auto"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-lime-500/30 bg-lime-950/40 text-lime-300 text-xs font-mono font-medium mb-2">
+              <span className="h-2 w-2 rounded-full bg-lime-400 animate-pulse" />
+              Mission Control Active
             </div>
-          )}
-        </GlassPanel>
-
-        {/* DevOps Manager */}
-        <GlassPanel className="p-5 sm:p-6">
-          <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
-            ⚙️ DevOps Manager
-          </h2>
-
-          <div className="grid gap-3 sm:gap-4">
-            <input
-              type="text"
-              placeholder="Project Title"
-              value={devopsTitle}
-              onChange={(e) => setDevopsTitle(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-            />
-
-            <input
-              type="text"
-              placeholder="Category"
-              value={devopsCategory}
-              onChange={(e) => setDevopsCategory(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-            />
-
-            <textarea
-              placeholder="Description"
-              value={devopsDescription}
-              onChange={(e) => setDevopsDescription(e.target.value)}
-              rows={3}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-            />
-
-            <button
-              onClick={addDevOpsPost}
-              disabled={actionLoading}
-              className="rounded-xl bg-cyan-500 hover:bg-cyan-400 font-semibold px-4 py-3 text-slate-950 min-h-[44px] transition disabled:opacity-50"
-            >
-              {actionLoading ? "Adding..." : "Add DevOps Project"}
-            </button>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
+              SohailVerse Admin CMS
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              Unified workspace: Projects, Cinema, and DevOps management.
+            </p>
           </div>
-        </GlassPanel>
+        </div>
 
-        {/* DevOps Library */}
-        <GlassPanel className="p-5 sm:p-6">
-          <h2 className="mb-4 text-xl sm:text-2xl font-semibold">
-            🚀 DevOps Library
-          </h2>
+        <AuthenticatedCMS
+          movies={movies}
+          moviesLoading={moviesLoading}
+          onRefreshMovies={loadMovies}
+          title={title}
+          setTitle={setTitle}
+          genre={genre}
+          setGenre={setGenre}
+          rating={rating}
+          setRating={setRating}
+          trailerUrl={trailerUrl}
+          setTrailerUrl={setTrailerUrl}
+          addMovie={addMovie}
+          deleteMovie={deleteMovie}
 
-          {devopsLoading ? (
-            <p className="text-sm text-slate-400">Loading projects...</p>
-          ) : (
-            <div className="grid gap-3 sm:gap-4">
-              {devops.map((project) => (
-                <div
-                  key={project.id}
-                  className="rounded-xl border border-white/10 bg-slate-900/40 p-4"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold text-base sm:text-lg">
-                        #{project.id} - {project.title}
-                      </h3>
+          devops={devops}
+          devopsLoading={devopsLoading}
+          onRefreshDevops={loadDevOpsPosts}
+          devopsTitle={devopsTitle}
+          setDevopsTitle={setDevopsTitle}
+          devopsCategory={devopsCategory}
+          setDevopsCategory={setDevopsCategory}
+          devopsDescription={devopsDescription}
+          setDevopsDescription={setDevopsDescription}
+          addDevOpsPost={addDevOpsPost}
+          deleteDevOpsPost={deleteDevOpsPost}
 
-                      <p className="text-xs sm:text-sm text-slate-300">
-                        Category: {project.category}
-                      </p>
+          timeline={timeline}
+          timelineLoading={timelineLoading}
+          timelineTitle={timelineTitle}
+          setTimelineTitle={setTimelineTitle}
+          timelineCategory={timelineCategory}
+          setTimelineCategory={setTimelineCategory}
+          timelineYear={timelineYear}
+          setTimelineYear={setTimelineYear}
+          timelineEventDate={timelineEventDate}
+          setTimelineEventDate={setTimelineEventDate}
+          timelineDescription={timelineDescription}
+          setTimelineDescription={setTimelineDescription}
+          addTimelinePost={addTimelinePost}
+          deleteTimelinePost={deleteTimelinePost}
 
-                      <p className="text-xs sm:text-sm text-slate-300">
-                        Description: {project.description}
-                      </p>
-                    </div>
+          message={message}
+          actionLoading={actionLoading}
+          onLogout={handleLogout}
+        />
+      </main>
 
-                    <button
-                      onClick={() => deleteDevOpsPost(project.id)}
-                      className="rounded-xl bg-red-500 hover:bg-red-600 px-4 py-2 text-white text-sm font-medium transition min-h-[40px] self-start sm:self-auto"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </GlassPanel>
-
-        {/* Timeline Manager */}
-        <GlassPanel className="p-5 sm:p-6">
-          <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
-            📅 Timeline Manager
-          </h2>
-
-          <div className="grid gap-3 sm:gap-4">
-            <input
-              type="text"
-              placeholder="Event Title"
-              value={timelineTitle}
-              onChange={(e) => setTimelineTitle(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-            />
-
-            <input
-              type="text"
-              placeholder="Category"
-              value={timelineCategory}
-              onChange={(e) => setTimelineCategory(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input
-                type="text"
-                placeholder="Year (e.g. 2024)"
-                value={timelineYear}
-                onChange={(e) => setTimelineYear(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-              />
-              <input
-                type="text"
-                placeholder="Event Date (e.g. 2024-03-10)"
-                value={timelineEventDate}
-                onChange={(e) => setTimelineEventDate(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-              />
-            </div>
-
-            <textarea
-              placeholder="Description"
-              value={timelineDescription}
-              onChange={(e) => setTimelineDescription(e.target.value)}
-              rows={3}
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-base text-white placeholder-slate-500"
-            />
-
-            <button
-              onClick={addTimelinePost}
-              disabled={actionLoading}
-              className="rounded-xl bg-cyan-500 hover:bg-cyan-400 font-semibold px-4 py-3 text-slate-950 min-h-[44px] transition disabled:opacity-50"
-            >
-              {actionLoading ? "Adding..." : "Add Timeline Event"}
-            </button>
-          </div>
-        </GlassPanel>
-
-        {/* Timeline Library */}
-        <GlassPanel className="p-5 sm:p-6">
-          <h2 className="mb-4 text-xl sm:text-2xl font-semibold">
-            🕒 Timeline Library
-          </h2>
-
-          {timelineLoading ? (
-            <p className="text-sm text-slate-400">Loading timeline...</p>
-          ) : (
-            <div className="grid gap-3 sm:gap-4">
-              {timeline.map((event) => (
-                <div
-                  key={event.id}
-                  className="rounded-xl border border-white/10 bg-slate-900/40 p-4"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-base sm:text-lg">
-                          #{event.id} - {event.title}
-                        </h3>
-                        {event.year && (
-                          <span className="rounded-full bg-cyan-500/20 text-cyan-400 text-xs px-2.5 py-0.5 font-medium">
-                            {event.year}
-                          </span>
-                        )}
-                        {event.event_date && (
-                          <span className="rounded-full bg-slate-800 text-slate-400 text-xs px-2.5 py-0.5">
-                            {event.event_date}
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                        Category: {event.category}
-                      </p>
-
-                      <p className="text-xs sm:text-sm text-slate-300 mt-0.5">
-                        Description: {event.description}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => deleteTimelinePost(event.id)}
-                      className="rounded-xl bg-red-500 hover:bg-red-600 px-4 py-2 text-white text-sm font-medium transition min-h-[40px] self-start sm:self-auto"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </GlassPanel>
-      </div>
-    </PageShell>
+      <AdminFooter />
+    </div>
   );
 }
