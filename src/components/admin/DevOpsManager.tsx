@@ -17,6 +17,7 @@ import PillarHeader from "./devops/PillarHeader";
 import VideoPlayerModal from "./devops/VideoPlayerModal";
 import NoteReaderModal from "./devops/NoteReaderModal";
 import ImageLightboxModal from "./devops/ImageLightboxModal";
+import DedicatedPillarManager from "./devops/DedicatedPillarManager";
 import {
   LearningPillar,
   PillarResource,
@@ -189,6 +190,39 @@ export default function DevOpsManager({
     }
   };
 
+  // Dedicated Pillar Save handler (Networking / AWS)
+  const handleSaveDedicatedResource = async (data: {
+    id?: number;
+    title: string;
+    name: string;
+    image_url: string;
+    video_url: string;
+    pillar: "Networking" | "AWS";
+  }) => {
+    await handleSaveResource({
+      id: data.id,
+      title: data.title,
+      name: data.name,
+      pillar: data.pillar,
+      category: data.pillar,
+      image_url: data.image_url,
+      video_url: data.video_url,
+    });
+  };
+
+  // Dedicated Pillar Delete handler (Networking / AWS)
+  const handleDeleteDedicatedResource = async (id: number) => {
+    const res = await fetch(`/api/devops/${id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || err.message || "Failed to delete resource.");
+    }
+    showFeedback("success", "✅ Resource removed successfully.");
+    await onRefresh();
+  };
+
   return (
     <div className="space-y-8 text-left">
       {/* Top Banner feedback */}
@@ -210,99 +244,111 @@ export default function DevOpsManager({
         </div>
       )}
 
-      {/* 5-Pillar Navigation & Header */}
-      <PillarHeader
-        activePillar={activePillar}
-        onSelectPillar={setActivePillar}
-        pillarCounts={pillarCounts}
-        onAddNew={handleAddNew}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        selectedStatus={selectedStatus}
-        onStatusChange={setSelectedStatus}
-        statusOptions={statusOptions}
-      />
-
-      {/* Grid of Resource Cards */}
-      {isLoading ? (
-        <div className="p-12 text-center rounded-2xl border border-white/10 bg-slate-950/50">
-          <RefreshCw className="h-8 w-8 text-sky-400 animate-spin mx-auto mb-3" />
-          <p className="text-sm text-slate-400">Loading resources from database...</p>
-        </div>
-      ) : filteredResources.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl border border-white/10 bg-slate-950/40 backdrop-blur">
-          <Layers className="h-10 w-10 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-white">No resources found</h3>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-md mx-auto">
-            {searchTerm
-              ? `No resources matched your search query "${searchTerm}". Try resetting search or filters.`
-              : activePillar !== "all"
-              ? `No resources yet in the "${activePillar}" pillar. Click "Add to ${activePillar}" to create one.`
-              : "No resources found in the database. Click 'Add to Hub' to create the first resource."}
-          </p>
-          <button
-            type="button"
-            onClick={() => handleAddNew(activePillar === "all" ? "DevOps" : activePillar)}
-            className="mt-5 px-5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs inline-flex items-center gap-2 transition-colors cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Resource to {activePillar === "all" ? "Hub" : activePillar}</span>
-          </button>
-        </div>
+      {activePillar === "Networking" || activePillar === "AWS" ? (
+        <DedicatedPillarManager
+          pillar={activePillar}
+          resources={parsedResources}
+          onBack={() => setActivePillar("all")}
+          onSaveResource={handleSaveDedicatedResource}
+          onDeleteResource={handleDeleteDedicatedResource}
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
-          {filteredResources.map((res) => (
-            <ResourceCard
-              key={res.id}
-              resource={res}
-              onEdit={handleEdit}
-              onDelete={handleDeletePrompt}
-              onWatchVideo={(url, title) => setActiveVideo({ url, title })}
-              onReadNotes={(r) => setReadingResource(r)}
-              onViewImage={(url, title) => setLightboxImage({ url, title })}
-            />
-          ))}
-        </div>
+        <>
+          {/* 5-Pillar Navigation & Header */}
+          <PillarHeader
+            activePillar={activePillar}
+            onSelectPillar={setActivePillar}
+            pillarCounts={pillarCounts}
+            onAddNew={handleAddNew}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            selectedStatus={selectedStatus}
+            onStatusChange={setSelectedStatus}
+            statusOptions={statusOptions}
+          />
+
+          {/* Grid of Resource Cards */}
+          {isLoading ? (
+            <div className="p-12 text-center rounded-2xl border border-white/10 bg-slate-950/50">
+              <RefreshCw className="h-8 w-8 text-sky-400 animate-spin mx-auto mb-3" />
+              <p className="text-sm text-slate-400">Loading resources from database...</p>
+            </div>
+          ) : filteredResources.length === 0 ? (
+            <div className="p-12 text-center rounded-2xl border border-white/10 bg-slate-950/40 backdrop-blur">
+              <Layers className="h-10 w-10 text-slate-600 mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-white">No resources found</h3>
+              <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-md mx-auto">
+                {searchTerm
+                  ? `No resources matched your search query "${searchTerm}". Try resetting search or filters.`
+                  : activePillar !== "all"
+                  ? `No resources yet in the "${activePillar}" pillar. Click "Add to ${activePillar}" to create one.`
+                  : "No resources found in the database. Click 'Add to Hub' to create the first resource."}
+              </p>
+              <button
+                type="button"
+                onClick={() => handleAddNew(activePillar === "all" ? "DevOps" : activePillar)}
+                className="mt-5 px-5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs inline-flex items-center gap-2 transition-colors cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Resource to {activePillar === "all" ? "Hub" : activePillar}</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
+              {filteredResources.map((res) => (
+                <ResourceCard
+                  key={res.id}
+                  resource={res}
+                  onEdit={handleEdit}
+                  onDelete={handleDeletePrompt}
+                  onWatchVideo={(url, title) => setActiveVideo({ url, title })}
+                  onReadNotes={(r) => setReadingResource(r)}
+                  onViewImage={(url, title) => setLightboxImage({ url, title })}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Editor Modal (Add / Edit) */}
+          <ResourceEditorModal
+            isOpen={isEditorOpen}
+            resource={editingResource}
+            defaultPillar={preselectedPillar}
+            onClose={() => setIsEditorOpen(false)}
+            onSave={handleSaveResource}
+          />
+
+          {/* Delete Confirmation Modal */}
+          <DeleteConfirmModal
+            isOpen={!!deletingResource}
+            itemName={deletingResource?.title || ""}
+            itemType={`[${deletingResource?.pillar || "DevOps"}] Resource`}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setDeletingResource(null)}
+          />
+
+          {/* Video Player Modal */}
+          <VideoPlayerModal
+            videoUrl={activeVideo?.url || null}
+            title={activeVideo?.title || ""}
+            onClose={() => setActiveVideo(null)}
+          />
+
+          {/* Note Reader Modal */}
+          <NoteReaderModal
+            resource={readingResource}
+            onClose={() => setReadingResource(null)}
+            onWatchVideo={(url, title) => setActiveVideo({ url, title })}
+          />
+
+          {/* Image Lightbox Modal */}
+          <ImageLightboxModal
+            imageUrl={lightboxImage?.url || null}
+            title={lightboxImage?.title || ""}
+            onClose={() => setLightboxImage(null)}
+          />
+        </>
       )}
-
-      {/* Editor Modal (Add / Edit) */}
-      <ResourceEditorModal
-        isOpen={isEditorOpen}
-        resource={editingResource}
-        defaultPillar={preselectedPillar}
-        onClose={() => setIsEditorOpen(false)}
-        onSave={handleSaveResource}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmModal
-        isOpen={!!deletingResource}
-        itemName={deletingResource?.title || ""}
-        itemType={`[${deletingResource?.pillar || "DevOps"}] Resource`}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setDeletingResource(null)}
-      />
-
-      {/* Video Player Modal */}
-      <VideoPlayerModal
-        videoUrl={activeVideo?.url || null}
-        title={activeVideo?.title || ""}
-        onClose={() => setActiveVideo(null)}
-      />
-
-      {/* Note Reader Modal */}
-      <NoteReaderModal
-        resource={readingResource}
-        onClose={() => setReadingResource(null)}
-        onWatchVideo={(url, title) => setActiveVideo({ url, title })}
-      />
-
-      {/* Image Lightbox Modal */}
-      <ImageLightboxModal
-        imageUrl={lightboxImage?.url || null}
-        title={lightboxImage?.title || ""}
-        onClose={() => setLightboxImage(null)}
-      />
     </div>
   );
 }

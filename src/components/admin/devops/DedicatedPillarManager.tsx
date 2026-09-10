@@ -18,7 +18,7 @@ import { FaAws } from "react-icons/fa";
 import type { PillarResource } from "../../../lib/pillarContent";
 import PillarVideoResourceModal from "./PillarVideoResourceModal";
 import VideoPlayerModal from "./VideoPlayerModal";
-import DeleteConfirmModal from "./DeleteConfirmModal";
+import DeleteConfirmModal from "../DeleteConfirmModal";
 
 interface DedicatedPillarManagerProps {
   pillar: "Networking" | "AWS";

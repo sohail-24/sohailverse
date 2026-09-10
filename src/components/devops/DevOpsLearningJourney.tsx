@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { ArrowDown } from "lucide-react";
 import DevOpsLearningPathCard from "./DevOpsLearningPathCard";
 import DevOpsPathModal from "./DevOpsPathModal";
+import DevOpsFinalCTA from "./DevOpsFinalCTA";
 import { learningPathStages, devopsNotes } from "../../data/devopsData";
 import { parsePillarResource, detectPillar } from "../../lib/pillarContent";
 import type { LearningPathStage, DevOpsProject } from "../../types/devops";
@@ -85,21 +86,22 @@ export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJ
             />
 
             {/* Downward Progression Arrow centered between boxes */}
-            {idx < learningPathStages.length - 1 && (
-              <div
-                className="flex items-center justify-center py-2 sm:py-2.5 text-slate-400 group"
-                aria-hidden="true"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="w-px h-1.5 sm:h-2 bg-gradient-to-b from-white/20 to-white/60" />
-                  <ArrowDown className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400 my-0.5" />
-                  <div className="w-px h-1.5 sm:h-2 bg-gradient-to-b from-white/60 to-white/20" />
-                </div>
+            <div
+              className="flex items-center justify-center py-2 sm:py-2.5 text-slate-400 group"
+              aria-hidden="true"
+            >
+              <div className="flex flex-col items-center">
+                <div className="w-px h-1.5 sm:h-2 bg-gradient-to-b from-white/20 to-white/60" />
+                <ArrowDown className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400 my-0.5" />
+                <div className="w-px h-1.5 sm:h-2 bg-gradient-to-b from-white/60 to-white/20" />
               </div>
-            )}
+            </div>
           </div>
         ))}
       </div>
+
+      {/* 6. THE JOURNEY CONTINUES */}
+      <DevOpsFinalCTA />
 
       {/* Interactive Detail Modal */}
       <DevOpsPathModal

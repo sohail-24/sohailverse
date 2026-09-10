@@ -6,9 +6,11 @@ interface DeleteConfirmModalProps {
   title?: string;
   itemName?: string;
   itemType?: string;
+  resourceType?: string;
   isDeleting?: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
+  onConfirm: () => void | Promise<void>;
+  onCancel?: () => void;
+  onClose?: () => void;
 }
 
 export default function DeleteConfirmModal({
@@ -16,11 +18,20 @@ export default function DeleteConfirmModal({
   title = "Remove this item?",
   itemName,
   itemType = "record",
+  resourceType,
   isDeleting = false,
   onConfirm,
   onCancel,
+  onClose,
 }: DeleteConfirmModalProps) {
   if (!isOpen) return null;
+
+  const handleCancel = () => {
+    if (onCancel) onCancel();
+    else if (onClose) onClose();
+  };
+
+  const effectiveItemType = resourceType || itemType;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
@@ -31,7 +42,7 @@ export default function DeleteConfirmModal({
         aria-labelledby="delete-dialog-title"
       >
         <button
-          onClick={onCancel}
+          onClick={handleCancel}
           disabled={isDeleting}
           className="absolute top-5 right-5 p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
           aria-label="Close dialog"
@@ -57,7 +68,7 @@ export default function DeleteConfirmModal({
                   <span className="text-white font-medium">"{itemName}"</span>?
                 </>
               ) : (
-                `Are you sure you want to delete this ${itemType}?`
+                `Are you sure you want to delete this ${effectiveItemType}?`
               )}{" "}
               This action cannot be undone.
             </p>
@@ -67,7 +78,7 @@ export default function DeleteConfirmModal({
         <div className="mt-6 flex items-center justify-end gap-3 pt-2">
           <button
             type="button"
-            onClick={onCancel}
+            onClick={handleCancel}
             disabled={isDeleting}
             className="px-4 py-2.5 rounded-xl border border-white/10 bg-slate-900/60 hover:bg-slate-800/80 text-xs sm:text-sm font-medium text-slate-300 transition-colors disabled:opacity-50"
           >
