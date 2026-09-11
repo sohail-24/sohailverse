@@ -24,7 +24,7 @@ export default function CinemaMovieCarousel({
     <section
       id="cinema-continue-exploring-section"
       aria-label="Continue Exploring Movies"
-      className="mt-14 sm:mt-20 md:-mx-2.5 lg:-mx-3.5"
+      className="mt-14 sm:mt-20"
     >
       {/* Header */}
       <div className="flex items-end justify-between mb-6">
@@ -68,7 +68,7 @@ export default function CinemaMovieCarousel({
           </button>
         </div>
       ) : (
-        <div className="cinema-desktop-movie-grid grid grid-cols-2 md:grid-cols-[repeat(4,230px)] gap-3.5 md:gap-x-2.5 md:gap-y-6 w-full max-w-[490px] md:max-w-none md:w-fit">
+        <div className="cinema-desktop-movie-grid grid grid-cols-2 md:grid-cols-4 gap-3.5 md:gap-x-6 md:gap-y-8 lg:gap-x-7 lg:gap-y-9 xl:gap-x-8 xl:gap-y-10 w-full max-w-[490px] md:max-w-none md:w-full">
           {movies.map((movie) => {
             const movieUrl = movie.movie_url || movie.trailer_url || "";
             const posterUrl = movie.poster_url || "/cinema/posters/oppenheimer.jpg";
@@ -91,7 +91,7 @@ export default function CinemaMovieCarousel({
               <div
                 key={movie.id}
                 id={`movie-poster-card-${movie.id}`}
-                className="group relative w-full sm:w-[210px] md:w-[230px] flex flex-col"
+                className="group relative w-full sm:w-[210px] md:w-full flex flex-col"
               >
                 {/* 2:3 Vertical Poster Container - Directly links to stored movie URL */}
                 <a

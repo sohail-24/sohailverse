@@ -117,11 +117,25 @@
   @media (min-width: 768px) {
     .cinema-desktop-movie-grid {
       display: grid !important;
-      grid-template-columns: repeat(4, 230px) !important;
-      column-gap: 10px !important;
-      row-gap: 24px !important;
-      width: fit-content !important;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      column-gap: 1.5rem !important;
+      row-gap: 2rem !important;
+      width: 100% !important;
       max-width: 100% !important;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .cinema-desktop-movie-grid {
+      column-gap: 1.75rem !important;
+      row-gap: 2.25rem !important;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .cinema-desktop-movie-grid {
+      column-gap: 2rem !important;
+      row-gap: 2.5rem !important;
     }
   }
 
