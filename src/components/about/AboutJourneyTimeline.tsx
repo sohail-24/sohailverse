@@ -4,7 +4,6 @@ import {
   Plane,
   Building2,
   ShoppingCart,
-  Sparkles,
   Terminal,
   CheckCircle2,
 } from "lucide-react";
@@ -20,11 +19,14 @@ interface JourneyMilestone {
   year: string;
   stage: string;
   title: string;
+  subtitle?: string;
   description: string;
   icon: typeof GraduationCap;
   isSpecialHighlight?: boolean;
   isContinuing?: boolean;
   specialBadges?: string[];
+  tagLabel?: string;
+  tags?: string[];
   note?: string;
   theme: {
     text: string;
@@ -42,6 +44,7 @@ interface JourneyMilestone {
 }
 
 const TIMELINE_THEMES = [
+  // 0: Emerald (Education & Academic Foundation)
   {
     text: "text-emerald-400",
     stageBg: "bg-emerald-500/10",
@@ -55,6 +58,7 @@ const TIMELINE_THEMES = [
     cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
     lineColor: "from-emerald-400",
   },
+  // 1: Cyan (Exploration, Travel & AWS Genesis)
   {
     text: "text-cyan-400",
     stageBg: "bg-cyan-500/10",
@@ -68,6 +72,7 @@ const TIMELINE_THEMES = [
     cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
     lineColor: "from-cyan-400",
   },
+  // 2: Purple (Hands-on DevOps Internship / Visys)
   {
     text: "text-purple-400",
     stageBg: "bg-purple-500/10",
@@ -77,10 +82,11 @@ const TIMELINE_THEMES = [
     nodeBorder: "border-purple-400",
     nodeRing: "ring-purple-400/30",
     nodeGlow: "shadow-[0_0_20px_rgba(192,132,252,0.35)]",
-    cardBorder: "border-white/10 hover:border-purple-500/35",
+    cardBorder: "border-purple-500/30 hover:border-purple-500/50",
     cardBg: "bg-slate-900/60 hover:bg-slate-900/80",
     lineColor: "from-purple-400",
   },
+  // 3: Lime (Flagship Real-World Product / Fresh Flow - Real Users & Transactions)
   {
     text: "text-lime-400",
     stageBg: "bg-lime-500/15",
@@ -94,6 +100,7 @@ const TIMELINE_THEMES = [
     cardBg: "bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-lime-950/30 hover:to-lime-950/40",
     lineColor: "from-lime-400",
   },
+  // 4: Sky (Kubernetes Platform Engineering / SohailShop)
   {
     text: "text-sky-400",
     stageBg: "bg-sky-500/10",
@@ -109,27 +116,6 @@ const TIMELINE_THEMES = [
   },
 ];
 
-function getCategoryIcon(category?: string, index: number = 0) {
-  const cat = (category || "").toLowerCase();
-  if (cat.includes("employ") || cat.includes("job") || cat.includes("career") || cat.includes("work")) {
-    return Building2;
-  }
-  if (cat.includes("platform") || cat.includes("system") || cat.includes("cms") || cat.includes("tech") || cat.includes("cloud")) {
-    return Terminal;
-  }
-  if (cat.includes("edu") || cat.includes("degree") || cat.includes("learn") || cat.includes("foundation")) {
-    return GraduationCap;
-  }
-  if (cat.includes("travel") || cat.includes("explor") || cat.includes("saudi")) {
-    return Plane;
-  }
-  if (cat.includes("shop") || cat.includes("b2b") || cat.includes("commerce") || cat.includes("fruit")) {
-    return ShoppingCart;
-  }
-  const ICONS = [Building2, Terminal, Sparkles, GraduationCap, Plane, ShoppingCart];
-  return ICONS[index % ICONS.length];
-}
-
 export default function AboutJourneyTimeline({
   timeline,
   dbTimeline,
@@ -138,8 +124,14 @@ export default function AboutJourneyTimeline({
 
   // Sort posts chronologically: year ascending, then event_date/created_at ascending, then id ascending
   const sortedPosts = [...posts].sort((a, b) => {
-    const yearA = parseInt(a.year || (a.event_date ? a.event_date.slice(0, 4) : (a.created_at ? a.created_at.slice(0, 4) : "2026")), 10);
-    const yearB = parseInt(b.year || (b.event_date ? b.event_date.slice(0, 4) : (b.created_at ? b.created_at.slice(0, 4) : "2026")), 10);
+    const yearA = parseInt(
+      a.year || (a.event_date ? a.event_date.slice(0, 4) : (a.created_at ? a.created_at.slice(0, 4) : "2026")),
+      10
+    );
+    const yearB = parseInt(
+      b.year || (b.event_date ? b.event_date.slice(0, 4) : (b.created_at ? b.created_at.slice(0, 4) : "2026")),
+      10
+    );
     if (yearA !== yearB) return yearA - yearB;
     const dateA = a.event_date || a.created_at || "";
     const dateB = b.event_date || b.created_at || "";
@@ -147,57 +139,140 @@ export default function AboutJourneyTimeline({
     return (a.id || 0) - (b.id || 0);
   });
 
-  const milestones: JourneyMilestone[] = sortedPosts.map((post, idx) => {
+  // Preserve database records: internal platform test records like "Timeline CMS Created" remain in Neon,
+  // while the public About page focuses on the verified engineering progression.
+  const careerPosts = sortedPosts.filter(
+    (p) => !(p.title || "").toLowerCase().includes("timeline cms")
+  );
+
+  const milestones: JourneyMilestone[] = careerPosts.map((post) => {
     let year = post.year ? post.year.trim() : null;
     if (!year) {
       const yearMatch = post.created_at ? post.created_at.match(/\b(19\d\d|20\d\d)\b/) : null;
       year = yearMatch ? yearMatch[1] : (post.created_at ? post.created_at.slice(0, 4) : "2026");
     }
-    const theme = TIMELINE_THEMES[idx % TIMELINE_THEMES.length];
-    const icon = getCategoryIcon(post.category, idx);
 
-    // Contextual badge & highlight detection
-    const isSpecialHighlight = (post.title || "").toLowerCase().includes("sohail-shop");
-    const isContinuing = (post.title || "").toLowerCase().includes("visys");
-    let specialBadges: string[] | undefined = undefined;
-    let note: string | undefined = undefined;
+    const titleLower = (post.title || "").toLowerCase();
+    const isFreshFlow = titleLower.includes("fresh flow");
+    const isSohailShop = titleLower.includes("sohail-shop") || titleLower.includes("sohailshop");
+    const isVisys = titleLower.includes("visys");
+    const isEducation = year === "2023" || titleLower.includes("bachelor") || titleLower.includes("engineering degree");
+    const isSaudi = year === "2024" || titleLower.includes("saudi");
 
-    if (isSpecialHighlight) {
-      specialBadges = ["REAL USERS & LIVE ARCHITECTURE"];
-      note = "Flagship cloud architecture & e-commerce deployment";
-    } else if (isContinuing) {
-      specialBadges = ["ACTIVE CLOUD ROLE"];
-      note = "DevOps automation and multi-cloud systems";
+    let subtitle: string | undefined;
+    let specialBadges: string[] | undefined;
+    let note: string | undefined;
+    let tagLabel: string | undefined;
+    let tags: string[] | undefined;
+    let theme = TIMELINE_THEMES[0];
+    let icon = GraduationCap;
+    let isSpecialHighlight = false;
+    let isContinuing = false;
+
+    if (isEducation) {
+      theme = TIMELINE_THEMES[0]; // Emerald
+      icon = GraduationCap;
+      subtitle = "Muffakham Jah College of Engineering and Technology · 2019 — 2023";
+      specialBadges = ["B.E. DEGREE"];
+    } else if (isSaudi) {
+      theme = TIMELINE_THEMES[1]; // Cyan
+      icon = Plane;
+      subtitle = "International Exploration & Cloud Transition";
+      specialBadges = ["AWS & DEVOPS GENESIS"];
+      tagLabel = "Focus";
+      tags = [
+        "AWS Cloud",
+        "DevOps Fundamentals",
+        "Cloud Infrastructure",
+        "Linux",
+        "Automation",
+        "Continuous Learning",
+      ];
+      note = "Catalyzed the focused shift from engineering foundations into cloud and DevOps systems";
+    } else if (isVisys) {
+      theme = TIMELINE_THEMES[2]; // Purple
+      icon = Building2;
+      subtitle = "Visys Cloud Technologies · 6-Month Industry Internship";
+      specialBadges = ["6-MONTH DEVOPS INTERNSHIP"];
+      tagLabel = "Hands-on";
+      tags = [
+        "AWS",
+        "Docker",
+        "Kubernetes / EKS",
+        "Terraform",
+        "Ansible",
+        "Linux",
+        "CI/CD (GitHub Actions, Jenkins)",
+        "Helm",
+        "ArgoCD",
+      ];
+      note = "Hands-on cloud infrastructure provisioning, Kubernetes orchestration, and deployment automation";
+      isContinuing = true;
+    } else if (isSohailShop) {
+      theme = TIMELINE_THEMES[4]; // Sky
+      icon = Terminal;
+      subtitle = "Django E-Commerce & GitOps Deployment Architecture";
+      specialBadges = ["KUBERNETES & GITOPS"];
+      tagLabel = "Architecture";
+      tags = [
+        "Kubernetes (kubeadm & EKS)",
+        "Docker",
+        "Terraform",
+        "Helm",
+        "ArgoCD GitOps",
+        "GitHub Actions",
+        "PostgreSQL",
+        "Redis",
+      ];
+      note = "Production deployments across both self-managed and managed Kubernetes environments";
+    } else if (isFreshFlow) {
+      theme = TIMELINE_THEMES[3]; // Lime
+      icon = ShoppingCart;
+      subtitle = "Live Production Grocery Logistics Platform";
+      specialBadges = ["REAL USERS & REAL TRANSACTIONS"];
+      tagLabel = "Production";
+      tags = [
+        "Real Users",
+        "Real Transactions",
+        "Cloud Infrastructure",
+        "Order Routing",
+        "API Design",
+      ];
+      note = "Transition from learning & internship into operating a live product serving real users";
+      isSpecialHighlight = true;
     }
 
     return {
       id: post.id,
-      year,
+      year: year || "2026",
       stage: post.category || "Milestone",
       title: post.title,
+      subtitle,
       description: post.description,
       icon,
       isSpecialHighlight,
       isContinuing,
       specialBadges,
+      tagLabel,
+      tags,
       note,
       theme,
     };
   });
 
   const years = milestones.map((m) => parseInt(m.year, 10)).filter((y) => !isNaN(y));
-  const minYear = years.length > 0 ? Math.min(...years) : 2026;
+  const minYear = years.length > 0 ? Math.min(...years) : 2023;
   const maxYear = years.length > 0 ? Math.max(...years) : 2026;
   const chronologyText =
     milestones.length > 0
       ? minYear === maxYear
         ? `Chronology · ${minYear}`
         : `Chronology · ${minYear} — ${maxYear}`
-      : "Chronology · Archive";
+      : "Chronology · 2023 — 2026";
 
   return (
     <section id="about-my-journey" className="py-8 sm:py-14">
-      {/* Section Header with progression narrative */}
+      {/* Section Header */}
       <div className="mb-8 sm:mb-12">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div>
@@ -220,7 +295,7 @@ export default function AboutJourneyTimeline({
         <div className="absolute top-6 bottom-8 left-[180px] lg:left-[210px] w-[2px] bg-gradient-to-b from-emerald-400 via-cyan-400 via-purple-400 via-lime-400 to-sky-400 opacity-40 pointer-events-none" />
 
         {/* Fading Tail indicating open-ended continuation */}
-        <div className="absolute -bottom-2 left-[180px] lg:left-[210px] w-[2px] h-10 bg-gradient-to-b from-sky-400 to-transparent opacity-40 pointer-events-none" />
+        <div className="absolute -bottom-2 left-[180px] lg:left-[210px] w-[2px] h-10 bg-gradient-to-b from-lime-400 to-transparent opacity-40 pointer-events-none" />
 
         {milestones.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-8 text-center backdrop-blur-md">
@@ -239,97 +314,127 @@ export default function AboutJourneyTimeline({
                   transition={{ duration: 0.45, delay: idx * 0.08 }}
                   className="relative flex items-start group"
                 >
-                {/* 1. Left Column: Year & Stage Classification */}
-                <div className="w-[180px] lg:w-[210px] pr-8 text-right shrink-0 pt-2">
-                  <div className="font-mono text-xl lg:text-2xl font-black tracking-tight">
-                    <span className={m.theme.text}>{m.year}</span>
+                  {/* 1. Left Column: Year & Stage Classification */}
+                  <div className="w-[180px] lg:w-[210px] pr-8 text-right shrink-0 pt-2">
+                    <div className="font-mono text-xl lg:text-2xl font-black tracking-tight">
+                      <span className={m.theme.text}>{m.year}</span>
+                    </div>
+                    <div className="mt-1.5 inline-flex items-center">
+                      <span
+                        className={`text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-full border ${m.theme.stageBg} ${m.theme.stageBorder} ${m.theme.stageText}`}
+                      >
+                        {m.stage}
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-1.5 inline-flex items-center">
-                    <span
-                      className={`text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-full border ${m.theme.stageBg} ${m.theme.stageBorder} ${m.theme.stageText}`}
-                    >
-                      {m.stage}
-                    </span>
-                  </div>
-                </div>
 
-                {/* 2. Center Node on the Spine Rail */}
-                <div className="relative z-10 shrink-0 -ml-[22px] lg:-ml-[24px]">
-                  <div
-                    className={`w-11 h-11 lg:w-12 lg:h-12 rounded-full ${m.theme.nodeBg} border-2 ${m.theme.nodeBorder} ${m.theme.nodeGlow} ring-4 ${m.theme.nodeRing} flex items-center justify-center bg-slate-950 transition-all duration-300 group-hover:scale-110 shadow-lg`}
-                  >
-                    <Icon className={`w-5 h-5 ${m.theme.text}`} />
-                  </div>
-                </div>
-
-                {/* 3. Right Column: Milestone Card */}
-                <div className="flex-1 pl-6 lg:pl-8">
-                  <div
-                    className={`relative rounded-2xl border ${m.theme.cardBorder} ${m.theme.cardBg} backdrop-blur-md p-6 transition-all duration-300 shadow-xl`}
-                  >
-                    {/* Left triangular pointer notch towards the node */}
+                  {/* 2. Center Node on the Spine Rail */}
+                  <div className="relative z-10 shrink-0 -ml-[22px] lg:-ml-[24px]">
                     <div
-                      className={`absolute -left-[7px] top-4 w-3.5 h-3.5 bg-slate-900 border-l border-b ${m.theme.cardBorder} rotate-45 pointer-events-none`}
-                    />
+                      className={`w-11 h-11 lg:w-12 lg:h-12 rounded-full ${m.theme.nodeBg} border-2 ${m.theme.nodeBorder} ${m.theme.nodeGlow} ring-4 ${m.theme.nodeRing} flex items-center justify-center bg-slate-950 transition-all duration-300 group-hover:scale-110 shadow-lg`}
+                    >
+                      <Icon className={`w-5 h-5 ${m.theme.text}`} />
+                    </div>
+                  </div>
 
-                    {/* Card Content */}
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-display text-lg lg:text-xl font-bold text-white tracking-tight leading-snug">
-                          {m.title}
-                        </h3>
+                  {/* 3. Right Column: Milestone Card */}
+                  <div className="flex-1 pl-6 lg:pl-8">
+                    <div
+                      className={`relative rounded-2xl border ${m.theme.cardBorder} ${m.theme.cardBg} backdrop-blur-md p-6 transition-all duration-300 shadow-xl`}
+                    >
+                      {/* Left triangular pointer notch towards the node */}
+                      <div
+                        className={`absolute -left-[7px] top-4 w-3.5 h-3.5 bg-slate-900 border-l border-b ${m.theme.cardBorder} rotate-45 pointer-events-none`}
+                      />
+
+                      {/* Card Header & Badges */}
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-display text-lg lg:text-xl font-bold text-white tracking-tight leading-snug">
+                            {m.title}
+                          </h3>
+                          {m.subtitle && (
+                            <p className="text-xs font-mono text-slate-400 mt-1">
+                              {m.subtitle}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Special Badges */}
+                        {m.specialBadges && (
+                          <div className="flex flex-wrap items-center gap-2 shrink-0">
+                            {m.specialBadges.map((badge) => (
+                              <span
+                                key={badge}
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-bold tracking-wider uppercase border shadow-sm ${
+                                  m.isSpecialHighlight
+                                    ? "bg-lime-400/15 border-lime-400/40 text-lime-400"
+                                    : m.year === "2023"
+                                    ? "bg-emerald-400/15 border-emerald-400/40 text-emerald-400"
+                                    : m.year === "2024"
+                                    ? "bg-cyan-400/15 border-cyan-400/40 text-cyan-400"
+                                    : m.isContinuing
+                                    ? "bg-purple-400/15 border-purple-400/40 text-purple-400"
+                                    : "bg-sky-400/15 border-sky-400/40 text-sky-400"
+                                }`}
+                              >
+                                {m.isSpecialHighlight && (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-lime-400" />
+                                )}
+                                {m.isContinuing && (
+                                  <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                                )}
+                                {badge}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
-                      {/* Special Badges (e.g. REAL USERS & REAL PAYMENTS) */}
-                      {m.specialBadges && (
-                        <div className="flex flex-wrap items-center gap-2 shrink-0">
-                          {m.specialBadges.map((badge) => (
+                      {/* Story Description */}
+                      <p className="text-sm lg:text-base text-slate-300/90 leading-relaxed font-normal mt-3">
+                        {m.description}
+                      </p>
+
+                      {/* Scannable Skills / Focus Tags */}
+                      {m.tags && m.tags.length > 0 && (
+                        <div className="mt-4 pt-3.5 border-t border-white/10 flex flex-wrap items-center gap-1.5">
+                          {m.tagLabel && (
+                            <span className="text-[11px] font-mono text-slate-400 font-semibold uppercase tracking-wider mr-1">
+                              {m.tagLabel}:
+                            </span>
+                          )}
+                          {m.tags.map((tag) => (
                             <span
-                              key={badge}
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-bold tracking-wider uppercase border shadow-sm ${
-                                m.isSpecialHighlight
-                                  ? "bg-lime-400/15 border-lime-400/40 text-lime-400"
-                                  : "bg-sky-400/15 border-sky-400/40 text-sky-400"
-                              }`}
+                              key={tag}
+                              className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800/80 border border-slate-700/60 text-slate-300"
                             >
-                              {m.isSpecialHighlight && (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-lime-400" />
-                              )}
-                              {m.isContinuing && (
-                                <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
-                              )}
-                              {badge}
+                              {tag}
                             </span>
                           ))}
                         </div>
                       )}
+
+                      {/* Context Note */}
+                      {m.note && (
+                        <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center gap-2 text-xs font-mono text-slate-400">
+                          {m.isSpecialHighlight ? (
+                            <span className="text-lime-400 font-semibold italic">
+                              &bull; {m.note}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 italic">
+                              &bull; {m.note}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-
-                    <p className="text-sm lg:text-base text-slate-300/90 leading-relaxed font-normal mt-2.5">
-                      {m.description}
-                    </p>
-
-                    {/* Milestone Context Note */}
-                    {m.note && (
-                      <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-2 text-xs font-mono text-slate-400">
-                        {m.isSpecialHighlight && (
-                          <span className="text-lime-400 font-semibold italic">
-                            &bull; {m.note}
-                          </span>
-                        )}
-                        {m.isContinuing && (
-                          <span className="text-sky-300 italic font-medium">
-                            &bull; {m.note}
-                          </span>
-                        )}
-                      </div>
-                    )}
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                </motion.div>
+              );
+            })}
+          </div>
         )}
       </div>
 
@@ -341,7 +446,7 @@ export default function AboutJourneyTimeline({
         <div className="absolute top-5 bottom-6 left-[18px] w-[2px] bg-gradient-to-b from-emerald-400 via-cyan-400 via-purple-400 via-lime-400 to-sky-400 opacity-40 pointer-events-none" />
 
         {/* Fading Tail for Mobile */}
-        <div className="absolute -bottom-1 left-[18px] w-[2px] h-8 bg-gradient-to-b from-sky-400 to-transparent opacity-40 pointer-events-none" />
+        <div className="absolute -bottom-1 left-[18px] w-[2px] h-8 bg-gradient-to-b from-lime-400 to-transparent opacity-40 pointer-events-none" />
 
         {milestones.length === 0 ? (
           <div className="rounded-xl border border-white/10 bg-slate-900/60 p-6 text-center backdrop-blur-md">
@@ -360,81 +465,111 @@ export default function AboutJourneyTimeline({
                   transition={{ duration: 0.4, delay: idx * 0.06 }}
                   className="relative flex items-start gap-3.5 group"
                 >
-                {/* Milestone Circular Node on Rail */}
-                <div className="relative z-10 shrink-0 mt-0.5">
-                  <div
-                    className={`w-9 h-9 rounded-full ${m.theme.nodeBg} border-2 ${m.theme.nodeBorder} ${m.theme.nodeGlow} ring-2 ${m.theme.nodeRing} flex items-center justify-center bg-slate-950`}
-                  >
-                    <Icon className={`w-4 h-4 ${m.theme.text}`} />
-                  </div>
-                </div>
-
-                {/* Milestone Mobile Card */}
-                <div
-                  className={`relative flex-1 rounded-xl border ${m.theme.cardBorder} ${m.theme.cardBg} backdrop-blur-md p-4 transition-all duration-300 shadow-md`}
-                >
-                  {/* Left triangular pointer notch towards the node */}
-                  <div
-                    className={`absolute -left-[5px] top-3.5 w-2.5 h-2.5 bg-slate-900 border-l border-b ${m.theme.cardBorder} rotate-45 pointer-events-none`}
-                  />
-
-                  {/* Year & Stage Header */}
-                  <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
-                    <span className={`font-mono text-xs font-bold tracking-wider ${m.theme.text}`}>
-                      {m.year}
-                    </span>
-                    <span
-                      className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border ${m.theme.stageBg} ${m.theme.stageBorder} ${m.theme.stageText}`}
+                  {/* Milestone Circular Node on Rail */}
+                  <div className="relative z-10 shrink-0 mt-0.5">
+                    <div
+                      className={`w-9 h-9 rounded-full ${m.theme.nodeBg} border-2 ${m.theme.nodeBorder} ${m.theme.nodeGlow} ring-2 ${m.theme.nodeRing} flex items-center justify-center bg-slate-950`}
                     >
-                      {m.stage}
-                    </span>
+                      <Icon className={`w-4 h-4 ${m.theme.text}`} />
+                    </div>
                   </div>
 
-                  {/* Title */}
-                  <h3 className="font-display text-sm font-bold text-white mb-1 leading-snug">
-                    {m.title}
-                  </h3>
+                  {/* Milestone Mobile Card */}
+                  <div
+                    className={`relative flex-1 rounded-xl border ${m.theme.cardBorder} ${m.theme.cardBg} backdrop-blur-md p-4 transition-all duration-300 shadow-md`}
+                  >
+                    {/* Left triangular pointer notch towards the node */}
+                    <div
+                      className={`absolute -left-[5px] top-3.5 w-2.5 h-2.5 bg-slate-900 border-l border-b ${m.theme.cardBorder} rotate-45 pointer-events-none`}
+                    />
 
-                  {/* Description */}
-                  <p className="text-xs text-slate-300/85 leading-relaxed font-normal">
-                    {m.description}
-                  </p>
-
-                  {/* Special Badges on Mobile */}
-                  {m.specialBadges && (
-                    <div className="flex flex-wrap items-center gap-1.5 mt-2.5 pt-2 border-t border-white/10">
-                      {m.specialBadges.map((badge) => (
-                        <span
-                          key={badge}
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase border ${
-                            m.isSpecialHighlight
-                              ? "bg-lime-400/15 border-lime-400/40 text-lime-400"
-                              : "bg-sky-400/15 border-sky-400/40 text-sky-400"
-                          }`}
-                        >
-                          {m.isSpecialHighlight && (
-                            <CheckCircle2 className="w-3 h-3 text-lime-400" />
-                          )}
-                          {m.isContinuing && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-                          )}
-                          {badge}
-                        </span>
-                      ))}
+                    {/* Year & Stage Header */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
+                      <span className={`font-mono text-xs font-bold tracking-wider ${m.theme.text}`}>
+                        {m.year}
+                      </span>
+                      <span
+                        className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border ${m.theme.stageBg} ${m.theme.stageBorder} ${m.theme.stageText}`}
+                      >
+                        {m.stage}
+                      </span>
                     </div>
-                  )}
 
-                  {/* Mobile note */}
-                  {m.note && m.isSpecialHighlight && (
-                    <p className="text-[11px] font-mono text-lime-400/90 italic mt-1.5">
-                      {m.note}
+                    {/* Title & Subtitle */}
+                    <h3 className="font-display text-sm font-bold text-white leading-snug">
+                      {m.title}
+                    </h3>
+                    {m.subtitle && (
+                      <p className="text-[11px] font-mono text-slate-400 mt-0.5 mb-1.5">
+                        {m.subtitle}
+                      </p>
+                    )}
+
+                    {/* Description */}
+                    <p className="text-xs text-slate-300/85 leading-relaxed font-normal mt-1">
+                      {m.description}
                     </p>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+
+                    {/* Special Badges on Mobile */}
+                    {m.specialBadges && (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2.5 pt-2 border-t border-white/10">
+                        {m.specialBadges.map((badge) => (
+                          <span
+                            key={badge}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase border ${
+                              m.isSpecialHighlight
+                                ? "bg-lime-400/15 border-lime-400/40 text-lime-400"
+                                : m.year === "2023"
+                                ? "bg-emerald-400/15 border-emerald-400/40 text-emerald-400"
+                                : m.year === "2024"
+                                ? "bg-cyan-400/15 border-cyan-400/40 text-cyan-400"
+                                : m.isContinuing
+                                ? "bg-purple-400/15 border-purple-400/40 text-purple-400"
+                                : "bg-sky-400/15 border-sky-400/40 text-sky-400"
+                            }`}
+                          >
+                            {m.isSpecialHighlight && (
+                              <CheckCircle2 className="w-3 h-3 text-lime-400" />
+                            )}
+                            {m.isContinuing && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                            )}
+                            {badge}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Tags on Mobile */}
+                    {m.tags && m.tags.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1 mt-2.5 pt-2 border-t border-white/10">
+                        {m.tagLabel && (
+                          <span className="text-[10px] font-mono text-slate-400 font-semibold uppercase mr-1">
+                            {m.tagLabel}:
+                          </span>
+                        )}
+                        {m.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700/60 text-slate-300"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Mobile note */}
+                    {m.note && (
+                      <p className={`text-[11px] font-mono italic mt-2 ${m.isSpecialHighlight ? "text-lime-400/90" : "text-slate-400"}`}>
+                        &bull; {m.note}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         )}
       </div>
     </section>
