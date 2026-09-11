@@ -122,33 +122,8 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
     };
   });
 
-  // Also include any extra projects from the DB that aren't already represented
-  for (const dbP of dbProjects) {
-    const isAlreadyMapped = mapped.some(
-      (m) =>
-        m.title.toLowerCase().includes(dbP.title.toLowerCase()) ||
-        dbP.title.toLowerCase().includes(String(m.title).toLowerCase())
-    );
-
-    if (!isAlreadyMapped) {
-      mapped.push({
-        id: dbP.id,
-        title: dbP.title,
-        category: dbP.category || "DevOps Engineering",
-        description: dbP.description,
-        technologies: normalizeTechnologies(dbP.technologies),
-        imageUrl:
-          dbP.image_url && dbP.image_url !== "coming-soon"
-            ? dbP.image_url
-            : "/projects/temporary/sohail-shop-desktop.jpg",
-        githubUrl: dbP.github_url || undefined,
-        internalUrl: `/projects/${dbP.id}`,
-        rating: dbP.rating ? Number(dbP.rating) : undefined,
-        status: formatProjectStatus(dbP.status || "Ready"),
-        statusLabel: formatProjectStatus(dbP.status || "Ready"),
-      });
-    }
-  }
-
+  // `initialProjects` is the canonical portfolio catalog. The /api/devops
+  // collection also contains learning resources, so unmatched database rows
+  // must not be promoted into the Projects domain.
   return mapped;
 }

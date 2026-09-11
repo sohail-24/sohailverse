@@ -524,48 +524,37 @@ export async function fetchProjectDetailsById(
 ): Promise<FullProjectData> {
   const strId = String(idOrSlug).trim().toLowerCase();
 
-  // 1. Fetch DB list to find matching record if any
-  let dbProjects: DevOpsProject[] = [];
-  try {
-    dbProjects = await fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject);
-  } catch (e) {
-    console.warn("[ProjectContent] /api/devops request failed, using local project records:", e);
-  }
-
-  // Match by numeric ID, or title matching slug
-  let dbRecord: DevOpsProject | undefined;
-  const numericId = parseInt(strId, 10);
-  if (!isNaN(numericId) && numericId > 0) {
-    dbRecord = dbProjects.find((p) => p.id === numericId);
-  }
-
-  if (!dbRecord) {
-    dbRecord = dbProjects.find(
-      (p) =>
-        p.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") === strId ||
-        p.title.toLowerCase().includes(strId) ||
-        (strId === "sohail-shop" && (p.id === 1 || p.title.toLowerCase().includes("shop"))) ||
-        (strId === "sohail-studio" && p.title.toLowerCase().includes("studio")) ||
-        (strId === "fresh-flow" && p.title.toLowerCase().includes("flow"))
-    );
-  }
-
-  // 2. Match with static initialProjects
+  // The static catalog is the authoritative Projects-domain boundary. A
+  // numeric DevOps row must never become a /projects/:id page by coincidence.
   const staticProj = initialProjects.find(
-    (p) =>
-      p.id.toLowerCase() === strId ||
-      (dbRecord && p.name.toLowerCase() === dbRecord.title.toLowerCase())
+    (p) => p.id.toLowerCase() === strId
   );
 
-  // If found neither in DB nor in static list, throw 404
-  if (!dbRecord && !staticProj) {
+  // The legacy numeric route remains valid only for the canonical flagship
+  // project, whose database record is used as content enrichment below.
+  const isFlagshipRequest = strId === "1" || strId === "sohail-shop";
+  if (!staticProj && !isFlagshipRequest) {
     const error = new Error(`Project "${idOrSlug}" not found in portfolio catalog.`);
     (error as any).status = 404;
     throw error;
   }
 
-  // 3. Merge data with priority to DB when available
-  const canonicalId = staticProj ? staticProj.id : String(dbRecord?.id || strId);
+  // Only the canonical flagship may be enriched from the shared legacy table.
+  let dbRecord: DevOpsProject | undefined;
+  if (staticProj?.id === "sohail-shop" || isFlagshipRequest) {
+    try {
+      const dbProjects = await fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject);
+      dbRecord = dbProjects.find(
+        (p) => p.id === 1 || p.title.toLowerCase().includes("sohail") || p.title.toLowerCase().includes("shop")
+      );
+    } catch (e) {
+      console.warn("[ProjectContent] /api/devops request failed, using local project records:", e);
+    }
+  }
+
+  // Merge data with priority to the canonical project definition, enriched by
+  // the flagship record when available.
+  const canonicalId = staticProj?.id || "sohail-shop";
   const title = dbRecord?.title || staticProj?.name || "Project";
   const category = dbRecord?.category || (staticProj ? "Cloud Native Architecture" : "Engineering");
   const description = dbRecord?.description || staticProj?.description || "";
