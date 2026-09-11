@@ -337,36 +337,54 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
     return next();
   }
 
-  const devEnv = loadDevVars();
-        const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
-        const pathname = url.pathname;
-        const method = req.method?.toUpperCase() || "GET";
+  const origin = req.headers.origin || "*";
+  const corsHeaders: Record<string, string> = {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept, Cookie, X-Requested-With",
+    "Access-Control-Allow-Credentials": "true",
+  };
 
-        // Helper to parse JSON body
-        const readJsonBody = async (): Promise<any> => {
-          return new Promise((resolve) => {
-            let bodyRaw = "";
-            req.on("data", (chunk) => {
-              bodyRaw += chunk;
-            });
-            req.on("end", () => {
-              try {
-                resolve(JSON.parse(bodyRaw || "{}"));
-              } catch {
-                resolve({});
-              }
-            });
-          });
-        };
+  if (req.method?.toUpperCase() === "OPTIONS") {
+    res.writeHead(204, corsHeaders);
+    return res.end();
+  }
 
-        // Helper to send JSON response
-        const sendJson = (statusCode: number, data: any, headers: Record<string, string> = {}) => {
-          res.writeHead(statusCode, {
-            "Content-Type": "application/json",
-            ...headers,
-          });
-          res.end(JSON.stringify(data));
-        };
+  try {
+    const devEnv = loadDevVars();
+    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+    const pathname = url.pathname;
+    const method = req.method?.toUpperCase() || "GET";
+
+    // Helper to parse JSON body
+    const readJsonBody = async (): Promise<any> => {
+      return new Promise((resolve) => {
+        let bodyRaw = "";
+        req.on("data", (chunk: any) => {
+          bodyRaw += chunk;
+        });
+        req.on("end", () => {
+          try {
+            resolve(JSON.parse(bodyRaw || "{}"));
+          } catch {
+            resolve({});
+          }
+        });
+        req.on("error", () => {
+          resolve({});
+        });
+      });
+    };
+
+    // Helper to send JSON response
+    const sendJson = (statusCode: number, data: any, headers: Record<string, string> = {}) => {
+      res.writeHead(statusCode, {
+        "Content-Type": "application/json",
+        ...corsHeaders,
+        ...headers,
+      });
+      res.end(JSON.stringify(data));
+    };
 
         // 1. Auth routes
         if (pathname === "/api/auth/login" && method === "POST") {
@@ -1169,6 +1187,16 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
         }
 
         next();
+      } catch (globalApiError: any) {
+        console.error(`[API Middleware Error] ${req.method} ${req.url}:`, globalApiError);
+        if (!res.headersSent) {
+          res.writeHead(500, {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          });
+          res.end(JSON.stringify({ error: globalApiError?.message || "Internal server error" }));
+        }
+      }
 };
 
 function devApiPlugin(): Plugin {

@@ -66,7 +66,7 @@ export function isValidMovie(item: any): item is Movie {
     typeof item.id === "number" &&
     typeof item.title === "string" &&
     typeof item.genre === "string" &&
-    typeof item.rating === "number" &&
+    (typeof item.rating === "number" || !isNaN(Number(item.rating))) &&
     (typeof item.trailer_url === "string" || typeof item.movie_url === "string")
   );
 }
@@ -114,7 +114,141 @@ export function isValidAtlasPost(item: any): item is AtlasPost {
 }
 
 // Local fallback datasets if the server/API is offline or unreachable
-const FALLBACK_DATA: Record<string, any[]> = {
+export const FALLBACK_DATA: Record<string, any[]> = {
+  movies: [
+    {
+      id: 17,
+      title: "Harry Potter and Chamber of secrets",
+      genre: "action",
+      rating: 5,
+      trailer_url: "https://www.jioaicloud.com/l/?u=DZCMz__IiBpVJkJgHfDGLuAvKlxmlF2lNC-S4hVdVx-M-0WqbbzB3U6j-94b6_xOXPz",
+      movie_url: "https://www.jioaicloud.com/l/?u=DZCMz__IiBpVJkJgHfDGLuAvKlxmlF2lNC-S4hVdVx-M-0WqbbzB3U6j-94b6_xOXPz",
+      poster_url: "/cinema/featured-favorite.jpg",
+      synopsis: "An ancient prophecy awakens in the whispering stone walls of Hogwarts as Harry faces the mystery of the legendary chamber.",
+      is_featured: true,
+    },
+    {
+      id: 16,
+      title: "Harry Potter and Deathly Hallows part-1",
+      genre: "action",
+      rating: 5,
+      trailer_url: "https://www.jioaicloud.com/l/?u=rx_VEiPkJJ5UYMqbgtN0OoPQnrWXKWfaCttxoiPc5S-koGCUsq9GSmBUyRrhWdFcdoB",
+      movie_url: "https://www.jioaicloud.com/l/?u=rx_VEiPkJJ5UYMqbgtN0OoPQnrWXKWfaCttxoiPc5S-koGCUsq9GSmBUyRrhWdFcdoB",
+      poster_url: "/cinema/posters/your-name.jpg",
+      synopsis: "On the run across a darkened Britain, the trio seeks Voldemort's Horcruxes in the most atmospheric and isolated chapter of the saga.",
+      is_featured: false,
+    },
+    {
+      id: 15,
+      title: "Sanam Teri Kasam",
+      genre: "action",
+      rating: 5,
+      trailer_url: "Sanam Teri Kasam",
+      movie_url: "Sanam Teri Kasam",
+      poster_url: "/cinema/posters/sanam-teri-kasam.jpg",
+      synopsis: "A deeply emotional romantic drama exploring sacrifice, unspoken devotion, and memories that outlast fleeting moments.",
+      is_featured: false,
+    },
+    {
+      id: 14,
+      title: "Chronicles_of_Narnia_Lion_Witch_and_Wardrobe",
+      genre: "action",
+      rating: 5,
+      trailer_url: "https://www.jioaicloud.com/l/?u=dK7OUfvS6kwo66htSBqr2Wqk1Hs_OCagUivf8DdO9dec9vtHAHUzJDAS7qphHqtFhIb",
+      movie_url: "https://www.jioaicloud.com/l/?u=dK7OUfvS6kwo66htSBqr2Wqk1Hs_OCagUivf8DdO9dec9vtHAHUzJDAS7qphHqtFhIb",
+      poster_url: "/cinema/posters/narnia-lion-witch-wardrobe.jpg",
+      synopsis: "Four siblings step through a forgotten coat wardrobe into the mythical snowbound land of Narnia, bound by the prophecy of Aslan.",
+      is_featured: false,
+    },
+    {
+      id: 13,
+      title: "Jurassic World 2018",
+      genre: "action",
+      rating: 5,
+      trailer_url: "https://www.jioaicloud.com/l/?u=7mVfX_RmISE3XqbkMC7R1nR-iKWIBZjiz1CY24nHjowAMW6pOPOxuPqZXnWdhHXkb3F",
+      movie_url: "https://www.jioaicloud.com/l/?u=7mVfX_RmISE3XqbkMC7R1nR-iKWIBZjiz1CY24nHjowAMW6pOPOxuPqZXnWdhHXkb3F",
+      poster_url: "/cinema/posters/jurassic-world-fallen-kingdom.jpg",
+      synopsis: "A race against time to rescue prehistoric marvels from a cataclysmic volcanic eruption before genetic capitalism claims them.",
+      is_featured: false,
+    },
+    {
+      id: 12,
+      title: "Jurassic Park -1",
+      genre: "action",
+      rating: 5,
+      trailer_url: "https://www.jioaicloud.com/l/?u=RXfZLYN9IRMvYpiUoqNeTdslPAWPj2BhMQyZk7sK0vznlmszxJNF1NoZn_iozsWgdoB",
+      movie_url: "https://www.jioaicloud.com/l/?u=RXfZLYN9IRMvYpiUoqNeTdslPAWPj2BhMQyZk7sK0vznlmszxJNF1NoZn_iozsWgdoB",
+      poster_url: "/cinema/posters/dark-knight.jpg",
+      synopsis: "Steven Spielberg's landmark masterpiece on Isla Nublar combining wonder, ambition, and the untamable majesty of living evolution.",
+      is_featured: false,
+    },
+    {
+      id: 11,
+      title: "Jurassic World Dominion",
+      genre: "action",
+      rating: 5,
+      trailer_url: "https://www.jioaicloud.com/l/?u=smIrKYHO0YU5NUV2XgEAupsB9JXupfJhdlLUugdtEZ1IABk7AhT73cXE0zYn5wXHPrF",
+      movie_url: "https://www.jioaicloud.com/l/?u=smIrKYHO0YU5NUV2XgEAupsB9JXupfJhdlLUugdtEZ1IABk7AhT73cXE0zYn5wXHPrF",
+      poster_url: "/cinema/posters/endgame.jpg",
+      synopsis: "Dinosaurs live and hunt alongside humans across the globe in a fragile battle for ecological supremacy.",
+      is_featured: false,
+    },
+    {
+      id: 10,
+      title: "Final Destination BloodLines",
+      genre: "Action",
+      rating: 5,
+      trailer_url: "https://www.jioaicloud.com/l/?u=L_MZyhmEaHgDXjMOZBopNrVZrzLmXHCk8_7T5q1knk9EFAjhq5xSqTz1KSMRBDUrhIb",
+      movie_url: "https://www.jioaicloud.com/l/?u=L_MZyhmEaHgDXjMOZBopNrVZrzLmXHCk8_7T5q1knk9EFAjhq5xSqTz1KSMRBDUrhIb",
+      poster_url: "/cinema/posters/final-destination-bloodlines.jpg",
+      synopsis: "A visceral, inventive continuation of the iconic puzzle where destiny and escape collide through elaborate mechanical fate.",
+      is_featured: false,
+    },
+    {
+      id: 9,
+      title: "KGF",
+      genre: "Action",
+      rating: 5,
+      trailer_url: "https://www.youtube.com/watch?v=ULEQb_l-N08",
+      movie_url: "https://www.youtube.com/watch?v=ULEQb_l-N08",
+      poster_url: "/cinema/posters/kgf-chapter-1.jpg",
+      synopsis: "Prashanth Neel's sweeping, high-octane period epic following Rocky's relentless ascent inside the brutal gold mines of Kolar.",
+      is_featured: false,
+    },
+    {
+      id: 1,
+      title: "Interstellar",
+      genre: "Sci-Fi",
+      rating: 9.5,
+      trailer_url: "https://www.youtube.com/watch?v=zSWdZVtXT7E",
+      movie_url: "https://www.youtube.com/watch?v=zSWdZVtXT7E",
+      poster_url: "/cinema/posters/interstellar.jpg",
+      synopsis: "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft, along with a team of researchers, to find a new planet for humans.",
+      is_featured: false,
+    },
+    {
+      id: 2,
+      title: "Inception",
+      genre: "Sci-Fi",
+      rating: 9.2,
+      trailer_url: "https://www.youtube.com/watch?v=YoHD9XEInc0",
+      movie_url: "https://www.youtube.com/watch?v=YoHD9XEInc0",
+      poster_url: "/cinema/posters/inception.jpg",
+      synopsis: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
+      is_featured: false,
+    },
+    {
+      id: 3,
+      title: "The Matrix",
+      genre: "Sci-Fi",
+      rating: 9.0,
+      trailer_url: "https://www.youtube.com/watch?v=vKQi3bBA1y8",
+      movie_url: "https://www.youtube.com/watch?v=vKQi3bBA1y8",
+      poster_url: "/cinema/posters/matrix.jpg",
+      synopsis: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
+      is_featured: false,
+    },
+  ],
   academy: [
     { id: 1, skill: "Kubernetes & EKS", category: "Cloud Infrastructure", level: "Advanced" },
     { id: 2, skill: "Terraform & IaC", category: "DevOps & Automation", level: "Advanced" },
@@ -174,9 +308,38 @@ const FALLBACK_DATA: Record<string, any[]> = {
       highlight: "Engineering degree completion and software development genesis.",
     },
   ],
+  timeline: [
+    {
+      id: 4,
+      title: "Completed Engineering Degree",
+      category: "Education",
+      description: "Graduated with an Engineering degree, establishing a comprehensive foundation in algorithms and computer systems.",
+      year: "2023",
+      event_date: "2023-06-20",
+      created_at: "2023-06-20",
+    },
+    {
+      id: 3,
+      title: "Senior DevOps & Cloud Platform Migration",
+      category: "Career",
+      description: "Led the migration of mission-critical services to Kubernetes clusters with automated CI/CD and GitOps pipelines.",
+      year: "2024",
+      event_date: "2024-03-15",
+      created_at: "2024-03-15",
+    },
+    {
+      id: 2,
+      title: "International Technical Exploration & Summit",
+      category: "Travel",
+      description: "Engaged with international engineering communities, architecting multi-region hybrid cloud deployments.",
+      year: "2024",
+      event_date: "2024-10-10",
+      created_at: "2024-10-10",
+    },
+  ],
 };
 
-function getFallbackForEndpoint(endpoint: string): any[] | null {
+export function getFallbackForEndpoint(endpoint: string): any[] | null {
   for (const [key, list] of Object.entries(FALLBACK_DATA)) {
     if (endpoint.includes(key)) {
       return list;
@@ -189,54 +352,61 @@ export async function fetchApi<T>(
   endpoint: string,
   validator?: (item: any) => boolean
 ): Promise<T[]> {
-  try {
-    const response = await fetch(endpoint, {
-      headers: {
-        Accept: "application/json",
-      },
-    });
+  let lastError: any = null;
 
-    if (response.ok) {
-      const json = await response.json();
+  // Attempt up to 2 times with a brief delay if network error
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await fetch(endpoint, {
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
-      let rawList: any[];
-      if (json && Array.isArray(json.data)) {
-        rawList = json.data;
-      } else if (Array.isArray(json)) {
-        rawList = json;
-      } else {
-        throw new Error(`Malformed response from ${endpoint}: missing 'data' array`);
-      }
+      if (response.ok) {
+        const json = await response.json();
 
-      if (validator) {
-        for (let i = 0; i < rawList.length; i++) {
-          if (!validator(rawList[i])) {
-            throw new Error(
-              `Record validation failed at index ${i} for ${endpoint}: malformed data structure`
-            );
+        let rawList: any[];
+        if (json && Array.isArray(json.data)) {
+          rawList = json.data;
+        } else if (Array.isArray(json)) {
+          rawList = json;
+        } else {
+          throw new Error(`Malformed response from ${endpoint}: missing 'data' array`);
+        }
+
+        if (validator) {
+          for (let i = 0; i < rawList.length; i++) {
+            if (!validator(rawList[i])) {
+              throw new Error(
+                `Record validation failed at index ${i} for ${endpoint}: malformed data structure`
+              );
+            }
           }
         }
-      }
 
-      return rawList as T[];
-    } else {
-      throw new Error(`HTTP ${response.status} from ${endpoint}`);
+        return rawList as T[];
+      } else {
+        throw new Error(`HTTP ${response.status} from ${endpoint}`);
+      }
+    } catch (err: any) {
+      lastError = err;
+      if (attempt === 0) {
+        // Small backoff before second attempt
+        await new Promise((r) => setTimeout(r, 200));
+      }
     }
-  } catch (err: any) {
-    if (endpoint.includes("movies") || endpoint.includes("timeline")) {
-      // Cinema and Timeline errors must propagate to page error and retry state
-      throw err;
-    }
-    console.warn(`[AI Studio] API request to ${endpoint} failed, activating fallback dataset:`, err?.message || err);
   }
+
+  console.warn(`[AI Studio] API request to ${endpoint} failed, activating fallback dataset:`, lastError?.message || lastError);
 
   // Gracefully fallback to bundled mock data
   const fallback = getFallbackForEndpoint(endpoint);
-  if (fallback) {
+  if (fallback && fallback.length > 0) {
     return fallback as T[];
   }
 
-  return [];
+  throw lastError || new Error(`Failed to load data from ${endpoint}`);
 }
 
 /**

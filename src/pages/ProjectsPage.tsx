@@ -79,11 +79,43 @@ export default function ProjectsPage() {
       id="projects-page-container"
       className="relative min-h-screen w-full bg-[#050811] text-slate-100 overflow-x-hidden"
     >
-      {/* Subtle Ambient Background Glow */}
+      {/* =========================================================================
+          ATMOSPHERIC BACKGROUND LAYER
+          - Authentic deep-space photography (Webb's First Deep Field)
+          - Deep radial vignette and vertical gradient for high text contrast
+          - Subtle technical micro-grid overlay
+         ========================================================================= */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 h-[420px] w-full max-w-6xl opacity-25 blur-[120px] bg-gradient-to-b from-cyan-600/20 via-blue-700/10 to-transparent"
-      />
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden select-none"
+      >
+        {/* Deep Space Background Artwork */}
+        <div
+          className="absolute inset-0 bg-cover bg-top sm:bg-center bg-no-repeat opacity-[0.20] transition-opacity duration-700"
+          style={{
+            backgroundImage: "url('/projects-hero-deepspace.jpg')",
+          }}
+        />
+
+        {/* Deep Radial Vignette focusing light on upper center and fading outward */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-transparent via-[#050811]/80 to-[#050811]" />
+
+        {/* Vertical Fade Gradient: Keeps hero luminous while seamlessly softening towards the project cards */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050811]/50 via-[#050811]/85 to-[#050811]" />
+
+        {/* Subtle Ambient Command-Center Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[450px] w-full max-w-6xl opacity-20 blur-[130px] bg-gradient-to-b from-cyan-500/25 via-blue-600/15 to-transparent" />
+
+        {/* Precision Micro-Grid overlay for technical command-center feel */}
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
+          }}
+        />
+      </div>
 
       <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-14">
         {/* =====================================================================
@@ -91,14 +123,14 @@ export default function ProjectsPage() {
             - Eyebrow: "SELECTED WORK"
             - One-line desktop heading: "REAL PRODUCTS. REAL SYSTEMS. REAL IMPACT."
             - Supporting sentence
-            - Filter tags: [ All Systems ] [ Production ] [ Building ] [ Upcoming ]
+            - Unified Status Filter Strip: [ ALL SYSTEMS (8) | READY | ACTIVE | UPCOMING ]
            ===================================================================== */}
         <header
           id="projects-hero"
           className="relative max-w-4xl space-y-3 pt-2 pb-6 sm:pb-8"
         >
           {/* Eyebrow badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-950/40 px-3 py-1 text-xs font-mono font-semibold uppercase tracking-widest text-cyan-300 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-950/50 px-3 py-1 text-xs font-mono font-semibold uppercase tracking-widest text-cyan-300 backdrop-blur-md shadow-[0_0_15px_rgba(34,211,238,0.1)]">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
             <span>SELECTED WORK</span>
           </div>
@@ -109,56 +141,125 @@ export default function ProjectsPage() {
           </h1>
 
           {/* Supporting Statement */}
-          <p className="text-sm sm:text-base text-slate-400 font-normal leading-relaxed max-w-2xl">
+          <p className="text-sm sm:text-base text-slate-300/90 font-normal leading-relaxed max-w-2xl">
             Selected products, platforms, experiments and systems I&apos;ve built along the way.
           </p>
 
-          {/* Quick Filter Navigation */}
-          <div className="flex flex-wrap items-center gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setFilter("ALL")}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-medium font-mono transition-all ${
-                filter === "ALL"
-                  ? "bg-cyan-400 text-slate-950 font-bold shadow-[0_0_15px_rgba(34,211,238,0.3)]"
-                  : "border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              All Systems ({projects.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter("LIVE")}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-medium font-mono transition-all ${
-                filter === "LIVE"
-                  ? "bg-emerald-400 text-slate-950 font-bold shadow-[0_0_15px_rgba(52,211,153,0.3)]"
-                  : "border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              Ready
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter("BUILDING")}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-medium font-mono transition-all ${
-                filter === "BUILDING"
-                  ? "bg-amber-400 text-slate-950 font-bold shadow-[0_0_15px_rgba(251,191,36,0.3)]"
-                  : "border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              Active
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter("UPCOMING")}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-medium font-mono transition-all ${
-                filter === "UPCOMING"
-                  ? "bg-purple-400 text-slate-950 font-bold shadow-[0_0_15px_rgba(192,132,252,0.3)]"
-                  : "border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              Upcoming
-            </button>
+          {/* Quick Filter Navigation — ONE UNIFIED HORIZONTAL ROW: [ ALL SYSTEMS (8) | READY | ACTIVE | UPCOMING ] */}
+          <div className="pt-2 w-full">
+            <div className="overflow-x-auto no-scrollbar py-1 -my-1 max-w-full">
+              <div
+                role="tablist"
+                aria-label="Filter projects by system status"
+                className="inline-flex items-center flex-nowrap whitespace-nowrap rounded-xl border border-white/[0.12] bg-[#070b18]/85 p-1 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.4),0_0_15px_rgba(34,211,238,0.04)]"
+              >
+                {/* 1. All Systems (Primary Filter) */}
+                <button
+                  type="button"
+                  role="tab"
+                  id="filter-all-systems"
+                  aria-selected={filter === "ALL"}
+                  onClick={() => setFilter("ALL")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 sm:px-3.5 py-1.5 text-xs font-mono font-medium transition-all duration-150 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                    filter === "ALL"
+                      ? "bg-cyan-400 text-slate-950 font-bold shadow-[0_0_14px_rgba(34,211,238,0.35)]"
+                      : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                  }`}
+                >
+                  <span>All Systems</span>
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                      filter === "ALL"
+                        ? "bg-slate-950/20 text-slate-950"
+                        : "bg-white/10 text-cyan-300"
+                    }`}
+                  >
+                    ({projects.length})
+                  </span>
+                </button>
+
+                {/* Divider 1 */}
+                <span
+                  aria-hidden="true"
+                  className="mx-1 h-3.5 w-px bg-white/15 shrink-0"
+                />
+
+                {/* 2. Ready (Live / Production) */}
+                <button
+                  type="button"
+                  role="tab"
+                  id="filter-ready"
+                  aria-selected={filter === "LIVE"}
+                  onClick={() => setFilter("LIVE")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono font-medium transition-all duration-150 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+                    filter === "LIVE"
+                      ? "bg-emerald-400 text-slate-950 font-bold shadow-[0_0_14px_rgba(52,211,153,0.35)]"
+                      : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      filter === "LIVE" ? "bg-slate-950" : "bg-emerald-400"
+                    }`}
+                  />
+                  <span>Ready</span>
+                </button>
+
+                {/* Divider 2 */}
+                <span
+                  aria-hidden="true"
+                  className="mx-1 h-3.5 w-px bg-white/15 shrink-0"
+                />
+
+                {/* 3. Active (Building / In-Progress) */}
+                <button
+                  type="button"
+                  role="tab"
+                  id="filter-active"
+                  aria-selected={filter === "BUILDING"}
+                  onClick={() => setFilter("BUILDING")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono font-medium transition-all duration-150 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+                    filter === "BUILDING"
+                      ? "bg-amber-400 text-slate-950 font-bold shadow-[0_0_14px_rgba(251,191,36,0.35)]"
+                      : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      filter === "BUILDING" ? "bg-slate-950" : "bg-amber-400"
+                    }`}
+                  />
+                  <span>Active</span>
+                </button>
+
+                {/* Divider 3 */}
+                <span
+                  aria-hidden="true"
+                  className="mx-1 h-3.5 w-px bg-white/15 shrink-0"
+                />
+
+                {/* 4. Upcoming */}
+                <button
+                  type="button"
+                  role="tab"
+                  id="filter-upcoming"
+                  aria-selected={filter === "UPCOMING"}
+                  onClick={() => setFilter("UPCOMING")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono font-medium transition-all duration-150 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
+                    filter === "UPCOMING"
+                      ? "bg-purple-400 text-slate-950 font-bold shadow-[0_0_14px_rgba(192,132,252,0.35)]"
+                      : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      filter === "UPCOMING" ? "bg-slate-950" : "bg-purple-400"
+                    }`}
+                  />
+                  <span>Upcoming</span>
+                </button>
+              </div>
+            </div>
           </div>
         </header>
 

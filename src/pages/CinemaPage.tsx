@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { fetchApi, isValidMovie, type Movie } from "../lib/api";
+import { fetchApi, isValidMovie, getFallbackForEndpoint, type Movie } from "../lib/api";
 import { ErrorState, LoadingSkeleton } from "../components/ui/StatusStates";
 import CinemaHero from "../components/cinema/CinemaHero";
 import CinemaStatusFilter, {
@@ -21,10 +21,26 @@ export default function CinemaPage() {
     setError(null);
     try {
       const data = await fetchApi<Movie>("/api/movies", isValidMovie);
-      setMovies(data);
+      if (data && data.length > 0) {
+        setMovies(data);
+      } else {
+        const fallback = getFallbackForEndpoint("movies") as Movie[];
+        if (fallback && fallback.length > 0) {
+          setMovies(fallback);
+        } else {
+          setError("No movies found in collection.");
+        }
+      }
     } catch (err: any) {
-      console.error("Failed to load movies:", err);
-      setError(err?.message || "Unable to load cinema observatory data.");
+      console.warn("API load failed, using curated cinema collection:", err);
+      const fallback = getFallbackForEndpoint("movies") as Movie[];
+      if (fallback && fallback.length > 0) {
+        setMovies(fallback);
+        setError(null);
+      } else {
+        console.error("Failed to load movies:", err);
+        setError(err?.message || "Unable to load cinema observatory data.");
+      }
     } finally {
       setLoading(false);
     }
