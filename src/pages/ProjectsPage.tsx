@@ -2,8 +2,10 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   loadUnifiedProjects,
+  CANONICAL_PROJECT_ORDER,
   type UnifiedProject,
 } from "../components/projects/projectData";
 import ProjectShowcaseItem from "../components/projects/ProjectShowcaseItem";
@@ -11,6 +13,7 @@ import ProjectShowcaseItem from "../components/projects/ProjectShowcaseItem";
 type StatusFilter = "ALL" | "LIVE" | "BUILDING" | "UPCOMING";
 
 export default function ProjectsPage() {
+  const shouldReduceMotion = useReducedMotion();
   const [projects, setProjects] = useState<UnifiedProject[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [filter, setFilter] = useState<StatusFilter>("ALL");
@@ -21,7 +24,16 @@ export default function ProjectsPage() {
       try {
         const data = await loadUnifiedProjects();
         if (isMounted) {
-          setProjects(data);
+          // Explicitly guarantee authoritative presentation order:
+          // 1. Sohail-Studio, 2. Fresh Flow, 3. Sohail-Shop, 4. Wedding Page, 5. New Chapter Loading
+          const sorted = [...data].sort((a, b) => {
+            const idA = String(a.id).toLowerCase();
+            const idB = String(b.id).toLowerCase();
+            const indexA = CANONICAL_PROJECT_ORDER.indexOf(idA);
+            const indexB = CANONICAL_PROJECT_ORDER.indexOf(idB);
+            return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+          });
+          setProjects(sorted);
         }
       } catch (err) {
         console.error("Error loading unified projects:", err);
@@ -80,31 +92,34 @@ export default function ProjectsPage() {
       className="relative min-h-screen w-full bg-[#050811] text-slate-100 overflow-x-hidden"
     >
       {/* =========================================================================
-          ATMOSPHERIC BACKGROUND LAYER
-          - Authentic deep-space photography (Webb's First Deep Field)
-          - Deep radial vignette and vertical gradient for high text contrast
-          - Subtle technical micro-grid overlay
+          ATMOSPHERIC HERO BACKGROUND LAYER
+          - Dedicated Cinematic Atmosphere Asset: /projects-hero-background.jpg
+            Curved Earth at night with glowing city networks, dark storm clouds,
+            deep starry space, and high-density enterprise server racks
+          - z-0 stacking with relative z-10 foreground to guarantee browser visibility
+          - Deep radial vignette + dark gradient overlay ensuring extreme headline readability
+          - Ambient cyan/blue command-center illumination and technical micro-grid
          ========================================================================= */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden select-none"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[460px] sm:h-[520px] lg:h-[580px] z-0 overflow-hidden select-none"
       >
-        {/* Deep Space Background Artwork */}
+        {/* Cinematic Projects Hero Background Artwork */}
         <div
-          className="absolute inset-0 bg-cover bg-top sm:bg-center bg-no-repeat opacity-[0.20] transition-opacity duration-700"
+          className="absolute inset-0 bg-cover bg-center sm:bg-top bg-no-repeat opacity-[0.45] sm:opacity-[0.55] transition-opacity duration-700"
           style={{
-            backgroundImage: "url('/projects-hero-deepspace.jpg')",
+            backgroundImage: "url('/projects-hero-background.jpg')",
           }}
         />
 
-        {/* Deep Radial Vignette focusing light on upper center and fading outward */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-transparent via-[#050811]/80 to-[#050811]" />
+        {/* Deep Radial Vignette: Highlights central hero focus while softly deepening outer perimeters */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_65%_at_50%_15%,rgba(5,8,17,0.20)_0%,rgba(5,8,17,0.70)_65%,#050811_100%)]" />
 
-        {/* Vertical Fade Gradient: Keeps hero luminous while seamlessly softening towards the project cards */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050811]/50 via-[#050811]/85 to-[#050811]" />
+        {/* Vertical Fade Gradient: Seamlessly transitions into pure #050811 dark canvas before project cards */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050811]/20 via-[#050811]/60 to-[#050811]" />
 
         {/* Subtle Ambient Command-Center Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[450px] w-full max-w-6xl opacity-20 blur-[130px] bg-gradient-to-b from-cyan-500/25 via-blue-600/15 to-transparent" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[420px] w-full max-w-6xl opacity-25 blur-[130px] bg-gradient-to-b from-cyan-500/25 via-blue-600/15 to-transparent" />
 
         {/* Precision Micro-Grid overlay for technical command-center feel */}
         <div
@@ -117,17 +132,20 @@ export default function ProjectsPage() {
         />
       </div>
 
-      <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-14">
+      <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-10 sm:pb-14">
         {/* =====================================================================
-            A. COMPACT HERO SECTION
+            A. HERO SECTION
             - Eyebrow: "SELECTED WORK"
-            - One-line desktop heading: "REAL PRODUCTS. REAL SYSTEMS. REAL IMPACT."
+            - Stacked 3-Line Animated Heading:
+                Line 1: REAL PRODUCTS
+                Line 2: REAL SYSTEMS
+                Line 3: REAL IMPACT.
             - Supporting sentence
-            - Unified Status Filter Strip: [ ALL SYSTEMS (8) | READY | ACTIVE | UPCOMING ]
+            - Unified Status Filter Strip: [ ALL SYSTEMS (5) | READY | ACTIVE | UPCOMING ]
            ===================================================================== */}
         <header
           id="projects-hero"
-          className="relative max-w-4xl space-y-3 pt-2 pb-6 sm:pb-8"
+          className="relative max-w-4xl space-y-2.5 sm:space-y-3 pt-0 pb-1"
         >
           {/* Eyebrow badge */}
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-950/50 px-3 py-1 text-xs font-mono font-semibold uppercase tracking-widest text-cyan-300 backdrop-blur-md shadow-[0_0_15px_rgba(34,211,238,0.1)]">
@@ -135,9 +153,49 @@ export default function ProjectsPage() {
             <span>SELECTED WORK</span>
           </div>
 
-          {/* Main Heading — Guaranteed ONE SINGLE LINE on All Viewports */}
-          <h1 className="font-display text-[13px] min-[360px]:text-[15px] min-[400px]:text-[17px] min-[480px]:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[42px] font-extrabold tracking-tight text-white leading-tight whitespace-nowrap overflow-hidden text-ellipsis sm:text-clip">
-            REAL PRODUCTS. REAL SYSTEMS. REAL IMPACT.
+          {/* Main Heading — 3 Stacked Sequential Animated Lines */}
+          <h1 className="font-display text-3xl min-[400px]:text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-black tracking-tight text-white leading-[1.08] sm:leading-[1.05] space-y-1 sm:space-y-1.5 select-none">
+            {/* 1. REAL PRODUCTS */}
+            <motion.span
+              initial={
+                shouldReduceMotion
+                  ? false
+                  : { opacity: 0, y: 16, filter: "blur(4px)" }
+              }
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.55, delay: 0.15, ease: "easeOut" }}
+              className="block text-white"
+            >
+              REAL PRODUCTS
+            </motion.span>
+
+            {/* 2. REAL SYSTEMS */}
+            <motion.span
+              initial={
+                shouldReduceMotion
+                  ? false
+                  : { opacity: 0, y: 16, filter: "blur(4px)" }
+              }
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.55, delay: 0.4, ease: "easeOut" }}
+              className="block text-white"
+            >
+              REAL SYSTEMS
+            </motion.span>
+
+            {/* 3. REAL IMPACT. */}
+            <motion.span
+              initial={
+                shouldReduceMotion
+                  ? false
+                  : { opacity: 0, y: 16, filter: "blur(4px)" }
+              }
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.55, delay: 0.65, ease: "easeOut" }}
+              className="block text-white"
+            >
+              REAL IMPACT.
+            </motion.span>
           </h1>
 
           {/* Supporting Statement */}
@@ -146,7 +204,7 @@ export default function ProjectsPage() {
           </p>
 
           {/* Quick Filter Navigation — ONE UNIFIED HORIZONTAL ROW: [ ALL SYSTEMS (8) | READY | ACTIVE | UPCOMING ] */}
-          <div className="pt-2 w-full">
+          <div className="pt-0.5 w-full">
             <div className="overflow-x-auto no-scrollbar py-1 -my-1 max-w-full">
               <div
                 role="tablist"
@@ -264,7 +322,7 @@ export default function ProjectsPage() {
         </header>
 
         {/* Initial Separator below Hero */}
-        <div className="w-full border-t border-white/[0.08] my-3 sm:my-5" />
+        <div className="w-full border-t border-white/[0.08] mt-2.5 sm:mt-3 mb-4 sm:mb-5" />
 
         {/* =====================================================================
             B. EDITORIAL PROJECT SHOWCASE (Data-Driven Alternating Layout)

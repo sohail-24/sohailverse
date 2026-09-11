@@ -72,6 +72,17 @@ export default function ProjectShowcaseItem({
   const targetLink = project.internalUrl || `/projects/${project.id}`;
   const isInternal = targetLink.startsWith("/");
 
+  const canonicalIndexMap: Record<string, string> = {
+    "sohail-studio": "01",
+    "fresh-flow": "02",
+    "sohail-shop": "03",
+    "wedding": "04",
+    "new-chapter": "05",
+  };
+  const displayIndex =
+    canonicalIndexMap[String(project.id).toLowerCase()] ||
+    String(index + 1).padStart(2, "0");
+
   return (
     <article
       id={`project-showcase-${project.id}`}
@@ -176,11 +187,16 @@ export default function ProjectShowcaseItem({
         <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch">
           {/* Main textual content block */}
           <div className="space-y-1.5 sm:space-y-2.5">
-            {/* Header Line: [Category Badge]            [Rating / Status Badge] */}
+            {/* Header Line: [Index + Category Badge]            [Rating / Status Badge] */}
             <div className="flex items-center justify-between gap-2">
-              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 min-[400px]:px-2.5 sm:px-3 py-0.5 text-[10px] sm:text-xs font-mono font-medium text-slate-300 truncate max-w-[95px] min-[400px]:max-w-[130px] sm:max-w-none">
-                {project.category}
-              </span>
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <span className="font-mono text-[11px] sm:text-xs font-bold tracking-wider text-cyan-400/90 shrink-0">
+                  {displayIndex}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 min-[400px]:px-2.5 sm:px-3 py-0.5 text-[10px] sm:text-xs font-mono font-medium text-slate-300 truncate max-w-[95px] min-[400px]:max-w-[130px] sm:max-w-none">
+                  {project.category}
+                </span>
+              </div>
 
               {/* Rating badge if real rating is present, or status */}
               {project.rating ? (

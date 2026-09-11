@@ -24,32 +24,8 @@ export const missionPalette: Record<MissionTone | "deepSpace" | "cloudWhite", st
 
 export const initialProjects: UniverseProject[] = [
   {
-    id: "sohail-shop",
-    name: "Sohail-Shop",
-    tagline: "Production-Grade E-Commerce & Multi-Vendor Platform",
-    description:
-      "Scalable e-commerce platform with multi-vendor support, secure payments, and smart order management.",
-    status: "live",
-    statusLabel: "Ready",
-    featured: true,
-    technologies: [
-      "Kubernetes",
-      "AWS EKS",
-      "Terraform",
-      "Docker",
-      "GitHub Actions",
-      "ArgoCD",
-      "PostgreSQL",
-      "Django",
-    ],
-    link: "/projects/sohail-shop",
-    complexity: 5,
-    highlightMetric: "Production Deployed",
-    image: "/projects/temporary/sohail-shop-placeholder.jpg",
-  },
-  {
     id: "sohail-studio",
-    name: "Sohail Studio",
+    name: "Sohail-Studio",
     tagline: "AI Engineering & Creative Workspace",
     description:
       "Intelligent engineering workspace to build, automate, and deploy modern high-performance digital systems.",
@@ -78,6 +54,30 @@ export const initialProjects: UniverseProject[] = [
     image: "/projects/temporary/fresh-flow-placeholder.jpg",
   },
   {
+    id: "sohail-shop",
+    name: "Sohail-Shop",
+    tagline: "Production-Grade E-Commerce & Multi-Vendor Platform",
+    description:
+      "Scalable e-commerce platform with multi-vendor support, secure payments, and smart order management.",
+    status: "live",
+    statusLabel: "Ready",
+    featured: true,
+    technologies: [
+      "Kubernetes",
+      "AWS EKS",
+      "Terraform",
+      "Docker",
+      "GitHub Actions",
+      "ArgoCD",
+      "PostgreSQL",
+      "Django",
+    ],
+    link: "/projects/sohail-shop",
+    complexity: 5,
+    highlightMetric: "Production Deployed",
+    image: "/projects/temporary/sohail-shop-placeholder.jpg",
+  },
+  {
     id: "wedding",
     name: "Wedding Page",
     tagline: "Crafting Beautiful Memories",
@@ -93,7 +93,7 @@ export const initialProjects: UniverseProject[] = [
   },
   {
     id: "new-chapter",
-    name: "New Chapter Loading...",
+    name: "New Chapter Loading",
     tagline: "Next-Gen Cloud & AI Initiative in Continuous Evolution",
     description: "New platform capabilities, intelligent automation, and production architectures currently in stealth development.",
     status: "building",

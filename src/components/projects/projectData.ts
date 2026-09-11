@@ -42,6 +42,14 @@ export function normalizeTechnologies(techInput?: string[] | string | null): str
     .filter(Boolean);
 }
 
+export const CANONICAL_PROJECT_ORDER: readonly string[] = [
+  "sohail-studio",
+  "fresh-flow",
+  "sohail-shop",
+  "wedding",
+  "new-chapter",
+];
+
 /**
  * Builds the portfolio list by combining real live database records with
  * established SohailVerse project systems.
@@ -120,6 +128,16 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
       tagline: proj.tagline,
       highlight: proj.highlightMetric,
     };
+  });
+
+  // Enforce authoritative presentation order:
+  // 1. Sohail-Studio, 2. Fresh Flow, 3. Sohail-Shop, 4. Wedding Page, 5. New Chapter Loading
+  mapped.sort((a, b) => {
+    const idA = String(a.id).toLowerCase();
+    const idB = String(b.id).toLowerCase();
+    const indexA = CANONICAL_PROJECT_ORDER.indexOf(idA);
+    const indexB = CANONICAL_PROJECT_ORDER.indexOf(idB);
+    return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
   });
 
   // `initialProjects` is the canonical portfolio catalog. The /api/devops
