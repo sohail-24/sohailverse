@@ -33,8 +33,17 @@ import {
   SiFlutter,
   SiFirebase,
   SiNodedotjs,
+  SiVite,
+  SiReactrouter,
+  SiTrpc,
+  SiReactquery,
+  SiHono,
+  SiZod,
+  SiDrizzle,
+  SiNginx,
 } from "react-icons/si";
 import { FaAws, FaGithub } from "react-icons/fa";
+import AMFruitsCaseStudy from "../components/projects/AMFruitsCaseStudy";
 import {
   fetchProjectDetailsById,
   getProjectVideoEmbedUrl,
@@ -67,6 +76,14 @@ function getTechBadgeIcon(name: string) {
   if (n.includes("flutter")) return <SiFlutter className="text-cyan-400" />;
   if (n.includes("firebase")) return <SiFirebase className="text-amber-400" />;
   if (n.includes("node")) return <SiNodedotjs className="text-emerald-400" />;
+  if (n.includes("vite")) return <SiVite className="text-purple-400" />;
+  if (n.includes("router")) return <SiReactrouter className="text-red-400" />;
+  if (n.includes("trpc")) return <SiTrpc className="text-blue-400" />;
+  if (n.includes("query") || n.includes("tanstack")) return <SiReactquery className="text-rose-400" />;
+  if (n.includes("hono")) return <SiHono className="text-orange-400" />;
+  if (n.includes("zod")) return <SiZod className="text-blue-500" />;
+  if (n.includes("drizzle")) return <SiDrizzle className="text-lime-400" />;
+  if (n.includes("nginx")) return <SiNginx className="text-emerald-400" />;
   return <Code2 className="text-cyan-400" />;
 }
 
@@ -387,58 +404,63 @@ export default function ProjectInformationPage() {
         </nav>
 
         {/* =========================================================================
-            SECTION 1: OVERVIEW & HERO IMAGE
+            SECTION 1: OVERVIEW & SUPPORTING PROJECT VISUAL
+            - Uses the EXACT approved Project Image Standard (210px x 350px, 3:5 aspect ratio)
+            - Stays compact and fixed-sized while the project information column grows vertically
            ========================================================================= */}
         <section ref={overviewRef} id="section-overview" className="space-y-6 sm:space-y-8">
-          {/* Hero Image Container */}
-          <div className="relative w-full rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-950 overflow-hidden shadow-2xl group">
-            <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden bg-slate-900">
-              <img
-                src={project.hero_image}
-                alt={`${project.title} Hero View`}
-                className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-102"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src =
-                    "/projects/temporary/sohail-shop-desktop.jpg";
-                }}
-              />
+          <div className="flex flex-col sm:flex-row items-start gap-6 sm:gap-8 lg:gap-10">
+            {/* Approved Standard Project Image (Locked 210px x 350px, 3:5 aspect ratio) */}
+            <div className="w-[210px] max-w-[210px] shrink-0 mx-auto sm:mx-0 self-start">
+              <div className="relative aspect-[3/5] w-full block overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg group">
+                <img
+                  src={project.hero_image}
+                  alt={`${project.title} Visual`}
+                  className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                      "/projects/temporary/sohail-shop-desktop.jpg";
+                  }}
+                />
 
-              {/* Gradient Scrim */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#050811] via-transparent to-transparent opacity-80" />
+                {/* Subtle depth vignette */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
 
-              {/* Lightbox Zoom Button */}
-              <button
-                onClick={() =>
-                  setLightboxImage({
-                    url: project.hero_image,
-                    title: project.title,
-                    caption: project.tagline || project.description,
-                  })
-                }
-                aria-label="View full screen preview"
-                className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-xs font-mono text-slate-300 hover:text-white border border-white/10 backdrop-blur-md transition-all shadow-lg"
-              >
-                <Maximize2 className="h-3.5 w-3.5" />
-                <span>Enlarge</span>
-              </button>
+                {/* Lightbox Zoom Button */}
+                <button
+                  onClick={() =>
+                    setLightboxImage({
+                      url: project.hero_image,
+                      title: project.title,
+                      caption: project.tagline || project.description,
+                    })
+                  }
+                  aria-label="View full screen preview"
+                  className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-950/80 hover:bg-slate-900 text-[11px] font-mono text-slate-300 hover:text-white border border-white/10 backdrop-blur-md transition-all shadow-md"
+                >
+                  <Maximize2 className="h-3 w-3" />
+                  <span>Enlarge</span>
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Description & Technical Overview */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
-            <div className="lg:col-span-8 space-y-4">
-              <h2 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-cyan-400" />
-                <span>System Overview</span>
-              </h2>
+            {/* Content Column (Grows vertically as much as needed without altering image size) */}
+            <div className="flex-1 min-w-0 space-y-6">
+              {/* System Overview */}
+              <div className="space-y-3">
+                <h2 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-cyan-400" />
+                  <span>System Overview</span>
+                </h2>
 
-              <div className="text-sm sm:text-base text-slate-300/90 leading-relaxed font-light space-y-3">
-                <p>{content.overview || project.description}</p>
+                <div className="text-sm sm:text-base text-slate-300/90 leading-relaxed font-light space-y-3">
+                  <p>{content.overview || project.description}</p>
+                </div>
               </div>
 
               {/* Highlights Checkmarks */}
               {content.highlightsList && content.highlightsList.length > 0 && (
-                <div className="pt-2">
+                <div className="pt-1">
                   <h3 className="text-xs font-mono uppercase tracking-widest text-slate-400 mb-3">
                     Key Highlights & Capabilities
                   </h3>
@@ -455,10 +477,8 @@ export default function ProjectInformationPage() {
                   </div>
                 </div>
               )}
-            </div>
 
-            {/* Technologies Arsenal Column */}
-            <div className="lg:col-span-4 space-y-4">
+              {/* Technologies Arsenal */}
               <div className="p-5 rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm space-y-3">
                 <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                   <Layers className="h-4 w-4 text-cyan-400" />
@@ -477,19 +497,22 @@ export default function ProjectInformationPage() {
                   ))}
                 </div>
 
-                <div className="pt-3 border-t border-white/5 space-y-2 text-xs font-mono text-slate-400">
+                <div className="pt-3 border-t border-white/5 grid grid-cols-2 gap-4 text-xs font-mono text-slate-400">
                   <div className="flex justify-between">
                     <span>Category:</span>
-                    <span className="text-slate-200">{project.category}</span>
+                    <span className="text-slate-200 font-medium">{project.category}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Status:</span>
-                    <span className="text-slate-200">{project.status}</span>
+                    <span className="text-slate-200 font-medium">{project.status}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Detailed Engineering Case Study for AM Fruits */}
+          {project.id === "fresh-flow" && <AMFruitsCaseStudy />}
         </section>
 
         {/* =========================================================================

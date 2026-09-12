@@ -329,14 +329,14 @@ export function getSessionTokenFromRequest(request: Request): string | null {
  * Generates the Set-Cookie string for a new session.
  */
 export function createSessionCookie(token: string): string {
-  return `${SESSION_COOKIE_NAME}=${token}; Path=/api; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_MAX_AGE_SECONDS}`;
+  return `${SESSION_COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${SESSION_MAX_AGE_SECONDS}`;
 }
 
 /**
  * Generates the Set-Cookie string to invalidate an active session.
  */
 export function createClearSessionCookie(): string {
-  return `${SESSION_COOKIE_NAME}=; Path=/api; HttpOnly; Secure; SameSite=Strict; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+  return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 }
 
 /**

@@ -418,7 +418,7 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
 
           const token = await createSessionToken(sessionSecret);
           const cookieHeader = createSessionCookie(token);
-          return sendJson(200, { authenticated: true }, { "Set-Cookie": cookieHeader });
+          return sendJson(200, { authenticated: true, token }, { "Set-Cookie": cookieHeader });
         }
 
         if (pathname === "/api/auth/logout" && method === "POST") {
@@ -428,7 +428,9 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
 
         if (pathname === "/api/auth/session" && method === "GET") {
           const cookies = parseCookies(req.headers.cookie || null);
-          const token = cookies[SESSION_COOKIE_NAME];
+          const authHeader = req.headers.authorization;
+          const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+          const token = cookies[SESSION_COOKIE_NAME] || bearerToken;
           const sessionSecret = devEnv.SESSION_SECRET;
 
           if (!token) {

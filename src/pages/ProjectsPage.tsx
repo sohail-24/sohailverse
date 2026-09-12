@@ -25,7 +25,7 @@ export default function ProjectsPage() {
         const data = await loadUnifiedProjects();
         if (isMounted) {
           // Explicitly guarantee authoritative presentation order:
-          // 1. Sohail-Studio, 2. Fresh Flow, 3. Sohail-Shop, 4. Wedding Page, 5. New Chapter Loading
+          // 1. Sohail-Studio, 2. AM Fruits, 3. Sohail-Shop, 4. Wedding Page, 5. New Chapter Loading
           const sorted = [...data].sort((a, b) => {
             const idA = String(a.id).toLowerCase();
             const idB = String(b.id).toLowerCase();

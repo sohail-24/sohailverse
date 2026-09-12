@@ -3,6 +3,7 @@ export type MissionTone = "orbitBlue" | "auroraCyan" | "horizonTeal" | "signalCo
 export interface UniverseProject {
   id: string;
   name: string;
+  category?: string;
   tagline: string;
   description: string;
   status: "live" | "building" | "coming_soon";

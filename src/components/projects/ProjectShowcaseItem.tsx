@@ -23,6 +23,14 @@ import {
   SiFlutter,
   SiFirebase,
   SiNodedotjs,
+  SiVite,
+  SiReactrouter,
+  SiTrpc,
+  SiReactquery,
+  SiHono,
+  SiZod,
+  SiDrizzle,
+  SiNginx,
 } from "react-icons/si";
 import { FaAws, FaGithub } from "react-icons/fa";
 import type { UnifiedProject } from "./projectData";
@@ -55,6 +63,14 @@ function getTechIcon(name: string) {
   if (n.includes("flutter")) return <SiFlutter className="text-cyan-400" />;
   if (n.includes("firebase")) return <SiFirebase className="text-amber-400" />;
   if (n.includes("node")) return <SiNodedotjs className="text-emerald-400" />;
+  if (n.includes("vite")) return <SiVite className="text-purple-400" />;
+  if (n.includes("router")) return <SiReactrouter className="text-red-400" />;
+  if (n.includes("trpc")) return <SiTrpc className="text-blue-400" />;
+  if (n.includes("query") || n.includes("tanstack")) return <SiReactquery className="text-rose-400" />;
+  if (n.includes("hono")) return <SiHono className="text-orange-400" />;
+  if (n.includes("zod")) return <SiZod className="text-blue-500" />;
+  if (n.includes("drizzle")) return <SiDrizzle className="text-lime-400" />;
+  if (n.includes("nginx")) return <SiNginx className="text-emerald-400" />;
   if (n.includes("systems") || n.includes("architecture")) return <Layers className="text-cyan-400" />;
   return <Code2 className="text-cyan-400/90" />;
 }
@@ -83,6 +99,8 @@ export default function ProjectShowcaseItem({
     canonicalIndexMap[String(project.id).toLowerCase()] ||
     String(index + 1).padStart(2, "0");
 
+  const isAmFruits = String(project.id).toLowerCase() === "fresh-flow";
+
   return (
     <article
       id={`project-showcase-${project.id}`}
@@ -100,25 +118,23 @@ export default function ProjectShowcaseItem({
         } items-stretch gap-2 min-[400px]:gap-2.5 sm:gap-6 md:gap-8 lg:gap-12 w-full`}
       >
         {/* =========================================================================
-            1. TALL, CINEMATIC PORTRAIT IMAGE CONTAINER
-            - Prominent, tall vertical height with LOCKED mobile min-h
-            - Expanded mobile width (~47-48%) reclaiming the unused outer black space
-            - Left image expands toward LEFT outer edge; right image expands toward RIGHT outer edge
-            - Desktop layout completely untouched (~25-28%)
-            - NO button beneath image
+            1. APPROVED STANDARD PROJECT IMAGE CONTAINER
+            - Standardized across ALL projects (Sohail-Studio, AM Fruits, Sohail-Shop, Wedding, New Chapter)
+            - Locked standard: 210px width x 350px height on desktop, aspect-[3/5] portrait ratio
+            - Matching responsive behavior on mobile (2-column layout width with aspect-[3/5])
            ========================================================================= */}
         <div
-          className={`w-[47%] min-[380px]:w-[48%] sm:w-[28%] md:w-[26%] lg:w-[25%] shrink-0 max-w-[210px] min-[400px]:max-w-[240px] sm:max-w-[190px] md:max-w-[230px] lg:max-w-[260px] self-stretch flex flex-col justify-center ${
+          className={`w-[47%] min-[380px]:w-[48%] sm:w-[210px] shrink-0 max-w-[210px] min-[400px]:max-w-[240px] sm:max-w-[210px] self-start sm:self-center flex flex-col justify-center ${
             isEven ? "items-start" : "items-end sm:items-center"
           }`}
         >
-          <div className="relative h-full min-h-[260px] min-[400px]:min-h-[285px] sm:min-h-[340px] md:min-h-[390px] lg:min-h-[430px] w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-white/[0.12] bg-slate-900/60 shadow-[0_8px_24px_rgba(0,0,0,0.45),0_0_15px_rgba(56,189,248,0.08)] transition-all duration-300 group-hover:-translate-y-1 group-hover:border-cyan-400/40 group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.65),0_0_24px_rgba(56,189,248,0.2)]">
+          <div className="relative aspect-[3/5] w-full block overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-cyan-400/40 group-hover:shadow-[0_12px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.15)]">
             {/* Clickable Image Link */}
             {isInternal ? (
               <Link
                 to={targetLink}
                 aria-label={`Inspect ${project.title}`}
-                className="block h-full w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded-2xl sm:rounded-3xl"
+                className="block h-full w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded-2xl"
               >
                 <img
                   src={project.imageUrl}
@@ -142,7 +158,7 @@ export default function ProjectShowcaseItem({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Inspect ${project.title}`}
-                className="block h-full w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded-2xl sm:rounded-3xl"
+                className="block h-full w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded-2xl"
               >
                 <img
                   src={project.imageUrl}
@@ -165,8 +181,8 @@ export default function ProjectShowcaseItem({
             {/* Very light edge depth shadow */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent opacity-50 group-hover:opacity-30 transition-opacity" />
 
-            {/* Highlight metric badge on poster if present */}
-            {project.highlight && (
+            {/* Highlight metric badge on poster if present (omitted for clean poster) */}
+            {project.highlight && !isAmFruits && (
               <div className="pointer-events-none absolute bottom-2 left-2 right-2 z-20">
                 <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-slate-950/85 backdrop-blur-md px-2 py-0.5 text-[9px] min-[400px]:text-[10px] font-mono text-cyan-300 font-medium shadow-md max-w-full">
                   <span className="h-1 w-1 rounded-full bg-cyan-400 animate-pulse shrink-0" />
@@ -194,65 +210,68 @@ export default function ProjectShowcaseItem({
                   {displayIndex}
                 </span>
                 <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 min-[400px]:px-2.5 sm:px-3 py-0.5 text-[10px] sm:text-xs font-mono font-medium text-slate-300 truncate max-w-[95px] min-[400px]:max-w-[130px] sm:max-w-none">
-                  {project.category}
+                  {isAmFruits ? "B2B Wholesale" : project.category}
                 </span>
               </div>
 
               {/* Rating badge if real rating is present, or status */}
-              {project.rating ? (
+              {project.rating && !isAmFruits ? (
                 <div className="inline-flex items-center gap-1 rounded-full border border-amber-400/25 bg-amber-950/30 px-2 sm:px-2.5 py-0.5 text-[10px] sm:text-xs font-mono font-semibold text-amber-300 shrink-0">
                   <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                   <span>{Number(project.rating).toFixed(1)}</span>
                 </div>
-              ) : project.status ? (
+              ) : (isAmFruits || project.status) ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-950/20 px-2 sm:px-2.5 py-0.5 text-[10px] sm:text-[11px] font-mono text-emerald-400 shrink-0">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  <span className="truncate max-w-[75px] sm:max-w-none">{formatProjectStatus(project.status)}</span>
+                  <span className="truncate max-w-[75px] sm:max-w-none">{isAmFruits ? "Active" : formatProjectStatus(project.status)}</span>
                 </span>
               ) : null}
             </div>
 
             {/* Project Title */}
             <h2 className="font-display text-[15px] min-[400px]:text-lg sm:text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight group-hover:text-cyan-300 transition-colors">
-              {project.title}
+              {isAmFruits ? "AM Fruits" : project.title}
             </h2>
 
             {/* Tagline / Subtitle */}
-            {project.tagline && (
+            {(isAmFruits ? "B2B Wholesale Produce Platform" : project.tagline) && (
               <p className="font-mono text-[10px] sm:text-xs md:text-sm text-cyan-400/90 font-medium truncate">
-                {project.tagline}
+                {isAmFruits ? "B2B Wholesale Produce Platform" : project.tagline}
               </p>
             )}
 
             {/* Narrative Description — clean wrapping with breathing room */}
             <p className="text-xs sm:text-sm md:text-base text-slate-300/90 leading-relaxed font-normal line-clamp-3 sm:line-clamp-4 md:line-clamp-none">
-              {project.description}
+              {isAmFruits
+                ? "A B2B platform connecting business buyers with wholesale produce and supplier operations."
+                : project.description}
             </p>
 
             {/* Technology Stack with Clean Branded Icons */}
-            {project.technologies && project.technologies.length > 0 && (
-              <div className="pt-0.5 sm:pt-1">
-                <div className="flex flex-wrap gap-1 sm:gap-1.5 md:gap-2">
-                  {project.technologies.slice(0, 4).map((tech) => (
-                    <span
-                      key={tech}
-                      className="inline-flex items-center gap-1 sm:gap-1.5 rounded-md sm:rounded-lg border border-white/10 bg-white/[0.03] px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-mono text-slate-200"
-                    >
-                      <span className="text-[10px] sm:text-xs shrink-0">{getTechIcon(tech)}</span>
-                      <span className="truncate max-w-[85px] sm:max-w-none">{tech}</span>
-                    </span>
-                  ))}
-                  {project.technologies.length > 4 && (
-                    <span className="inline-flex items-center rounded-md sm:rounded-lg border border-white/10 bg-white/[0.02] px-1.5 py-0.5 sm:px-2 sm:py-1 text-[9px] sm:text-xs font-mono text-slate-400">
-                      +{project.technologies.length - 4}
-                    </span>
-                  )}
-                </div>
+            <div className="pt-0.5 sm:pt-1">
+              <div className="flex flex-wrap gap-1 sm:gap-1.5 md:gap-2">
+                {(isAmFruits
+                  ? ["React", "TypeScript", "Hono", "PostgreSQL", "Docker"]
+                  : project.technologies.slice(0, 4)
+                ).map((tech) => (
+                  <span
+                    key={tech}
+                    className="inline-flex items-center gap-1 sm:gap-1.5 rounded-md sm:rounded-lg border border-white/10 bg-white/[0.03] px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-mono text-slate-200"
+                  >
+                    <span className="text-[10px] sm:text-xs shrink-0">{getTechIcon(tech)}</span>
+                    <span className="truncate max-w-[85px] sm:max-w-none">{tech}</span>
+                  </span>
+                ))}
+                {!isAmFruits && project.technologies.length > 4 && (
+                  <span className="inline-flex items-center rounded-md sm:rounded-lg border border-white/10 bg-white/[0.02] px-1.5 py-0.5 sm:px-2 sm:py-1 text-[9px] sm:text-xs font-mono text-slate-400">
+                    +{project.technologies.length - 4}
+                  </span>
+                )}
               </div>
-            )}
+            </div>
 
-            {/* Website Link (e.g. sohailverse.com ↗) */}
-            {project.liveUrl && (
+            {/* Website Link (for other projects only) */}
+            {!isAmFruits && project.liveUrl && (
               <div className="pt-0.5">
                 <a
                   href={

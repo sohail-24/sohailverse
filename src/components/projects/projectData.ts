@@ -100,20 +100,27 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
     // Default mapping for other projects
     return {
       id: proj.id,
-      title: proj.name,
+      title: proj.id === "fresh-flow" ? "AM Fruits" : proj.name,
       category:
-        proj.id === "sohail-studio"
-          ? "AI / Platform"
-          : proj.id === "fresh-flow"
-          ? "Automation / Cloud"
-          : proj.id === "wedding"
-          ? "Web Experience"
-          : "Cloud & AI Initiative",
-      description: proj.description,
-      technologies: proj.technologies || [],
+        proj.id === "fresh-flow"
+          ? "B2B Wholesale"
+          : (proj.category ||
+            (proj.id === "sohail-studio"
+              ? "AI / Platform"
+              : proj.id === "wedding"
+              ? "Web Experience"
+              : "Cloud & AI Initiative")),
+      description:
+        proj.id === "fresh-flow"
+          ? "A B2B platform connecting business buyers with wholesale produce and supplier operations."
+          : proj.description,
+      technologies:
+        proj.id === "fresh-flow"
+          ? ["React", "TypeScript", "Hono", "PostgreSQL", "Docker"]
+          : (proj.technologies || []),
       imageUrl: images.imageDesktop,
       fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.jpg",
-      githubUrl: proj.id === "wedding" ? undefined : undefined,
+      githubUrl: proj.id === "fresh-flow" ? "https://github.com/sohail-24" : undefined,
       liveUrl:
         proj.id === "sohail-studio"
           ? "studio.sohailverse.com"
@@ -123,15 +130,18 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
           ? "memories.sohailverse.com"
           : undefined,
       internalUrl: `/projects/${proj.id}`,
-      status: formatProjectStatus(proj.statusLabel),
-      statusLabel: formatProjectStatus(proj.statusLabel),
-      tagline: proj.tagline,
-      highlight: proj.highlightMetric,
+      status: proj.id === "fresh-flow" ? "Active" : formatProjectStatus(proj.statusLabel),
+      statusLabel: proj.id === "fresh-flow" ? "Active" : formatProjectStatus(proj.statusLabel),
+      tagline:
+        proj.id === "fresh-flow"
+          ? "B2B Wholesale Produce Platform"
+          : proj.tagline,
+      highlight: proj.id === "fresh-flow" ? undefined : proj.highlightMetric,
     };
   });
 
   // Enforce authoritative presentation order:
-  // 1. Sohail-Studio, 2. Fresh Flow, 3. Sohail-Shop, 4. Wedding Page, 5. New Chapter Loading
+  // 1. Sohail-Studio, 2. AM Fruits, 3. Sohail-Shop, 4. Wedding Page, 5. New Chapter Loading
   mapped.sort((a, b) => {
     const idA = String(a.id).toLowerCase();
     const idB = String(b.id).toLowerCase();

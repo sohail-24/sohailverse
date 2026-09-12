@@ -320,57 +320,69 @@ kubectl get pods -n shop-prod -l app=sohail-shop
   },
   "fresh-flow": {
     overview:
-      "Fresh Flow is an automated grocery delivery and logistics orchestration platform. Built to streamline order routing, warehouse inventory synchronization, and live driver tracking, the system integrates asynchronous message queues with cloud microservices.",
+      "AM Fruits is a full-stack B2B wholesale produce platform built for business buyers and wholesale suppliers.\n\nThe buyer experience allows businesses such as grocers, restaurants, and institutions to browse wholesale products, search the catalog, manage a shopping cart, complete checkout, choose payment methods, place orders, and track order progress.\n\nThe owner experience provides tools for managing products, categories, inventory, warehouses, customers, orders, invoices, delivery areas, shipping methods, and reports.\n\nThe main engineering goal is to connect the buying process with the supplier's operational workflow in one application.",
     hero_image: "/projects/temporary/fresh-flow-desktop.jpg",
     videos: [
       {
-        id: "vid-fresh-1",
-        title: "Real-Time Order Routing & Geolocation Dispatch",
-        name: "Session 01: Dispatch Tour",
+        id: "vid-amfruits-1",
+        title: "AM Fruits Platform Walkthrough & Order Processing",
+        name: "Session 01: Platform Tour",
         video_url: "https://www.youtube.com/watch?v=0k5G6FmE3s4",
         thumbnail_url: "/projects/temporary/fresh-flow-desktop.jpg",
         duration: "08:40",
         description:
-          "Examining the automated order dispatch pipeline and WebSocket client state synchronization.",
+          "Walkthrough of AM Fruits B2B procurement, catalog management, and operational order handling.",
       },
     ],
     documents: [
       {
-        id: "doc-fresh-1",
-        title: "Logistics Engine Architecture Spec",
+        id: "doc-amfruits-1",
+        title: "AM Fruits Architecture & Business Engineering Spec",
         type: "pdf",
         url: "/resume.pdf",
         description:
-          "Detailed engineering document on routing algorithms, event queues, and fault tolerance.",
+          "Engineering document covering B2B buyer workflows, tRPC API schema, Drizzle ORM models, and business operations.",
       },
     ],
     architecture: [
       {
-        id: "arch-fresh-1",
-        title: "Event-Driven Order Processing Architecture",
+        id: "arch-amfruits-1",
+        title: "AM Fruits End-to-End System Architecture",
         image_url: "/projects/temporary/fresh-flow-desktop.jpg",
         caption:
-          "Microservice messaging flow utilizing RabbitMQ and Redis pub/sub for instant order notifications.",
+          "Development: React 19 + TypeScript → tRPC → Hono / Node.js → Drizzle ORM → PostgreSQL. Production: Nginx reverse proxy → Node.js / Hono → PostgreSQL.",
+        description:
+          "Type-safe communication from React frontend to Hono backend using tRPC and Zod schema validation, backed by PostgreSQL and Drizzle ORM.",
+      },
+      {
+        id: "arch-amfruits-2",
+        title: "B2B Order & Inventory Lifecycle Flow",
+        image_url: "/projects/temporary/fresh-flow-mobile.jpg",
+        caption:
+          "Product → Cart → Checkout → Shipping & Tax Calculation → Payment → Order Creation → Invoice → Inventory Update → Order Notification.",
+        description:
+          "Atomic order creation with immutable historical order item data preservation, automated tax and inventory adjustments, and Razorpay signature verification.",
       },
     ],
     links: [
       {
-        id: "link-fresh-1",
+        id: "link-amfruits-1",
         title: "GitHub Repository",
         url: "https://github.com/sohail-24",
         type: "github",
       },
       {
-        id: "link-fresh-2",
-        title: "Live Application Staging",
+        id: "link-amfruits-2",
+        title: "AM Fruits Application",
         url: "https://freshflow.app",
         type: "demo",
       },
     ],
     highlightsList: [
-      "Asynchronous event queues preventing order processing bottlenecks",
-      "Real-time driver location tracking with battery-efficient client beacons",
-      "Automated stock level reorder alerts with supplier API webhooks",
+      "Full-stack B2B wholesale platform unifying buyer ordering with supplier operations",
+      "End-to-end type safety with tRPC, Zod validation, and Drizzle ORM on PostgreSQL",
+      "Server-side Razorpay signature verification with timing-safe HMAC-SHA256 comparison",
+      "Historical order record immutability preserving price, product details, and tax snapshots",
     ],
   },
   wedding: {
@@ -555,13 +567,22 @@ export async function fetchProjectDetailsById(
   // Merge data with priority to the canonical project definition, enriched by
   // the flagship record when available.
   const canonicalId = staticProj?.id || "sohail-shop";
-  const title = dbRecord?.title || staticProj?.name || "Project";
-  const category = dbRecord?.category || (staticProj ? "Cloud Native Architecture" : "Engineering");
-  const description = dbRecord?.description || staticProj?.description || "";
-  const tagline = staticProj?.tagline || "High-Performance Cloud System";
+  const title = canonicalId === "fresh-flow" ? "AM Fruits" : (dbRecord?.title || staticProj?.name || "Project");
+  const category =
+    canonicalId === "fresh-flow"
+      ? "B2B Wholesale Commerce"
+      : dbRecord?.category || staticProj?.category || (staticProj ? "Cloud Architecture" : "Engineering");
+  const description =
+    canonicalId === "fresh-flow"
+      ? "A full-stack B2B wholesale produce platform that combines buyer procurement with supplier business management."
+      : dbRecord?.description || staticProj?.description || "";
+  const tagline =
+    canonicalId === "fresh-flow"
+      ? "B2B Wholesale Produce & Business Management Platform"
+      : staticProj?.tagline || "High-Performance Cloud System";
 
-  const rawStatus = dbRecord?.status || staticProj?.statusLabel;
-  const status = normalizeProjectStatus(rawStatus);
+  const rawStatus = canonicalId === "fresh-flow" ? "Active" : (dbRecord?.status || staticProj?.statusLabel);
+  const status = canonicalId === "fresh-flow" ? "Active" : normalizeProjectStatus(rawStatus);
 
   // Technologies
   let techList: string[] = [];

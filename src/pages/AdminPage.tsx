@@ -53,7 +53,11 @@ export default function AdminPage() {
   const checkSession = async () => {
     try {
       setAuthChecking(true);
-      const res = await fetch("/api/auth/session");
+      const token = sessionStorage.getItem("sv_admin_token");
+      const res = await fetch("/api/auth/session", {
+        credentials: "include",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (res.ok) {
         const data = await res.json();
         setAuthenticated(data.authenticated === true);
@@ -79,6 +83,7 @@ export default function AdminPage() {
       setLoginError("");
       const res = await fetch("/api/auth/login", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -87,6 +92,9 @@ export default function AdminPage() {
 
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.authenticated === true) {
+        if (data.token) {
+          sessionStorage.setItem("sv_admin_token", data.token);
+        }
         setAuthenticated(true);
         setPassword("");
         setLoginError("");
@@ -105,10 +113,12 @@ export default function AdminPage() {
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
+        credentials: "include",
       });
     } catch (err) {
       console.error("Logout request error:", err);
     } finally {
+      sessionStorage.removeItem("sv_admin_token");
       setAuthenticated(false);
       setPassword("");
     }
