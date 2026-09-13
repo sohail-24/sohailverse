@@ -121,7 +121,7 @@ export default function ProjectsShowcase({
     const cardEl = el.querySelector<HTMLElement>(".project-card");
     const isMobile = window.innerWidth < 640;
     const gap = isMobile ? 12 : 24;
-    const cardWidth = cardEl?.offsetWidth || (isMobile ? 240 : 360);
+    const cardWidth = cardEl?.offsetWidth || (isMobile ? 205 : 240);
     const scrollAmount = cardWidth + gap;
 
     el.scrollBy({
@@ -138,7 +138,7 @@ export default function ProjectsShowcase({
     const cardEl = el.querySelector<HTMLElement>(".project-card");
     const isMobile = window.innerWidth < 640;
     const gap = isMobile ? 12 : 24;
-    const cardWidth = cardEl?.offsetWidth || (isMobile ? 240 : 360);
+    const cardWidth = cardEl?.offsetWidth || (isMobile ? 205 : 240);
 
     el.scrollTo({
       left: index * (cardWidth + gap),
@@ -336,7 +336,7 @@ export default function ProjectsShowcase({
           tabIndex={0}
           onKeyDown={handleKeyDown}
           aria-label="Projects horizontal carousel"
-          className="flex gap-3 sm:gap-6 items-stretch overflow-x-auto pb-4 pt-1 px-4 sm:px-0 snap-x snap-mandatory scroll-smooth no-scrollbar focus:outline-none focus-visible:ring-1 focus-visible:ring-lime-400/50"
+          className="flex gap-3 sm:gap-6 items-stretch overflow-x-auto pb-4 pt-1 px-3 sm:px-6 scroll-px-3 sm:scroll-px-6 snap-x snap-mandatory scroll-smooth no-scrollbar focus:outline-none focus-visible:ring-1 focus-visible:ring-lime-400/50"
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
@@ -351,7 +351,7 @@ export default function ProjectsShowcase({
             return (
               <div
                 key={project.id}
-                className={`project-card group relative flex flex-col shrink-0 snap-start rounded-2xl border border-slate-800/90 bg-[#0d1526]/95 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] overflow-hidden transition-all duration-300 hover:-translate-y-1.5 ${theme.accentBorder} w-[calc((100vw-28px)/1.52)] sm:w-[320px] md:w-[340px] lg:w-[360px] xl:w-[380px]`}
+                className={`project-card group relative flex flex-col shrink-0 snap-start rounded-2xl border border-slate-800/90 bg-[#0d1526]/95 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] overflow-hidden transition-all duration-300 hover:-translate-y-1.5 ${theme.accentBorder} w-[190px] min-[400px]:w-[205px] sm:w-[225px] md:w-[240px]`}
               >
                 {/* Subtle Ambient Card Glow on Hover */}
                 <div
@@ -360,52 +360,50 @@ export default function ProjectsShowcase({
                 />
 
                 {/* ================= 1. PROJECT IMAGE (TOP OF CARD) ================= */}
-                {/* Clean, continuous image treatment sitting directly on the card without nested boxing */}
-                <div className="relative w-full flex justify-center shrink-0">
-                  <div className="relative w-full max-w-[190px] min-[400px]:max-w-[205px] sm:max-w-[225px] md:max-w-[240px] aspect-[5/6] overflow-hidden rounded-t-2xl">
-                    {/* Compact Status Indicator Badge positioned at Top-Right of Image */}
-                    <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none">
+                {/* Clean image sitting flush with the card edges - zero lateral empty space, exact approved dimensions */}
+                <div className="relative w-full aspect-[5/6] overflow-hidden shrink-0">
+                  {/* Compact Status Indicator Badge positioned at Top-Right of Image */}
+                  <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none">
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] sm:text-[11px] font-mono font-medium tracking-wide backdrop-blur-md shadow-md ${statusStyle.badgeClass}`}
+                    >
                       <span
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] sm:text-[11px] font-mono font-medium tracking-wide backdrop-blur-md shadow-md ${statusStyle.badgeClass}`}
-                      >
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusStyle.dotClass} ${
-                            statusStyle.pulse ? "animate-pulse" : ""
-                          }`}
-                        />
-                        <span className="leading-none">{formatProjectStatus(project.statusLabel)}</span>
-                      </span>
-                    </div>
-
-                    {/* Responsive Picture tag: phone-oriented screenshot on mobile (<640px), desktop on desktop (>=640px) */}
-                    <picture className="h-full w-full block">
-                      <source
-                        media="(max-width: 639px)"
-                        srcSet={projectImages.imageMobile}
+                        className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusStyle.dotClass} ${
+                          statusStyle.pulse ? "animate-pulse" : ""
+                        }`}
                       />
-                      <source
-                        media="(min-width: 640px)"
-                        srcSet={projectImages.imageDesktop}
-                      />
-                      <img
-                        src={projectImages.imageDesktop}
-                        alt={`${project.name} preview`}
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            "/projects/temporary/sohail-shop-desktop.jpg";
-                        }}
-                        className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
-                      />
-                    </picture>
+                      <span className="leading-none">{formatProjectStatus(project.statusLabel)}</span>
+                    </span>
                   </div>
+
+                  {/* Responsive Picture tag: phone-oriented screenshot on mobile (<640px), desktop on desktop (>=640px) */}
+                  <picture className="h-full w-full block">
+                    <source
+                      media="(max-width: 639px)"
+                      srcSet={projectImages.imageMobile}
+                    />
+                    <source
+                      media="(min-width: 640px)"
+                      srcSet={projectImages.imageDesktop}
+                    />
+                    <img
+                      src={projectImages.imageDesktop}
+                      alt={`${project.name} preview`}
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "/projects/temporary/sohail-shop-desktop.jpg";
+                      }}
+                      className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+                    />
+                  </picture>
                 </div>
 
                 {/* ================= CARD BODY HIERARCHY ================= */}
                 {/* TITLE & TAGLINE → SHORT DESCRIPTION → TECH BADGES → EXPLORE BUTTON */}
                 {/* One continuous card structure: text begins naturally below the image */}
-                <div className="flex flex-col flex-1 justify-between p-3.5 sm:p-5 pt-3 sm:pt-3.5 gap-3 sm:gap-4">
+                <div className="flex flex-col flex-1 justify-between p-3 sm:p-4 pt-3 sm:pt-3.5 gap-2.5 sm:gap-3">
                   <div className="space-y-2 sm:space-y-2.5">
                     {/* PROJECT TITLE & TAGLINE */}
                     <div>
