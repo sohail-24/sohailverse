@@ -375,65 +375,156 @@ export function getFallbackForEndpoint(endpoint: string): any[] | null {
   return null;
 }
 
-export async function fetchApi<T>(
+interface CacheEntry<T> {
+  data: T[];
+  timestamp: number;
+}
+
+const apiCache = new Map<string, CacheEntry<any>>();
+const inFlightRequests = new Map<string, Promise<any>>();
+const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes fresh cache window
+
+/**
+ * Returns synchronously cached list data if available and fresh.
+ */
+export function getCachedApi<T>(endpoint: string): T[] | null {
+  const cached = apiCache.get(endpoint);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data as T[];
+  }
+  return null;
+}
+
+/**
+ * Manually update client-side API cache.
+ */
+export function setCachedApi<T>(endpoint: string, data: T[]): void {
+  apiCache.set(endpoint, { data, timestamp: Date.now() });
+}
+
+/**
+ * Invalidate client-side API cache for a specific endpoint or all endpoints.
+ */
+export function invalidateApiCache(endpoint?: string): void {
+  if (endpoint) {
+    apiCache.delete(endpoint);
+  } else {
+    apiCache.clear();
+  }
+}
+
+/**
+ * Prefetch API data in background to warm the cache.
+ */
+export function prefetchApi<T>(
   endpoint: string,
   validator?: (item: any) => boolean
 ): Promise<T[]> {
-  let lastError: any = null;
+  const cached = getCachedApi<T>(endpoint);
+  if (cached) {
+    return Promise.resolve(cached);
+  }
+  return fetchApi<T>(endpoint, validator).catch(() => []);
+}
 
-  // Attempt up to 2 times with a brief delay if network error
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const response = await fetch(endpoint, {
-        headers: {
-          Accept: "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-
-        let rawList: any[];
-        if (json && Array.isArray(json.data)) {
-          rawList = json.data;
-        } else if (Array.isArray(json)) {
-          rawList = json;
-        } else {
-          throw new Error(`Malformed response from ${endpoint}: missing 'data' array`);
-        }
-
-        if (validator) {
-          for (let i = 0; i < rawList.length; i++) {
-            if (!validator(rawList[i])) {
-              throw new Error(
-                `Record validation failed at index ${i} for ${endpoint}: malformed data structure`
-              );
-            }
-          }
-        }
-
-        return rawList as T[];
-      } else {
-        throw new Error(`HTTP ${response.status} from ${endpoint}`);
-      }
-    } catch (err: any) {
-      lastError = err;
-      if (attempt === 0) {
-        // Small backoff before second attempt
-        await new Promise((r) => setTimeout(r, 200));
-      }
+export async function fetchApi<T>(
+  endpoint: string,
+  validator?: (item: any) => boolean,
+  options?: { forceRefresh?: boolean }
+): Promise<T[]> {
+  if (!options?.forceRefresh) {
+    const cached = getCachedApi<T>(endpoint);
+    if (cached) {
+      return cached;
     }
   }
 
-  console.warn(`[AI Studio] API request to ${endpoint} failed, activating fallback dataset:`, lastError?.message || lastError);
-
-  // Gracefully fallback to bundled mock data
-  const fallback = getFallbackForEndpoint(endpoint);
-  if (fallback && fallback.length > 0) {
-    return fallback as T[];
+  // Deduplicate simultaneous requests to the same endpoint
+  if (inFlightRequests.has(endpoint)) {
+    return inFlightRequests.get(endpoint) as Promise<T[]>;
   }
 
-  throw lastError || new Error(`Failed to load data from ${endpoint}`);
+  const fetchPromise = (async () => {
+    let lastError: any = null;
+
+    // Attempt up to 2 times with a brief delay if network error
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const response = await fetch(endpoint, {
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+
+          let rawList: any[];
+          if (json && Array.isArray(json.data)) {
+            rawList = json.data;
+          } else if (Array.isArray(json)) {
+            rawList = json;
+          } else {
+            throw new Error(`Malformed response from ${endpoint}: missing 'data' array`);
+          }
+
+          if (validator) {
+            for (let i = 0; i < rawList.length; i++) {
+              if (!validator(rawList[i])) {
+                throw new Error(
+                  `Record validation failed at index ${i} for ${endpoint}: malformed data structure`
+                );
+              }
+            }
+          }
+
+          const result = rawList as T[];
+          apiCache.set(endpoint, { data: result, timestamp: Date.now() });
+          return result;
+        } else {
+          throw new Error(`HTTP ${response.status} from ${endpoint}`);
+        }
+      } catch (err: any) {
+        lastError = err;
+        if (attempt === 0) {
+          // Small backoff before second attempt
+          await new Promise((r) => setTimeout(r, 200));
+        }
+      }
+    }
+
+    console.warn(`[AI Studio] API request to ${endpoint} failed, activating fallback dataset:`, lastError?.message || lastError);
+
+    // Gracefully fallback to bundled mock data
+    const fallback = getFallbackForEndpoint(endpoint);
+    if (fallback && fallback.length > 0) {
+      const result = fallback as T[];
+      apiCache.set(endpoint, { data: result, timestamp: Date.now() });
+      return result;
+    }
+
+    throw lastError || new Error(`Failed to load data from ${endpoint}`);
+  })();
+
+  inFlightRequests.set(endpoint, fetchPromise);
+  try {
+    return await fetchPromise;
+  } finally {
+    inFlightRequests.delete(endpoint);
+  }
+}
+
+const recordCache = new Map<string, { data: any; timestamp: number }>();
+
+/**
+ * Returns synchronously cached single record if available and fresh.
+ */
+export function getCachedApiRecord<T>(endpoint: string): T | null {
+  const cached = recordCache.get(endpoint);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data as T;
+  }
+  return null;
 }
 
 /**
@@ -443,35 +534,80 @@ export async function fetchApi<T>(
  */
 export async function fetchApiRecord<T>(
   endpoint: string,
-  validator?: (item: any) => boolean
+  validator?: (item: any) => boolean,
+  options?: { forceRefresh?: boolean }
 ): Promise<T> {
-  const response = await fetch(endpoint, {
-    headers: {
-      Accept: "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => null);
-    const errorMessage =
-      errorBody?.error || errorBody?.message || `HTTP ${response.status} from ${endpoint}`;
-    const err = new Error(errorMessage);
-    (err as any).status = response.status;
-    throw err;
+  if (!options?.forceRefresh) {
+    const cached = getCachedApiRecord<T>(endpoint);
+    if (cached) {
+      return cached;
+    }
   }
 
-  const json = await response.json();
-  const rawRecord = json && typeof json === "object" && "data" in json ? json.data : json;
-
-  if (!rawRecord || typeof rawRecord !== "object" || Array.isArray(rawRecord)) {
-    throw new Error(`Malformed response from ${endpoint}: missing 'data' record object`);
+  if (inFlightRequests.has(endpoint)) {
+    return inFlightRequests.get(endpoint) as Promise<T>;
   }
 
-  if (validator && !validator(rawRecord)) {
-    throw new Error(`Record validation failed for ${endpoint}: malformed data structure`);
-  }
+  const recordPromise = (async () => {
+    const response = await fetch(endpoint, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
 
-  return rawRecord as T;
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null);
+      const errorMessage =
+        errorBody?.error || errorBody?.message || `HTTP ${response.status} from ${endpoint}`;
+      const err = new Error(errorMessage);
+      (err as any).status = response.status;
+      throw err;
+    }
+
+    const json = await response.json();
+    const rawRecord = json && typeof json === "object" && "data" in json ? json.data : json;
+
+    if (!rawRecord || typeof rawRecord !== "object" || Array.isArray(rawRecord)) {
+      throw new Error(`Malformed response from ${endpoint}: missing 'data' record object`);
+    }
+
+    if (validator && !validator(rawRecord)) {
+      throw new Error(`Record validation failed for ${endpoint}: malformed data structure`);
+    }
+
+    const record = rawRecord as T;
+    recordCache.set(endpoint, { data: record, timestamp: Date.now() });
+    return record;
+  })();
+
+  inFlightRequests.set(endpoint, recordPromise);
+  try {
+    return await recordPromise;
+  } finally {
+    inFlightRequests.delete(endpoint);
+  }
+}
+
+/**
+ * Synchronously retrieves cached DevOps project record if available.
+ */
+export function getCachedDevOpsProjectById(id: number | string): DevOpsProject | null {
+  const numericId = typeof id === "string" ? parseInt(id, 10) : id;
+  if (isNaN(numericId) || numericId <= 0) return null;
+  const endpoint = `/api/devops/${numericId}`;
+  const direct = getCachedApiRecord<DevOpsProject>(endpoint);
+  if (direct) return direct;
+
+  // Also check if the /api/devops list is already cached in memory
+  const list = getCachedApi<DevOpsProject>("/api/devops");
+  if (list) {
+    const found = list.find((p) => p.id === numericId);
+    if (found) {
+      recordCache.set(endpoint, { data: found, timestamp: Date.now() });
+      return found;
+    }
+  }
+  return null;
 }
 
 /**

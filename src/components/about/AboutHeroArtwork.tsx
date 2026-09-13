@@ -33,7 +33,7 @@ export default function AboutHeroArtwork({
         src={src}
         alt={alt}
         className="w-full h-auto sm:h-full object-contain sm:object-cover object-center sm:object-center block select-none pointer-events-none"
-        loading="eager"
+        loading="lazy"
         decoding="async"
         draggable={false}
       />

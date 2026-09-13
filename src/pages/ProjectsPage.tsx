@@ -5,6 +5,7 @@ import { FaGithub } from "react-icons/fa";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   loadUnifiedProjects,
+  getCachedUnifiedProjects,
   CANONICAL_PROJECT_ORDER,
   type UnifiedProject,
 } from "../components/projects/projectData";
@@ -14,8 +15,9 @@ type StatusFilter = "ALL" | "LIVE" | "BUILDING" | "UPCOMING";
 
 export default function ProjectsPage() {
   const shouldReduceMotion = useReducedMotion();
-  const [projects, setProjects] = useState<UnifiedProject[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const initialProjectsData = useMemo(() => getCachedUnifiedProjects(), []);
+  const [projects, setProjects] = useState<UnifiedProject[]>(initialProjectsData || []);
+  const [loading, setLoading] = useState<boolean>(!initialProjectsData || initialProjectsData.length === 0);
   const [filter, setFilter] = useState<StatusFilter>("ALL");
 
   useEffect(() => {

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { primaryNavItems } from "../../data/navigation";
-import { isNavLinkActive } from "./Navbar";
+import { isNavLinkActive, prefetchRouteData } from "./Navbar";
 
 interface MobileMenuProps {
   open: boolean;
@@ -98,6 +98,9 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
                     to={item.path}
                     role="menuitem"
                     onClick={onClose}
+                    onMouseEnter={() => prefetchRouteData(item.path)}
+                    onTouchStart={() => prefetchRouteData(item.path)}
+                    onFocus={() => prefetchRouteData(item.path)}
                     className={cn(
                       "group relative flex min-h-[44px] items-center justify-between rounded-xl px-3 py-2 text-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-lime-400 active:scale-[0.98]",
                       active

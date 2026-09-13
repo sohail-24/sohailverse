@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { fetchApi, isValidTimelinePost, type TimelinePost } from "../lib/api";
+import { fetchApi, getCachedApi, isValidTimelinePost, type TimelinePost } from "../lib/api";
 import { LoadingSkeleton, ErrorState } from "../components/ui/StatusStates";
 import AboutHero from "../components/about/AboutHero";
 import AboutWhoIAm from "../components/about/AboutWhoIAm";
@@ -8,27 +8,32 @@ import AboutBuilderMindset from "../components/about/AboutBuilderMindset";
 import AboutWhatsNextBanner from "../components/about/AboutWhatsNextBanner";
 
 export default function TimelinePage() {
-  const [timeline, setTimeline] = useState<TimelinePost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedTimeline = getCachedApi<TimelinePost>("/api/timeline");
+  const [timeline, setTimeline] = useState<TimelinePost[]>(cachedTimeline || []);
+  const [loading, setLoading] = useState(!cachedTimeline || cachedTimeline.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   const loadTimeline = useCallback(async () => {
-    setLoading(true);
+    if (timeline.length === 0) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const data = await fetchApi<TimelinePost>("/api/timeline", isValidTimelinePost);
       setTimeline(data);
     } catch (err: any) {
       console.error("Failed to load timeline milestones:", err);
-      setError(err?.message || "Unable to load timeline milestones from database.");
+      if (timeline.length === 0) {
+        setError(err?.message || "Unable to load timeline milestones from database.");
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [timeline.length]);
 
   useEffect(() => {
     loadTimeline();
-  }, [loadTimeline]);
+  }, []);
 
   return (
     <div className="w-full flex flex-col">

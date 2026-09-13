@@ -1,8 +1,12 @@
+import React, { Suspense } from "react";
 import CinematicHero from "../components/mission-control/CinematicHero";
 import ProjectsShowcase from "../components/mission-control/ProjectsShowcase";
-import CinematicEarthTransition from "../components/mission-control/CinematicEarthTransition";
 import ConnectCtaBanner from "../components/mission-control/ConnectCtaBanner";
 import TelemetryStrip from "../components/mission-control/TelemetryStrip";
+
+const CinematicEarthTransition = React.lazy(
+  () => import("../components/mission-control/CinematicEarthTransition")
+);
 
 export default function MissionControlPage() {
   return (
@@ -14,7 +18,9 @@ export default function MissionControlPage() {
       <ProjectsShowcase />
 
       {/* 3. Cinematic Earth / Journey Transition */}
-      <CinematicEarthTransition />
+      <Suspense fallback={<div className="min-h-[300px] w-full" />}>
+        <CinematicEarthTransition />
+      </Suspense>
 
       {/* 4. Telemetry & Metrics Strip */}
       <TelemetryStrip />

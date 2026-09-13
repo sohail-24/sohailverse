@@ -1224,6 +1224,15 @@ function devApiPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [react(), devApiPlugin()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          three: ["three"],
+        },
+      },
+    },
+  },
   server: {
     host: "0.0.0.0",
     port: 3000,

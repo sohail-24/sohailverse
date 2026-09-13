@@ -18,7 +18,8 @@ export default function DevOpsHero({ projectsCount }: DevOpsHeroProps) {
         <img
           src="/devops-hero-bookshelf-library.jpg"
           alt="Technical library bookshelf study with Linux, AWS, Docker, Kubernetes, DevOps, System Design and Clean Code books"
-          loading="eager"
+          loading="lazy"
+          decoding="async"
           referrerPolicy="no-referrer"
           className="h-full w-full object-cover object-[75%_center] sm:object-[center_35%] scale-100"
         />

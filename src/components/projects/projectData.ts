@@ -4,7 +4,7 @@
  * Respects snake_case API contracts (image_url, github_url, ppt_url).
  */
 
-import { fetchApi, isValidDevOpsProject, type DevOpsProject } from "../../lib/api";
+import { fetchApi, getCachedApi, isValidDevOpsProject, type DevOpsProject } from "../../lib/api";
 import { initialProjects } from "../../data/mission-control";
 import type { UniverseProject } from "../../types/mission-control";
 import { resolveProjectImages } from "../mission-control/ProjectsShowcase";
@@ -51,18 +51,9 @@ export const CANONICAL_PROJECT_ORDER: readonly string[] = [
 ];
 
 /**
- * Builds the portfolio list by combining real live database records with
- * established SohailVerse project systems.
+ * Synchronously constructs UnifiedProject[] from static projects and optional database records.
  */
-export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
-  let dbProjects: DevOpsProject[] = [];
-
-  try {
-    dbProjects = await fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject);
-  } catch (err) {
-    console.warn("[Projects] Failed to fetch /api/devops, falling back to local dataset:", err);
-  }
-
+export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedProject[] {
   // Find DB record for SohailShop / flagship if available
   const dbFlagship = dbProjects.find(
     (p) =>
@@ -150,8 +141,39 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
     return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
   });
 
-  // `initialProjects` is the canonical portfolio catalog. The /api/devops
-  // collection also contains learning resources, so unmatched database rows
-  // must not be promoted into the Projects domain.
   return mapped;
+}
+
+let cachedUnifiedProjects: UnifiedProject[] | null = null;
+
+/**
+ * Returns synchronously cached UnifiedProject[] if available.
+ */
+export function getCachedUnifiedProjects(): UnifiedProject[] | null {
+  if (cachedUnifiedProjects) return cachedUnifiedProjects;
+  const dbProjects = getCachedApi<DevOpsProject>("/api/devops");
+  if (dbProjects) {
+    cachedUnifiedProjects = buildUnifiedProjects(dbProjects);
+    return cachedUnifiedProjects;
+  }
+  // Even if dbProjects isn't fetched yet, build from initialProjects so the page can render instantly!
+  cachedUnifiedProjects = buildUnifiedProjects([]);
+  return cachedUnifiedProjects;
+}
+
+/**
+ * Builds the portfolio list by combining real live database records with
+ * established SohailVerse project systems.
+ */
+export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
+  let dbProjects: DevOpsProject[] = [];
+
+  try {
+    dbProjects = await fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject);
+  } catch (err) {
+    console.warn("[Projects] Failed to fetch /api/devops, falling back to local dataset:", err);
+  }
+
+  cachedUnifiedProjects = buildUnifiedProjects(dbProjects);
+  return cachedUnifiedProjects;
 }

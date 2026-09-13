@@ -5,6 +5,17 @@ import { cn } from "../../lib/utils";
 import MobileMenu from "./MobileMenu";
 import { primaryNavItems } from "../../data/navigation";
 import BrandAvatar from "../ui/BrandAvatar";
+import { prefetchApi, isValidDevOpsProject, isValidTimelinePost, isValidMovie } from "../../lib/api";
+
+export function prefetchRouteData(path: string) {
+  if (path === "/timeline" || path === "/about") {
+    prefetchApi("/api/timeline", isValidTimelinePost);
+  } else if (path === "/projects" || path === "/devops") {
+    prefetchApi("/api/devops", isValidDevOpsProject);
+  } else if (path === "/cinema") {
+    prefetchApi("/api/movies", isValidMovie);
+  }
+}
 
 export function isNavLinkActive(pathname: string, targetPath: string): boolean {
   if (targetPath === "/") {
@@ -62,6 +73,8 @@ export default function Navbar() {
               <Link
                 key={item.path}
                 to={item.path}
+                onMouseEnter={() => prefetchRouteData(item.path)}
+                onFocus={() => prefetchRouteData(item.path)}
                 className={cn(
                   "relative py-1 text-sm font-medium transition-colors duration-200 whitespace-nowrap",
                   active

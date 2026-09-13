@@ -98,7 +98,8 @@ function SpaceEarthBackground() {
           src="/earth-cinematic.png"
           alt=""
           className="relative h-full w-full object-contain opacity-45 sm:opacity-55 lg:opacity-65 filter drop-shadow-[0_0_70px_rgba(56,189,248,0.35)]"
-          loading="eager"
+          loading="lazy"
+          decoding="async"
         />
       </div>
 

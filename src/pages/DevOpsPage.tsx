@@ -2,22 +2,27 @@ import { useEffect, useState } from "react";
 import DevOpsHero from "../components/devops/DevOpsHero";
 import DevOpsLearningJourney from "../components/devops/DevOpsLearningJourney";
 import DevOpsBottomNav from "../components/devops/DevOpsBottomNav";
-import { fetchApi, isValidDevOpsProject, type DevOpsProject } from "../lib/api";
+import { fetchApi, getCachedApi, isValidDevOpsProject, type DevOpsProject } from "../lib/api";
 
 export default function DevOpsPage() {
-  const [projects, setProjects] = useState<DevOpsProject[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cached = getCachedApi<DevOpsProject>("/api/devops");
+  const [projects, setProjects] = useState<DevOpsProject[]>(cached || []);
+  const [loading, setLoading] = useState(!cached || cached.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   const loadProjects = async () => {
-    setLoading(true);
+    if (projects.length === 0) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const data = await fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject);
       setProjects(data);
     } catch (err: any) {
       console.error("Failed to load devops projects:", err);
-      setError(err?.message || "Unable to load data. Please try again.");
+      if (projects.length === 0) {
+        setError(err?.message || "Unable to load data. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

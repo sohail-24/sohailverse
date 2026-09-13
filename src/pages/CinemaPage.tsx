@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { fetchApi, isValidMovie, getFallbackForEndpoint, type Movie } from "../lib/api";
+import { fetchApi, getCachedApi, isValidMovie, getFallbackForEndpoint, type Movie } from "../lib/api";
 import { ErrorState, LoadingSkeleton } from "../components/ui/StatusStates";
 import CinemaHero from "../components/cinema/CinemaHero";
 import CinemaStatusFilter, {
@@ -11,13 +11,16 @@ import CinemaMovieCarousel from "../components/cinema/CinemaMovieCarousel";
 import CinemaEditorialFooter from "../components/cinema/CinemaEditorialFooter";
 
 export default function CinemaPage() {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedMovies = getCachedApi<Movie>("/api/movies");
+  const [movies, setMovies] = useState<Movie[]>(cachedMovies || []);
+  const [loading, setLoading] = useState(!cachedMovies || cachedMovies.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<MovieStatusFilter>("ALL");
 
   const loadMovies = async () => {
-    setLoading(true);
+    if (movies.length === 0) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const data = await fetchApi<Movie>("/api/movies", isValidMovie);
@@ -28,7 +31,9 @@ export default function CinemaPage() {
         if (fallback && fallback.length > 0) {
           setMovies(fallback);
         } else {
-          setError("No movies found in collection.");
+          if (movies.length === 0) {
+            setError("No movies found in collection.");
+          }
         }
       }
     } catch (err: any) {
@@ -39,7 +44,9 @@ export default function CinemaPage() {
         setError(null);
       } else {
         console.error("Failed to load movies:", err);
-        setError(err?.message || "Unable to load cinema observatory data.");
+        if (movies.length === 0) {
+          setError(err?.message || "Unable to load cinema observatory data.");
+        }
       }
     } finally {
       setLoading(false);

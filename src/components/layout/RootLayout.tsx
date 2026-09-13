@@ -1,9 +1,30 @@
+import { useEffect } from "react";
 import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
 import Footer from "../navigation/Footer";
 import Navbar from "../navigation/Navbar";
+import { prefetchApi, isValidDevOpsProject, isValidTimelinePost, isValidMovie } from "../../lib/api";
 
 export default function RootLayout() {
   const location = useLocation();
+
+  useEffect(() => {
+    // Idle background prefetch so page transitions feel instantaneous across the entire site
+    const warmCache = () => {
+      prefetchApi("/api/devops", isValidDevOpsProject);
+      prefetchApi("/api/timeline", isValidTimelinePost);
+      prefetchApi("/api/movies", isValidMovie);
+    };
+
+    if (typeof window !== "undefined") {
+      if ("requestIdleCallback" in window) {
+        const handle = (window as any).requestIdleCallback(warmCache, { timeout: 1500 });
+        return () => (window as any).cancelIdleCallback(handle);
+      } else {
+        const timer = setTimeout(warmCache, 200);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
   const isAdmin =
     location.pathname === "/admin" ||
     location.pathname === "/console" ||

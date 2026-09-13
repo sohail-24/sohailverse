@@ -1,7 +1,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchDevOpsProjectById, type DevOpsProject } from "../lib/api";
+import { fetchDevOpsProjectById, getCachedDevOpsProjectById, type DevOpsProject } from "../lib/api";
 import { ErrorState, LoadingSkeleton } from "../components/ui/StatusStates";
 import ProjectHero from "../components/projects/ProjectHero";
 import ProjectMetrics from "../components/projects/ProjectMetrics";
@@ -16,8 +16,9 @@ import ProjectLinks from "../components/projects/ProjectLinks";
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [project, setProject] = useState<DevOpsProject | null>(null);
-  const [loading, setLoading] = useState(true);
+  const initialCached = id ? getCachedDevOpsProjectById(id) : null;
+  const [project, setProject] = useState<DevOpsProject | null>(initialCached);
+  const [loading, setLoading] = useState(!initialCached);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<number | null>(null);
 
@@ -37,7 +38,9 @@ export default function ProjectDetailPage() {
       return;
     }
 
-    setLoading(true);
+    if (!project) {
+      setLoading(true);
+    }
     setError(null);
     setErrorCode(null);
 
@@ -54,11 +57,13 @@ export default function ProjectDetailPage() {
           ? 400
           : 500);
       setErrorCode(status);
-      setError(err?.message || "Failed to retrieve project from Neon database.");
+      if (!project) {
+        setError(err?.message || "Failed to retrieve project from Neon database.");
+      }
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, project]);
 
   useEffect(() => {
     loadProject();

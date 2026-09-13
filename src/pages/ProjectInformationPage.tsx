@@ -48,6 +48,7 @@ import {
 import { FaAws, FaGithub } from "react-icons/fa";
 import {
   fetchProjectDetailsById,
+  getCachedProjectDetailsById,
   getProjectVideoEmbedUrl,
   type FullProjectData,
   type ProjectVideoSession,
@@ -92,12 +93,15 @@ function getTechBadgeIcon(name: string) {
 export default function ProjectInformationPage() {
   const { id } = useParams<{ id: string }>();
 
-  const [project, setProject] = useState<FullProjectData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const initialProject = id ? getCachedProjectDetailsById(id) : null;
+  const [project, setProject] = useState<FullProjectData | null>(initialProject);
+  const [loading, setLoading] = useState(!initialProject);
   const [error, setError] = useState<string | null>(null);
 
   // Active video session in player
-  const [activeVideo, setActiveVideo] = useState<ProjectVideoSession | null>(null);
+  const [activeVideo, setActiveVideo] = useState<ProjectVideoSession | null>(() => {
+    return initialProject && initialProject.content.videos.length > 0 ? initialProject.content.videos[0] : null;
+  });
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   // Active document selected in documentation viewer
@@ -132,26 +136,30 @@ export default function ProjectInformationPage() {
     }
 
     try {
-      setLoading(true);
+      // If we don't already have project data, show loading
+      if (!project) {
+        setLoading(true);
+      }
       setError(null);
       const data = await fetchProjectDetailsById(id);
       setProject(data);
-      setSelectedGalleryIndex(0);
-      if (data.content.videos.length > 0) {
+      if (data.content.videos.length > 0 && !activeVideo) {
         setActiveVideo(data.content.videos[0]);
       }
     } catch (err: any) {
       console.error("Failed to load project information:", err);
-      setError(err?.message || "Unable to retrieve project information.");
+      if (!project) {
+        setError(err?.message || "Unable to retrieve project information.");
+      }
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, project, activeVideo]);
 
   useEffect(() => {
     loadData();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [loadData]);
+    window.scrollTo(0, 0);
+  }, [id]);
 
   // Handle escape key for modals
   useEffect(() => {

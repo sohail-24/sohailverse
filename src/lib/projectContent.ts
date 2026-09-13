@@ -6,7 +6,7 @@
  * Documentation/PDFs, Architecture Diagrams, and External Links).
  */
 
-import { fetchApi, isValidDevOpsProject, type DevOpsProject } from "./api";
+import { fetchApi, getCachedApi, prefetchApi, isValidDevOpsProject, type DevOpsProject } from "./api";
 import { initialProjects } from "../data/mission-control";
 import {
   TEMPORARY_PROJECT_IMAGE_MAP,
@@ -745,19 +745,21 @@ export function parseProjectContentFromRecord(
  * Loads a project by ID or slug (e.g. "sohail-shop" or "1").
  * Decoupled from DevOps: returns a self-contained FullProjectData object.
  */
-export async function fetchProjectDetailsById(
-  idOrSlug: string | number
-): Promise<FullProjectData> {
+const projectDetailsCache = new Map<string, FullProjectData>();
+
+/**
+ * Synchronously constructs FullProjectData from static catalog and optional database records.
+ */
+export function buildFullProjectData(
+  idOrSlug: string | number,
+  dbProjects?: DevOpsProject[]
+): FullProjectData {
   const strId = String(idOrSlug).trim().toLowerCase();
 
-  // The static catalog is the authoritative Projects-domain boundary. A
-  // numeric DevOps row must never become a /projects/:id page by coincidence.
   const staticProj = initialProjects.find(
     (p) => p.id.toLowerCase() === strId
   );
 
-  // The legacy numeric route remains valid only for the canonical flagship
-  // project, whose database record is used as content enrichment below.
   const isFlagshipRequest = strId === "1" || strId === "sohail-shop";
   if (!staticProj && !isFlagshipRequest) {
     const error = new Error(`Project "${idOrSlug}" not found in portfolio catalog.`);
@@ -765,10 +767,8 @@ export async function fetchProjectDetailsById(
     throw error;
   }
 
-  // Check database for an enriched or admin-updated record
   let dbRecord: DevOpsProject | undefined;
-  try {
-    const dbProjects = await fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject);
+  if (dbProjects && dbProjects.length > 0) {
     dbRecord = dbProjects.find((p) => {
       if (strId === "1" || strId === "sohail-shop") {
         return p.id === 1 || p.title.toLowerCase().includes("sohail") || p.title.toLowerCase().includes("shop");
@@ -782,12 +782,8 @@ export async function fetchProjectDetailsById(
       }
       return String(p.id) === strId || p.title.toLowerCase().includes(strId);
     });
-  } catch (e) {
-    console.warn("[ProjectContent] /api/devops request failed, using local project records:", e);
   }
 
-  // Merge data with priority to the canonical project definition, enriched by
-  // the flagship record when available.
   const canonicalId = staticProj?.id || "sohail-shop";
   const title = canonicalId === "fresh-flow" ? (dbRecord?.title || "AM Fruits") : (dbRecord?.title || staticProj?.name || "Project");
   const category =
@@ -872,6 +868,59 @@ export async function fetchProjectDetailsById(
       content.links.find((l) => l.type === "demo")?.url ||
       (staticProj?.link?.includes("http") ? staticProj.link : undefined),
   };
+}
+
+/**
+ * Returns synchronously cached project details if available.
+ */
+export function getCachedProjectDetailsById(idOrSlug: string | number): FullProjectData | null {
+  const strId = String(idOrSlug).trim().toLowerCase();
+  const cached = projectDetailsCache.get(strId);
+  if (cached) return cached;
+
+  try {
+    const dbProjects = getCachedApi<DevOpsProject>("/api/devops");
+    const data = buildFullProjectData(strId, dbProjects || undefined);
+    projectDetailsCache.set(strId, data);
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Prefetch project details and warm the cache.
+ */
+export function prefetchProjectDetails(idOrSlug: string | number): void {
+  const strId = String(idOrSlug).trim().toLowerCase();
+  prefetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject).then((db) => {
+    try {
+      const data = buildFullProjectData(strId, db);
+      projectDetailsCache.set(strId, data);
+    } catch {}
+  }).catch(() => {});
+}
+
+export async function fetchProjectDetailsById(
+  idOrSlug: string | number
+): Promise<FullProjectData> {
+  const strId = String(idOrSlug).trim().toLowerCase();
+
+  // Check in-memory cache first
+  const cached = getCachedProjectDetailsById(strId);
+
+  // Check database for an enriched or admin-updated record
+  let dbProjects: DevOpsProject[] = [];
+  try {
+    dbProjects = await fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject);
+  } catch (e) {
+    console.warn("[ProjectContent] /api/devops request failed, using local project records:", e);
+    if (cached) return cached;
+  }
+
+  const freshData = buildFullProjectData(strId, dbProjects);
+  projectDetailsCache.set(strId, freshData);
+  return freshData;
 }
 
 /**

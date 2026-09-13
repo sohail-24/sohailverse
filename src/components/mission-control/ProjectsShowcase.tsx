@@ -10,6 +10,8 @@ import {
 import { initialProjects } from "../../data/mission-control";
 import type { UniverseProject } from "../../types/mission-control";
 import { formatProjectStatus } from "../../lib/utils";
+import { prefetchProjectDetails } from "../../lib/projectContent";
+import { prefetchRouteData } from "../navigation/Navbar";
 
 interface ProjectsShowcaseProps {
   projects?: UniverseProject[];
@@ -196,7 +198,7 @@ export default function ProjectsShowcase({
           glowBg: "rgba(163,230,53,0.08)",
           taglineColor: "text-lime-400",
           ctaButton:
-            "border border-lime-400/40 bg-lime-500/10 text-lime-300 hover:bg-lime-500/20 hover:border-lime-400 hover:shadow-[0_0_15px_rgba(163,230,53,0.25)]",
+            "border border-lime-400/40 bg-lime-500/10 text-lime-300 group-hover:bg-lime-500/20 group-hover:border-lime-400 group-hover:shadow-[0_0_15px_rgba(163,230,53,0.25)] hover:bg-lime-500/20 hover:border-lime-400 hover:shadow-[0_0_15px_rgba(163,230,53,0.25)]",
         };
       case "sohail-studio":
         return {
@@ -205,7 +207,7 @@ export default function ProjectsShowcase({
           glowBg: "rgba(6,182,212,0.08)",
           taglineColor: "text-cyan-400",
           ctaButton:
-            "border border-cyan-400/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400 hover:shadow-[0_0_15px_rgba(6,182,212,0.25)]",
+            "border border-cyan-400/40 bg-cyan-500/10 text-cyan-300 group-hover:bg-cyan-500/20 group-hover:border-cyan-400 group-hover:shadow-[0_0_15px_rgba(6,182,212,0.25)] hover:bg-cyan-500/20 hover:border-cyan-400 hover:shadow-[0_0_15px_rgba(6,182,212,0.25)]",
         };
       case "fresh-flow":
         return {
@@ -214,7 +216,7 @@ export default function ProjectsShowcase({
           glowBg: "rgba(56,189,248,0.08)",
           taglineColor: "text-sky-400",
           ctaButton:
-            "border border-sky-400/40 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 hover:border-sky-400 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)]",
+            "border border-sky-400/40 bg-sky-500/10 text-sky-300 group-hover:bg-sky-500/20 group-hover:border-sky-400 group-hover:shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:bg-sky-500/20 hover:border-sky-400 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)]",
         };
       case "wedding":
         return {
@@ -223,7 +225,7 @@ export default function ProjectsShowcase({
           glowBg: "rgba(244,63,94,0.08)",
           taglineColor: "text-rose-400",
           ctaButton:
-            "border border-rose-400/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 hover:border-rose-400 hover:shadow-[0_0_15px_rgba(244,63,94,0.25)]",
+            "border border-rose-400/40 bg-rose-500/10 text-rose-300 group-hover:bg-rose-500/20 group-hover:border-rose-400 group-hover:shadow-[0_0_15px_rgba(244,63,94,0.25)] hover:bg-rose-500/20 hover:border-rose-400 hover:shadow-[0_0_15px_rgba(244,63,94,0.25)]",
         };
       default:
         return {
@@ -232,7 +234,7 @@ export default function ProjectsShowcase({
           glowBg: "rgba(168,85,247,0.08)",
           taglineColor: "text-purple-400",
           ctaButton:
-            "border border-purple-400/40 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)]",
+            "border border-purple-400/40 bg-purple-500/10 text-purple-300 group-hover:bg-purple-500/20 group-hover:border-purple-400 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.25)] hover:bg-purple-500/20 hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)]",
         };
     }
   };
@@ -376,11 +378,16 @@ export default function ProjectsShowcase({
             const theme = getProjectTheme(project.id);
             const statusStyle = getProjectStatusStyle(project);
             const projectImages = resolveProjectImages(project);
+            const projectUrl = project.link || `/projects/${project.id}`;
 
             return (
-              <div
+              <Link
                 key={project.id}
-                className={`project-card group relative flex flex-col shrink-0 snap-start rounded-2xl border border-slate-800/90 bg-[#0d1526]/95 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] overflow-hidden transition-all duration-300 hover:-translate-y-1.5 ${theme.accentBorder} w-[190px] min-[400px]:w-[205px] sm:w-[225px] md:w-[240px]`}
+                to={projectUrl}
+                aria-label={`Explore project ${project.name}`}
+                onMouseEnter={() => prefetchProjectDetails(project.id)}
+                onFocus={() => prefetchProjectDetails(project.id)}
+                className={`project-card group relative flex flex-col shrink-0 snap-start rounded-2xl border border-slate-800/90 bg-[#0d1526]/95 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] overflow-hidden transition-all duration-300 hover:-translate-y-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 ${theme.accentBorder} w-[190px] min-[400px]:w-[205px] sm:w-[225px] md:w-[240px] cursor-pointer`}
               >
                 {/* Subtle Ambient Card Glow on Hover */}
                 <div
@@ -495,16 +502,15 @@ export default function ProjectsShowcase({
 
                   {/* EXPLORE PROJECT BUTTON */}
                   <div className="pt-2 border-t border-slate-800/80 mt-1">
-                    <Link
-                      to={project.link || `/projects/${project.id}`}
+                    <span
                       className={`w-full min-h-[38px] sm:min-h-[42px] inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-98 shadow-sm ${theme.ctaButton}`}
                     >
                       <span>Explore Project</span>
                       <ArrowUpRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </Link>
+                    </span>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
           {/* Spacer to give the last card comfortable end padding on mobile */}
@@ -537,6 +543,8 @@ export default function ProjectsShowcase({
       <div className="flex justify-center pt-1 sm:pt-2">
         <Link
           to="/projects"
+          onMouseEnter={() => prefetchRouteData("/projects")}
+          onFocus={() => prefetchRouteData("/projects")}
           id="view-all-projects-bottom-cta"
           className="group inline-flex min-h-[42px] sm:min-h-[46px] items-center justify-center gap-2 rounded-full border border-slate-800/90 bg-[#0d1526]/90 px-6 sm:px-8 py-2.5 text-xs sm:text-sm font-semibold text-slate-200 hover:text-white hover:border-lime-400/50 hover:bg-slate-800/90 hover:shadow-[0_0_20px_rgba(163,230,53,0.15)] transition-all shadow-md active:scale-98"
         >
