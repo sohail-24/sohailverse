@@ -408,8 +408,17 @@ export function setCachedApi<T>(endpoint: string, data: T[]): void {
 export function invalidateApiCache(endpoint?: string): void {
   if (endpoint) {
     apiCache.delete(endpoint);
+    inFlightRequests.delete(endpoint);
+    // Also delete any recordCache entries matching or starting with this endpoint (e.g. /api/devops/7)
+    for (const key of Array.from(recordCache.keys())) {
+      if (key === endpoint || key.startsWith(`${endpoint}/`)) {
+        recordCache.delete(key);
+      }
+    }
   } else {
     apiCache.clear();
+    recordCache.clear();
+    inFlightRequests.clear();
   }
 }
 

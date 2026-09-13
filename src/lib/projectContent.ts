@@ -6,8 +6,12 @@
  * Documentation/PDFs, Architecture Diagrams, and External Links).
  */
 
-import { fetchApi, getCachedApi, prefetchApi, isValidDevOpsProject, type DevOpsProject } from "./api";
+import { fetchApi, getCachedApi, prefetchApi, invalidateApiCache, isValidDevOpsProject, type DevOpsProject } from "./api";
 import { initialProjects } from "../data/mission-control";
+import {
+  findDbRecordForProject,
+  invalidateUnifiedProjectsCache,
+} from "../components/projects/projectData";
 import {
   TEMPORARY_PROJECT_IMAGE_MAP,
   resolveVersionedProjectImageUrl,
@@ -956,38 +960,25 @@ export function buildFullProjectData(
 
   let dbRecord: DevOpsProject | undefined;
   if (dbProjects && dbProjects.length > 0) {
-    dbRecord = dbProjects.find((p) => {
-      if (strId === "1" || strId === "sohail-shop") {
-        return p.id === 1 || p.title.toLowerCase().includes("sohail") || p.title.toLowerCase().includes("shop");
-      }
-      if (strId === "fresh-flow" || strId === "am-fruits") {
-        return (
-          p.title.toLowerCase().includes("fresh") ||
-          p.title.toLowerCase().includes("fruit") ||
-          p.title.toLowerCase().includes("flow")
-        );
-      }
-      return String(p.id) === strId || p.title.toLowerCase().includes(strId);
-    });
+    dbRecord = findDbRecordForProject(idOrSlug, staticProj?.name, dbProjects);
   }
 
-  const canonicalId = staticProj?.id || "sohail-shop";
-  const title =
-    canonicalId === "fresh-flow"
-      ? (dbRecord?.title || "AM Fruits")
-      : (dbRecord?.title || staticProj?.name || "Project");
+  const canonicalId = staticProj?.id || (dbRecord ? String(dbRecord.id) : "sohail-shop");
+  const title = dbRecord?.title || (canonicalId === "fresh-flow" ? "AM Fruits" : (staticProj?.name || "Project"));
   const category =
-    canonicalId === "fresh-flow"
-      ? (dbRecord?.category || "B2B Wholesale Commerce")
+    dbRecord?.category ||
+    (canonicalId === "fresh-flow"
+      ? "B2B Wholesale Commerce"
       : canonicalId === "sohail-studio"
-      ? (dbRecord?.category || "DevOps AI Control Plane")
-      : dbRecord?.category || staticProj?.category || (staticProj ? "Cloud Architecture" : "Engineering");
+      ? "DevOps AI Control Plane"
+      : staticProj?.category || "Cloud Architecture");
   const description =
-    canonicalId === "fresh-flow"
-      ? (dbRecord?.description || "A full-stack B2B wholesale produce platform that combines buyer procurement with supplier business management.")
+    dbRecord?.description ||
+    (canonicalId === "fresh-flow"
+      ? "A full-stack B2B wholesale produce platform that combines buyer procurement with supplier business management."
       : canonicalId === "sohail-studio"
-      ? (dbRecord?.description || staticProj?.description || "A local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions across three isolated execution planes.")
-      : dbRecord?.description || staticProj?.description || "";
+      ? "A local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions across three isolated execution planes."
+      : staticProj?.description || "");
   const tagline =
     canonicalId === "fresh-flow"
       ? "B2B Wholesale Produce & Business Management Platform"
@@ -995,8 +986,8 @@ export function buildFullProjectData(
       ? (staticProj?.tagline || "Local-First DevOps AI Control Plane & Engineering Workspace")
       : staticProj?.tagline || "High-Performance Cloud System";
 
-  const rawStatus = canonicalId === "fresh-flow" ? (dbRecord?.status || "Active") : (dbRecord?.status || staticProj?.statusLabel);
-  const status = canonicalId === "fresh-flow" ? "Active" : normalizeProjectStatus(rawStatus);
+  const rawStatus = dbRecord?.status || staticProj?.statusLabel;
+  const status = normalizeProjectStatus(rawStatus);
 
   // Technologies
   let techList: string[] = [];
@@ -1097,20 +1088,44 @@ export function prefetchProjectDetails(idOrSlug: string | number): void {
   }).catch(() => {});
 }
 
+/**
+ * Invalidate project details cache for a specific ID or all projects.
+ */
+export function invalidateProjectDetailsCache(idOrSlug?: string | number): void {
+  if (idOrSlug !== undefined && idOrSlug !== null) {
+    projectDetailsCache.delete(String(idOrSlug).trim().toLowerCase());
+  } else {
+    projectDetailsCache.clear();
+  }
+  invalidateUnifiedProjectsCache();
+  invalidateApiCache("/api/devops");
+}
+
 export async function fetchProjectDetailsById(
-  idOrSlug: string | number
+  idOrSlug: string | number,
+  options?: { forceRefresh?: boolean }
 ): Promise<FullProjectData> {
   const strId = String(idOrSlug).trim().toLowerCase();
 
-  // Check in-memory cache first
-  const cached = getCachedProjectDetailsById(strId);
+  if (options?.forceRefresh) {
+    projectDetailsCache.delete(strId);
+  } else {
+    // Check in-memory cache first
+    const cached = getCachedProjectDetailsById(strId);
+    if (cached) return cached;
+  }
 
   // Check database for an enriched or admin-updated record
   let dbProjects: DevOpsProject[] = [];
   try {
-    dbProjects = await fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject);
+    dbProjects = await fetchApi<DevOpsProject>(
+      "/api/devops",
+      isValidDevOpsProject,
+      { forceRefresh: options?.forceRefresh }
+    );
   } catch (e) {
     console.warn("[ProjectContent] /api/devops request failed, using local project records:", e);
+    const cached = getCachedProjectDetailsById(strId);
     if (cached) return cached;
   }
 
@@ -1156,6 +1171,9 @@ export async function saveProjectContentToDatabase(
     const errorBody = await res.json().catch(() => null);
     throw new Error(errorBody?.error || `Failed to update project #${dbId}`);
   }
+
+  // Clear all relevant caches immediately to ensure synchronized data propagation across all pages
+  invalidateProjectDetailsCache(dbId);
 
   return res.json();
 }

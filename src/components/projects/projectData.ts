@@ -4,7 +4,7 @@
  * Respects snake_case API contracts (image_url, github_url, ppt_url).
  */
 
-import { fetchApi, getCachedApi, isValidDevOpsProject, type DevOpsProject } from "../../lib/api";
+import { fetchApi, getCachedApi, invalidateApiCache, isValidDevOpsProject, type DevOpsProject } from "../../lib/api";
 import { initialProjects } from "../../data/mission-control";
 import type { UniverseProject } from "../../types/mission-control";
 import { resolveProjectImages } from "../mission-control/ProjectsShowcase";
@@ -26,6 +26,7 @@ export interface UnifiedProject {
   statusLabel?: string;
   tagline?: string;
   highlight?: string;
+  dbId?: number;
 }
 
 /**
@@ -51,115 +52,138 @@ export const CANONICAL_PROJECT_ORDER: readonly string[] = [
 ];
 
 /**
- * Synchronously constructs UnifiedProject[] from static projects and optional database records.
+ * Canonical matcher to locate the corresponding database record for a project.
+ * Matches by numeric ID, canonical ID alias, or title substring.
+ */
+export function findDbRecordForProject(
+  id: string | number,
+  title?: string,
+  dbProjects: DevOpsProject[] = []
+): DevOpsProject | undefined {
+  if (!dbProjects || dbProjects.length === 0) return undefined;
+
+  const strId = String(id).toLowerCase().trim();
+  const numId = typeof id === "number" ? id : (!isNaN(Number(strId)) ? Number(strId) : null);
+  const searchTitle = (title || "").toLowerCase().trim();
+
+  // 1. Direct numeric ID match
+  if (numId !== null && numId > 0) {
+    const direct = dbProjects.find((p) => p.id === numId);
+    if (direct) return direct;
+  }
+
+  // 2. Canonical project identifiers
+  if (strId === "sohail-studio") {
+    return dbProjects.find(
+      (p) =>
+        p.id === 7 ||
+        p.title.toLowerCase().includes("sohail-studio") ||
+        (p.title.toLowerCase().includes("sohail") && p.title.toLowerCase().includes("studio"))
+    );
+  }
+
+  if (strId === "fresh-flow" || strId === "am-fruits") {
+    return dbProjects.find(
+      (p) =>
+        p.id === 5 ||
+        p.title.toLowerCase().includes("am fruits") ||
+        p.title.toLowerCase().includes("fresh flow") ||
+        p.title.toLowerCase().includes("fruit")
+    );
+  }
+
+  if (strId === "sohail-shop") {
+    return dbProjects.find(
+      (p) =>
+        p.id === 1 ||
+        p.title.toLowerCase().includes("sohailshop") ||
+        (p.title.toLowerCase().includes("sohail") && p.title.toLowerCase().includes("shop"))
+    );
+  }
+
+  if (strId === "wedding" || strId === "wedding-page") {
+    return dbProjects.find(
+      (p) => p.id === 6 || p.title.toLowerCase().includes("wedding")
+    );
+  }
+
+  if (strId === "new-chapter") {
+    return dbProjects.find((p) => p.title.toLowerCase().includes("new chapter"));
+  }
+
+  // 3. Match by exact or partial title if provided
+  if (searchTitle) {
+    const byTitle = dbProjects.find((p) => {
+      const pTitle = p.title.toLowerCase();
+      return pTitle === searchTitle || pTitle.includes(searchTitle) || searchTitle.includes(pTitle);
+    });
+    if (byTitle) return byTitle;
+  }
+
+  // 4. Fallback search by id substring in project title
+  return dbProjects.find((p) => p.title.toLowerCase().includes(strId));
+}
+
+/**
+ * Synchronously constructs UnifiedProject[] from static projects and database records.
+ * The database is the single authoritative source of truth for all persisted fields (status, title, category, description, tech, urls).
  */
 export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedProject[] {
-  // Find DB record for SohailShop / flagship if available
-  const dbFlagship = dbProjects.find(
-    (p) =>
-      p.id === 1 ||
-      p.title.toLowerCase().includes("sohail") ||
-      p.title.toLowerCase().includes("shop")
-  );
-
-  // Map initialProjects to UnifiedProject
+  // Map initialProjects to UnifiedProject, merging with matching database records
   const mapped: UnifiedProject[] = initialProjects.map((proj: UniverseProject) => {
     const images = resolveProjectImages(proj);
+    const dbRecord = findDbRecordForProject(proj.id, proj.name, dbProjects);
 
-    // If this is the flagship project and DB record exists, merge real DB fields
-    if (proj.id === "sohail-shop" && dbFlagship) {
-      const dbTech = normalizeTechnologies(dbFlagship.technologies);
-      return {
-        id: proj.id,
-        title: proj.name,
-        category: dbFlagship.category || "Cloud Native Architecture",
-        description: dbFlagship.description || proj.description,
-        technologies: dbTech.length > 0 ? dbTech : (proj.technologies || []),
-        imageUrl: images.imageDesktop,
-        fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.v2.jpg",
-        githubUrl: dbFlagship.github_url || "https://github.com/sohail-24/django_ecommerce",
-        liveUrl: "sohail-shop.sohailverse.com",
-        internalUrl: "/projects/sohail-shop",
-        rating: dbFlagship.rating ? Number(dbFlagship.rating) : undefined,
-        status: formatProjectStatus(dbFlagship.status || proj.statusLabel),
-        statusLabel: formatProjectStatus(dbFlagship.status || proj.statusLabel),
-        tagline: proj.tagline,
-        highlight: proj.highlightMetric,
-      };
-    }
+    // Database fields take strict precedence over static defaults
+    const title = dbRecord?.title || (proj.id === "fresh-flow" ? "AM Fruits" : proj.name);
+    const category = dbRecord?.category || (proj.id === "fresh-flow" ? "B2B Wholesale" : (proj.category || "Cloud & AI Initiative"));
+    const description = dbRecord?.description || proj.description;
+    const dbTech = dbRecord?.technologies ? normalizeTechnologies(dbRecord.technologies) : null;
+    const technologies = dbTech && dbTech.length > 0 ? dbTech : (proj.technologies || []);
+    const status = formatProjectStatus(dbRecord?.status || proj.statusLabel);
 
-    // Default mapping for other projects
     return {
       id: proj.id,
-      title: proj.id === "fresh-flow" ? "AM Fruits" : proj.name,
-      category:
-        proj.id === "fresh-flow"
-          ? "B2B Wholesale"
-          : proj.id === "sohail-studio"
-          ? "DevOps AI Control Plane"
-          : (proj.category ||
-            (proj.id === "wedding"
-              ? "Web Experience"
-              : "Cloud & AI Initiative")),
-      description:
-        proj.id === "fresh-flow"
-          ? "A B2B platform connecting business buyers with wholesale produce and supplier operations."
-          : proj.id === "sohail-studio"
-          ? "A local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions across three isolated execution planes."
-          : proj.description,
-      technologies:
-        proj.id === "fresh-flow"
-          ? ["React", "TypeScript", "Hono", "PostgreSQL", "Docker"]
-          : proj.id === "sohail-studio"
-          ? [
-              "React",
-              "TypeScript",
-              "Node.js",
-              "Tailwind CSS",
-              "Systems Design",
-              "Shell Execution",
-              "Local-First Architecture",
-            ]
-          : (proj.technologies || []),
+      title,
+      category,
+      description,
+      technologies,
       imageUrl: images.imageDesktop,
       fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.v2.jpg",
-      githubUrl:
-        proj.id === "sohail-studio"
-          ? "https://github.com/sohail-24"
-          : proj.id === "fresh-flow"
-          ? "https://github.com/sohail-24"
-          : undefined,
-      liveUrl:
-        proj.id === "sohail-studio"
-          ? "studio.sohailverse.com"
-          : proj.id === "fresh-flow"
-          ? "freshflow.app"
-          : proj.id === "wedding"
-          ? "memories.sohailverse.com"
-          : undefined,
+      githubUrl: dbRecord?.github_url || proj.githubUrl,
+      liveUrl: proj.liveUrl,
       internalUrl: `/projects/${proj.id}`,
-      status:
-        proj.id === "fresh-flow" || proj.id === "sohail-studio"
-          ? "Active"
-          : formatProjectStatus(proj.statusLabel),
-      statusLabel:
-        proj.id === "fresh-flow" || proj.id === "sohail-studio"
-          ? "Active"
-          : formatProjectStatus(proj.statusLabel),
-      tagline:
-        proj.id === "fresh-flow"
-          ? "B2B Wholesale Produce Platform"
-          : proj.id === "sohail-studio"
-          ? "Local-First DevOps AI Control Plane & Engineering Workspace"
-          : proj.tagline,
-      highlight:
-        proj.id === "fresh-flow"
-          ? undefined
-          : proj.id === "sohail-studio"
-          ? "Flagship Control Plane"
-          : proj.highlightMetric,
+      rating: dbRecord?.rating ? Number(dbRecord.rating) : undefined,
+      status,
+      statusLabel: status,
+      tagline: proj.tagline,
+      highlight: proj.highlightMetric,
+      dbId: dbRecord?.id,
     };
   });
+
+  // Include any extra database records that were not matched to initialProjects
+  const matchedDbIds = new Set(
+    mapped.map((p) => p.dbId).filter((id): id is number => typeof id === "number")
+  );
+
+  const additionalDbProjects = dbProjects.filter((p) => !matchedDbIds.has(p.id));
+  for (const db of additionalDbProjects) {
+    mapped.push({
+      id: db.id,
+      title: db.title,
+      category: db.category || "DevOps Architecture",
+      description: db.description || "",
+      technologies: normalizeTechnologies(db.technologies),
+      imageUrl: db.image_url || "/projects/temporary/sohail-shop-desktop.v2.jpg",
+      fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.v2.jpg",
+      githubUrl: db.github_url || undefined,
+      internalUrl: `/projects/${db.id}`,
+      status: formatProjectStatus(db.status || "Ready"),
+      statusLabel: formatProjectStatus(db.status || "Ready"),
+      dbId: db.id,
+    });
+  }
 
   // Enforce authoritative presentation order:
   // 1. Sohail-Studio, 2. AM Fruits, 3. Sohail-Shop, 4. Wedding Page, 5. New Chapter Loading
@@ -177,6 +201,14 @@ export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedP
 let cachedUnifiedProjects: UnifiedProject[] | null = null;
 
 /**
+ * Invalidate client-side UnifiedProjects cache to guarantee subsequent reads pull fresh data.
+ */
+export function invalidateUnifiedProjectsCache(): void {
+  cachedUnifiedProjects = null;
+  invalidateApiCache("/api/devops");
+}
+
+/**
  * Returns synchronously cached UnifiedProject[] if available.
  */
 export function getCachedUnifiedProjects(): UnifiedProject[] | null {
@@ -186,7 +218,7 @@ export function getCachedUnifiedProjects(): UnifiedProject[] | null {
     cachedUnifiedProjects = buildUnifiedProjects(dbProjects);
     return cachedUnifiedProjects;
   }
-  // Even if dbProjects isn't fetched yet, build from initialProjects so the page can render instantly!
+  // Even if dbProjects isn't fetched yet, build from initialProjects so the page can render instantly
   cachedUnifiedProjects = buildUnifiedProjects([]);
   return cachedUnifiedProjects;
 }
@@ -195,11 +227,21 @@ export function getCachedUnifiedProjects(): UnifiedProject[] | null {
  * Builds the portfolio list by combining real live database records with
  * established SohailVerse project systems.
  */
-export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
+export async function loadUnifiedProjects(options?: { forceRefresh?: boolean }): Promise<UnifiedProject[]> {
+  if (options?.forceRefresh) {
+    invalidateUnifiedProjectsCache();
+  } else if (cachedUnifiedProjects) {
+    return cachedUnifiedProjects;
+  }
+
   let dbProjects: DevOpsProject[] = [];
 
   try {
-    dbProjects = await fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject);
+    dbProjects = await fetchApi<DevOpsProject>(
+      "/api/devops",
+      isValidDevOpsProject,
+      { forceRefresh: options?.forceRefresh }
+    );
   } catch (err) {
     console.warn("[Projects] Failed to fetch /api/devops, falling back to local dataset:", err);
   }
