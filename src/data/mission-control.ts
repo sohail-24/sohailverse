@@ -36,7 +36,7 @@ export const initialProjects: UniverseProject[] = [
     link: "/projects/sohail-studio",
     complexity: 4,
     highlightMetric: "Active Engine",
-    image: "/projects/temporary/sohail-studio-placeholder.jpg",
+    image: "/projects/temporary/sohail-studio-placeholder.v2.jpg",
   },
   {
     id: "fresh-flow",
@@ -44,7 +44,7 @@ export const initialProjects: UniverseProject[] = [
     category: "B2B Wholesale Commerce",
     tagline: "B2B Wholesale Produce & Business Management Platform",
     description:
-      "AM Fruits is a B2B wholesale produce platform that connects business buyers with the supplier's business operations in one application. Buyers can browse wholesale products, search the catalog, manage their cart, checkout, make payments, place orders, and track their orders. The owner side provides business management capabilities for products, categories, inventory, warehouses, customers, orders, invoices, delivery areas, shipping methods, and reports.",
+      "AM Fruits is a B2B wholesale produce platform connecting buyers with distributors and suppliers. Buyers can browse wholesale products, compare volume pricing, manage carts, checkout, and track delivery status. Suppliers manage products, pricing tiers, customer accounts, and order invoices.",
     status: "live",
     statusLabel: "Active",
     featured: false,
@@ -67,7 +67,7 @@ export const initialProjects: UniverseProject[] = [
     link: "/projects/fresh-flow",
     complexity: 4,
     highlightMetric: "Active Platform",
-    image: "/projects/temporary/fresh-flow-placeholder.jpg",
+    image: "/projects/temporary/fresh-flow-placeholder.v2.jpg",
   },
   {
     id: "sohail-shop",
@@ -91,7 +91,7 @@ export const initialProjects: UniverseProject[] = [
     link: "/projects/sohail-shop",
     complexity: 5,
     highlightMetric: "Production Deployed",
-    image: "/projects/temporary/sohail-shop-placeholder.jpg",
+    image: "/projects/temporary/sohail-shop-placeholder.v2.jpg",
   },
   {
     id: "wedding",
@@ -105,7 +105,7 @@ export const initialProjects: UniverseProject[] = [
     link: "/projects/wedding",
     complexity: 3,
     highlightMetric: "Upcoming",
-    image: "/projects/temporary/wedding-placeholder.jpg",
+    image: "/projects/temporary/wedding-placeholder.v2.jpg",
   },
   {
     id: "new-chapter",
@@ -119,7 +119,7 @@ export const initialProjects: UniverseProject[] = [
     link: "/projects/new-chapter",
     complexity: 4,
     highlightMetric: "Loading 2026",
-    image: "/projects/temporary/new-chapter-placeholder.jpg",
+    image: "/projects/temporary/new-chapter-placeholder.v2.jpg",
   },
 ];
 

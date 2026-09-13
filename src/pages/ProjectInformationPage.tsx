@@ -16,6 +16,9 @@ import {
   Calendar,
   Eye,
   Info,
+  ShieldCheck,
+  History,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   SiKubernetes,
@@ -43,7 +46,6 @@ import {
   SiNginx,
 } from "react-icons/si";
 import { FaAws, FaGithub } from "react-icons/fa";
-import AMFruitsCaseStudy from "../components/projects/AMFruitsCaseStudy";
 import {
   fetchProjectDetailsById,
   getProjectVideoEmbedUrl,
@@ -101,6 +103,9 @@ export default function ProjectInformationPage() {
   // Active document selected in documentation viewer
   const [selectedDocIndex, setSelectedDocIndex] = useState(0);
 
+  // Active gallery image selected (1 to 5 images)
+  const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0);
+
   // Lightbox for architecture diagrams / hero image
   const [lightboxImage, setLightboxImage] = useState<{
     url: string;
@@ -131,6 +136,7 @@ export default function ProjectInformationPage() {
       setError(null);
       const data = await fetchProjectDetailsById(id);
       setProject(data);
+      setSelectedGalleryIndex(0);
       if (data.content.videos.length > 0) {
         setActiveVideo(data.content.videos[0]);
       }
@@ -211,7 +217,113 @@ export default function ProjectInformationPage() {
   }
 
   const { content } = project;
+  const detail = content.projectDetail;
   const activeDoc = content.documents[selectedDocIndex] || null;
+
+  // Project Gallery (up to 5 images) — Only include images where enabled === true AND valid URL
+  const enabledImages: string[] = [];
+  if (detail?.images) {
+    if (detail.images.image1?.enabled && detail.images.image1?.url?.trim()) {
+      enabledImages.push(detail.images.image1.url.trim());
+    }
+    if (detail.images.image2?.enabled && detail.images.image2?.url?.trim()) {
+      enabledImages.push(detail.images.image2.url.trim());
+    }
+    if (detail.images.image3?.enabled && detail.images.image3?.url?.trim()) {
+      enabledImages.push(detail.images.image3.url.trim());
+    }
+    if (detail.images.image4?.enabled && detail.images.image4?.url?.trim()) {
+      enabledImages.push(detail.images.image4.url.trim());
+    }
+    if (detail.images.image5?.enabled && detail.images.image5?.url?.trim()) {
+      enabledImages.push(detail.images.image5.url.trim());
+    }
+  } else {
+    // Fallback if no projectDetail schema
+    if (content.gallery_images && content.gallery_images.length > 0) {
+      enabledImages.push(
+        ...content.gallery_images.filter((img) => typeof img === "string" && img.trim().length > 0)
+      );
+    } else if (project.hero_image) {
+      enabledImages.push(project.hero_image);
+    }
+  }
+
+  const galleryList = enabledImages.slice(0, 5);
+  const activeImage = galleryList[selectedGalleryIndex] || galleryList[0] || null;
+
+  // Optional project resources: Must have valid content AND enabled === true
+  const gitUrl = (
+    detail?.gitRepository?.enabled
+      ? (detail.gitRepository.url || content.git_url || project.githubUrl || "")
+      : ""
+  ).trim();
+
+  const websiteUrl = (
+    detail?.website?.enabled
+      ? (detail.website.url || content.website_url || project.liveUrl || "")
+      : ""
+  ).trim();
+
+  const videoUrl = (
+    detail?.video?.enabled
+      ? (detail.video.url || content.video_url || "")
+      : ""
+  ).trim();
+
+  const pdfUrl = (
+    detail?.pdf?.enabled
+      ? (detail.pdf.url || content.pdf_url || "")
+      : ""
+  ).trim();
+
+  const docUrl = (
+    detail?.documentation?.enabled
+      ? (detail.documentation.url || content.documentation_url || "")
+      : ""
+  ).trim();
+
+  const docContent = (
+    detail?.documentation?.enabled
+      ? (detail.documentation.content || content.documentation_content || "")
+      : ""
+  ).trim();
+
+  const hasAnyResource = Boolean(gitUrl || websiteUrl || videoUrl || pdfUrl || docUrl);
+
+  // Video Sessions: Must be enabled AND have at least one valid video URL
+  const isVideoSessionsVisible = Boolean(
+    detail?.videoSessions?.enabled &&
+    content.videos.length > 0 &&
+    content.videos.some((v) => v.video_url && v.video_url.trim().length > 0)
+  );
+
+  // Documentation section: Must be enabled AND have documents or content
+  const isDocumentsSectionVisible = Boolean(
+    detail?.documentation?.enabled &&
+    (content.documents.length > 0 || docUrl || docContent)
+  );
+
+  // Architecture diagrams: Must be enabled AND have at least one diagram
+  const isArchitectureVisible = Boolean(
+    detail?.architecture?.enabled &&
+    content.architecture.length > 0 &&
+    content.architecture.some((a) => a.image_url && a.image_url.trim().length > 0)
+  );
+
+  const hasMultipleSections = Boolean(
+    isVideoSessionsVisible ||
+    isDocumentsSectionVisible ||
+    isArchitectureVisible ||
+    content.links.length > 0
+  );
+
+  // Implemented features
+  const implementedFeatures = (
+    content.implemented_features && content.implemented_features.length > 0
+      ? content.implemented_features
+      : content.highlightsList
+  )?.filter((f): f is string => typeof f === "string" && f.trim().length > 0) || [];
 
   // Status styling
   const statusStyles = {
@@ -257,11 +369,11 @@ export default function ProjectInformationPage() {
             <span>Back to Projects</span>
           </Link>
 
-          {/* Action Links (GitHub, Live App) */}
+          {/* Action Links (GitHub, Live App) - strictly guarded by Admin visibility */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {project.githubUrl && (
+            {gitUrl && (
               <a
-                href={project.githubUrl}
+                href={gitUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-slate-900/60 hover:bg-slate-800 text-xs font-mono text-slate-300 hover:text-white transition-all shadow-sm"
@@ -271,12 +383,12 @@ export default function ProjectInformationPage() {
               </a>
             )}
 
-            {project.liveUrl && (
+            {websiteUrl && (
               <a
                 href={
-                  project.liveUrl.startsWith("http")
-                    ? project.liveUrl
-                    : `https://${project.liveUrl}`
+                  websiteUrl.startsWith("http")
+                    ? websiteUrl
+                    : `https://${websiteUrl}`
                 }
                 target="_blank"
                 rel="noopener noreferrer"
@@ -332,193 +444,338 @@ export default function ProjectInformationPage() {
             3. STICKY SUB-NAVIGATION PILLS
             - Overview | Video Sessions | Documentation | Architecture | Project Links
            ========================================================================= */}
-        <nav
-          aria-label="Project section navigation"
-          className="sticky top-[57px] sm:top-[65px] z-20 -mx-4 sm:mx-0 px-4 sm:px-0 py-2.5 bg-[#050811]/95 backdrop-blur-md border-y border-white/[0.08] flex items-center gap-2 overflow-x-auto no-scrollbar"
-        >
-          <button
-            onClick={() => scrollToSection("overview")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-              activeSection === "overview"
-                ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-            }`}
+        {hasMultipleSections && (
+          <nav
+            aria-label="Project section navigation"
+            className="sticky top-[57px] sm:top-[65px] z-20 -mx-4 sm:mx-0 px-4 sm:px-0 py-2.5 bg-[#050811]/95 backdrop-blur-md border-y border-white/[0.08] flex items-center gap-2 overflow-x-auto no-scrollbar"
           >
-            Overview
-          </button>
-
-          {content.videos.length > 0 && (
             <button
-              onClick={() => scrollToSection("videos")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeSection === "videos"
-                  ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                  : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-              }`}
-            >
-              <span>Video Sessions</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-cyan-400/20 text-[11px] font-mono text-cyan-200">
-                {content.videos.length}
-              </span>
-            </button>
-          )}
-
-          {content.documents.length > 0 && (
-            <button
-              onClick={() => scrollToSection("docs")}
+              onClick={() => scrollToSection("overview")}
               className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                activeSection === "docs"
+                activeSection === "overview"
                   ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
                   : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
               }`}
             >
-              Documentation / PDF
+              Overview
             </button>
-          )}
 
-          {content.architecture.length > 0 && (
-            <button
-              onClick={() => scrollToSection("architecture")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                activeSection === "architecture"
-                  ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                  : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-              }`}
-            >
-              Architecture Diagrams
-            </button>
-          )}
+            {isVideoSessionsVisible && (
+              <button
+                onClick={() => scrollToSection("videos")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  activeSection === "videos"
+                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
+                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
+                }`}
+              >
+                <span>Video Sessions</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-cyan-400/20 text-[11px] font-mono text-cyan-200">
+                  {content.videos.length}
+                </span>
+              </button>
+            )}
 
-          {content.links.length > 0 && (
-            <button
-              onClick={() => scrollToSection("links")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                activeSection === "links"
-                  ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                  : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-              }`}
-            >
-              Project Links
-            </button>
-          )}
-        </nav>
+            {isDocumentsSectionVisible && (
+              <button
+                onClick={() => scrollToSection("docs")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+                  activeSection === "docs"
+                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
+                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
+                }`}
+              >
+                Documentation / PDF
+              </button>
+            )}
+
+            {isArchitectureVisible && (
+              <button
+                onClick={() => scrollToSection("architecture")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+                  activeSection === "architecture"
+                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
+                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
+                }`}
+              >
+                Architecture Diagrams
+              </button>
+            )}
+
+            {content.links.length > 0 && (
+              <button
+                onClick={() => scrollToSection("links")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+                  activeSection === "links"
+                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
+                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
+                }`}
+              >
+                Project Links
+              </button>
+            )}
+          </nav>
+        )}
 
         {/* =========================================================================
-            SECTION 1: OVERVIEW & SUPPORTING PROJECT VISUAL
-            - Uses the EXACT approved Project Image Standard (210px x 350px, 3:5 aspect ratio)
-            - Stays compact and fixed-sized while the project information column grows vertically
+            SECTION 1: HERO IMAGE, GALLERY, OVERVIEW, RESOURCES & CORE PRESENTATION
+            - Clean, expandable presentation page structure for AM Fruits and all projects
+            - Supports up to 5 project images with thumbnail selector
+            - Optional project resources (Git, Website, Video, PDF, Documentation)
+            - Implemented Features, Important Business Flow, Payment System & Security, Order Data / Historical Records
            ========================================================================= */}
-        <section ref={overviewRef} id="section-overview" className="space-y-6 sm:space-y-8">
-          <div className="flex flex-col sm:flex-row items-start gap-6 sm:gap-8 lg:gap-10">
-            {/* Approved Standard Project Image (Locked 210px x 350px, 3:5 aspect ratio) */}
-            <div className="w-[210px] max-w-[210px] shrink-0 mx-auto sm:mx-0 self-start">
-              <div className="relative aspect-[3/5] w-full block overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg group">
+        <section ref={overviewRef} id="section-overview" className="space-y-8 sm:space-y-10">
+          {/* Main Hero Project Image Container - only rendered when at least 1 image is enabled */}
+          {galleryList.length > 0 && activeImage && (
+            <div className="space-y-4">
+              <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/60 shadow-2xl group">
                 <img
-                  src={project.hero_image}
-                  alt={`${project.title} Visual`}
+                  src={activeImage}
+                  alt={`${project.title} Preview`}
                   className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src =
-                      "/projects/temporary/sohail-shop-desktop.jpg";
+                      "/projects/temporary/fresh-flow-desktop.v2.jpg";
                   }}
                 />
-
-                {/* Subtle depth vignette */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
 
                 {/* Lightbox Zoom Button */}
                 <button
                   onClick={() =>
                     setLightboxImage({
-                      url: project.hero_image,
-                      title: project.title,
+                      url: activeImage,
+                      title: `${project.title} — Image ${selectedGalleryIndex + 1}`,
                       caption: project.tagline || project.description,
                     })
                   }
                   aria-label="View full screen preview"
-                  className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-950/80 hover:bg-slate-900 text-[11px] font-mono text-slate-300 hover:text-white border border-white/10 backdrop-blur-md transition-all shadow-md"
+                  className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-xs font-mono text-slate-300 hover:text-white border border-white/10 backdrop-blur-md transition-all shadow-md"
                 >
-                  <Maximize2 className="h-3 w-3" />
+                  <Maximize2 className="h-3.5 w-3.5" />
                   <span>Enlarge</span>
                 </button>
               </div>
-            </div>
 
-            {/* Content Column (Grows vertically as much as needed without altering image size) */}
-            <div className="flex-1 min-w-0 space-y-6">
-              {/* System Overview */}
-              <div className="space-y-3">
-                <h2 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-cyan-400" />
-                  <span>System Overview</span>
-                </h2>
-
-                <div className="text-sm sm:text-base text-slate-300/90 leading-relaxed font-light space-y-3">
-                  <p>{content.overview || project.description}</p>
-                </div>
-              </div>
-
-              {/* Highlights Checkmarks */}
-              {content.highlightsList && content.highlightsList.length > 0 && (
-                <div className="pt-1">
-                  <h3 className="text-xs font-mono uppercase tracking-widest text-slate-400 mb-3">
-                    Key Highlights & Capabilities
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {content.highlightsList.map((item, idx) => (
-                      <div
+              {/* Project Gallery (1 to 5 images) */}
+              {galleryList.length > 1 && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center justify-between text-xs font-mono text-slate-400">
+                    <span className="flex items-center gap-1.5 text-slate-300 font-medium">
+                      <ImageIcon className="h-3.5 w-3.5 text-cyan-400" />
+                      <span>Project Gallery ({galleryList.length} images)</span>
+                    </span>
+                    <span>
+                      Viewing {selectedGalleryIndex + 1} of {galleryList.length}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar py-1">
+                    {galleryList.map((imgUrl, idx) => (
+                      <button
                         key={idx}
-                        className="flex items-start gap-2.5 p-3 rounded-xl border border-white/5 bg-slate-900/40 text-xs sm:text-sm text-slate-200"
+                        onClick={() => setSelectedGalleryIndex(idx)}
+                        className={`relative shrink-0 w-24 sm:w-32 aspect-[16/10] rounded-xl overflow-hidden border transition-all ${
+                          selectedGalleryIndex === idx
+                            ? "border-cyan-400 ring-2 ring-cyan-400/30 scale-[1.02]"
+                            : "border-white/10 opacity-70 hover:opacity-100 hover:border-white/30"
+                        }`}
                       >
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                        <span className="leading-snug">{item}</span>
-                      </div>
+                        <img
+                          src={imgUrl}
+                          alt={`Gallery view ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src =
+                              "/projects/temporary/fresh-flow-desktop.v2.jpg";
+                          }}
+                        />
+                        <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 text-[10px] font-mono text-slate-200">
+                          {idx + 1}
+                        </div>
+                      </button>
                     ))}
                   </div>
                 </div>
               )}
+            </div>
+          )}
 
-              {/* Technologies Arsenal */}
-              <div className="p-5 rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm space-y-3">
-                <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-cyan-400" />
-                  <span>Technology Stack</span>
-                </h3>
+          {/* Project Overview */}
+          {(content.overview || project.description) && (
+            <div className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-3">
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-cyan-400" />
+                <span>Project Overview</span>
+              </h2>
+              <div className="text-sm sm:text-base text-slate-300 leading-relaxed font-light whitespace-pre-line space-y-3">
+                {content.overview || project.description}
+              </div>
+            </div>
+          )}
 
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {project.technologies.map((tech, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/10 bg-slate-800/80 text-xs font-mono text-slate-200 hover:border-cyan-500/40 transition-colors"
-                    >
-                      {getTechBadgeIcon(tech)}
-                      <span>{tech}</span>
-                    </span>
-                  ))}
-                </div>
+          {/* Project Resources (Optional) */}
+          {hasAnyResource && (
+            <div className="p-5 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-3">
+              <h3 className="text-xs font-mono uppercase tracking-widest text-slate-400 font-semibold flex items-center gap-2">
+                <ExternalLink className="h-3.5 w-3.5 text-cyan-400" />
+                <span>Project Resources</span>
+              </h3>
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-1">
+                {gitUrl && (
+                  <a
+                    href={gitUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-slate-800/80 hover:bg-slate-700 text-xs sm:text-sm font-medium text-slate-200 hover:text-white transition-colors"
+                  >
+                    <FaGithub className="h-4 w-4 text-slate-300" />
+                    <span>Git Repository</span>
+                  </a>
+                )}
+                {websiteUrl && (
+                  <a
+                    href={websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-cyan-500/30 bg-cyan-950/40 hover:bg-cyan-900/50 text-xs sm:text-sm font-medium text-cyan-300 hover:text-cyan-200 transition-colors shadow-sm"
+                  >
+                    <ExternalLink className="h-4 w-4 text-cyan-400" />
+                    <span>Website</span>
+                  </a>
+                )}
+                {videoUrl && (
+                  <a
+                    href={videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-rose-500/30 bg-rose-950/40 hover:bg-rose-900/50 text-xs sm:text-sm font-medium text-rose-300 hover:text-rose-200 transition-colors shadow-sm"
+                  >
+                    <Play className="h-4 w-4 text-rose-400" />
+                    <span>Video</span>
+                  </a>
+                )}
+                {pdfUrl && (
+                  <a
+                    href={pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/30 bg-amber-950/40 hover:bg-amber-900/50 text-xs sm:text-sm font-medium text-amber-300 hover:text-amber-200 transition-colors shadow-sm"
+                  >
+                    <Download className="h-4 w-4 text-amber-400" />
+                    <span>PDF</span>
+                  </a>
+                )}
+                {docUrl && (
+                  <a
+                    href={docUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-purple-500/30 bg-purple-950/40 hover:bg-purple-900/50 text-xs sm:text-sm font-medium text-purple-300 hover:text-purple-200 transition-colors"
+                  >
+                    <FileText className="h-4 w-4 text-purple-400" />
+                    <span>Documentation</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
 
-                <div className="pt-3 border-t border-white/5 grid grid-cols-2 gap-4 text-xs font-mono text-slate-400">
-                  <div className="flex justify-between">
-                    <span>Category:</span>
-                    <span className="text-slate-200 font-medium">{project.category}</span>
+          {/* Implemented Features */}
+          {implementedFeatures.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="font-display text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                <span>Implemented Features</span>
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {implementedFeatures.map((feat, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-3 p-3.5 rounded-xl border border-white/5 bg-slate-900/40 text-xs sm:text-sm text-slate-200"
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span className="leading-snug">{feat}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Status:</span>
-                    <span className="text-slate-200 font-medium">{project.status}</span>
-                  </div>
-                </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Important Business Flow */}
+          {content.business_flow && content.business_flow.trim() && (
+            <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
+              <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <Layers className="h-4 w-4 text-cyan-400" />
+                <span>Important Business Flow</span>
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light whitespace-pre-line">
+                {content.business_flow}
+              </p>
+            </div>
+          )}
+
+          {/* Payment System & Security */}
+          {content.payment_security && content.payment_security.trim() && (
+            <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
+              <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                <span>Payment System & Security</span>
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light whitespace-pre-line">
+                {content.payment_security}
+              </p>
+            </div>
+          )}
+
+          {/* Order Data / Historical Records */}
+          {content.order_data_preservation && content.order_data_preservation.trim() && (
+            <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
+              <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <History className="h-4 w-4 text-cyan-400" />
+                <span>Order Data / Historical Records</span>
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light whitespace-pre-line">
+                {content.order_data_preservation}
+              </p>
+            </div>
+          )}
+
+          {/* Technologies Arsenal */}
+          <div className="p-5 rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm space-y-3">
+            <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <Layers className="h-4 w-4 text-cyan-400" />
+              <span>Technology Stack</span>
+            </h3>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {project.technologies.map((tech, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/10 bg-slate-800/80 text-xs font-mono text-slate-200 hover:border-cyan-500/40 transition-colors"
+                >
+                  {getTechBadgeIcon(tech)}
+                  <span>{tech}</span>
+                </span>
+              ))}
+            </div>
+
+            <div className="pt-3 border-t border-white/5 grid grid-cols-2 gap-4 text-xs font-mono text-slate-400">
+              <div className="flex justify-between">
+                <span>Category:</span>
+                <span className="text-slate-200 font-medium">{project.category}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Status:</span>
+                <span className="text-slate-200 font-medium">{project.status}</span>
               </div>
             </div>
           </div>
-
-          {/* Detailed Engineering Case Study for AM Fruits */}
-          {project.id === "fresh-flow" && <AMFruitsCaseStudy />}
         </section>
 
         {/* =========================================================================
             SECTION 2: VIDEO SESSIONS (Reusing Cinema/DevOps Video Player)
            ========================================================================= */}
-        {content.videos.length > 0 && (
+        {isVideoSessionsVisible && (
           <section ref={videosRef} id="section-videos" className="space-y-6 pt-4">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div>
@@ -662,7 +919,7 @@ export default function ProjectInformationPage() {
         {/* =========================================================================
             SECTION 3: README / DOCUMENTATION & PDF VIEWER
            ========================================================================= */}
-        {content.documents.length > 0 && (
+        {isDocumentsSectionVisible && (
           <section ref={docsRef} id="section-docs" className="space-y-6 pt-4">
             <div>
               <div className="flex items-center gap-2">
@@ -771,7 +1028,7 @@ export default function ProjectInformationPage() {
         {/* =========================================================================
             SECTION 4: ARCHITECTURE & SYSTEM DIAGRAMS
            ========================================================================= */}
-        {content.architecture.length > 0 && (
+        {isArchitectureVisible && (
           <section ref={architectureRef} id="section-architecture" className="space-y-6 pt-4">
             <div>
               <div className="flex items-center gap-2">
@@ -805,7 +1062,7 @@ export default function ProjectInformationPage() {
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src =
-                          "/projects/temporary/sohail-shop-desktop.jpg";
+                          "/projects/temporary/sohail-shop-desktop.v2.jpg";
                       }}
                     />
                     <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

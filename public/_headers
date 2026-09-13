@@ -1,0 +1,12 @@
+# Cloudflare Pages Headers Configuration
+
+# Immutable long-term caching for versioned/fingerprinted project images
+/projects/temporary/*.v2.jpg
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# Legacy / non-versioned temporary project images:
+# Force immediate revalidation (max-age=0, must-revalidate) so browsers never retain stale image bytes
+/projects/temporary/*
+  Cache-Control: public, max-age=0, must-revalidate
+  Access-Control-Allow-Origin: *

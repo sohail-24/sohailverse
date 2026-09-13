@@ -54,7 +54,10 @@ export async function onRequestGet({ env }: PagesContext): Promise<Response> {
 
     return new Response(JSON.stringify({ data: formatted }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+      },
     });
   } catch (error) {
     console.error("Error querying devops from Neon:", error);

@@ -360,10 +360,10 @@ export default function AMFruitsCaseStudy() {
               { step: "01", label: "Product", desc: "Catalog lookup & specifications" },
               { step: "02", label: "Cart", desc: "Line items & bulk quantities" },
               { step: "03", label: "Checkout", desc: "Billing & destination details" },
-              { step: "04", label: "Shipping & Tax", desc: "Zone rate & GST calculation" },
+              { step: "04", label: "Shipping & Tax", desc: "Zone rate & tax calculation" },
               { step: "05", label: "Payment", desc: "COD or Razorpay verification" },
               { step: "06", label: "Order Creation", desc: "Atomic transaction & snapshot" },
-              { step: "07", label: "Invoice", desc: "Tax invoice document generated" },
+              { step: "07", label: "Invoice", desc: "Official invoice document generated" },
               { step: "08", label: "Inventory Update", desc: "Stock count decrement" },
               { step: "09", label: "Notification", desc: "Buyer & owner order alert" },
             ].map((node, idx) => (
@@ -489,7 +489,7 @@ export default function AMFruitsCaseStudy() {
             { name: "Inventory", icon: Boxes },
             { name: "Warehouses", icon: Store },
             { name: "Delivery Zones", icon: MapPin },
-            { name: "GST & Tax Data", icon: BarChart3 },
+            { name: "Tax & Pricing", icon: BarChart3 },
             { name: "Shipping Methods", icon: Truck },
           ].map((entity, idx) => {
             const Icon = entity.icon;
@@ -521,7 +521,7 @@ export default function AMFruitsCaseStudy() {
             </div>
           </div>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light">
-            Order items preserve important information from the time the order is created. This allows historical orders to remain accurate even if current product information changes later. Price snapshots, product descriptions, unit specifications, and applicable GST rates are permanently frozen into the order line items at checkout time.
+            Order items preserve important information from the time the order is created. This allows historical orders to remain accurate even if current product information changes later. Price snapshots, product descriptions, unit specifications, and applicable tax rates are permanently frozen into the order line items at checkout time.
           </p>
         </div>
       </section>

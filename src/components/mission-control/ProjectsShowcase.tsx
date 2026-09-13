@@ -24,40 +24,69 @@ export interface ProjectImageSources {
   imageMobile: string;
 }
 
+/**
+ * Deterministic mapping to versioned/fingerprinted project images.
+ * Guarantees that browsers (Safari, iOS Mobile Safari, Brave, Chrome)
+ * never hold stale disk cache entries when project images are published.
+ */
+export const VERSIONED_IMAGE_MAP: Record<string, string> = {
+  "/projects/temporary/fresh-flow-desktop.jpg": "/projects/temporary/fresh-flow-desktop.v2.jpg",
+  "/projects/temporary/fresh-flow-mobile.jpg": "/projects/temporary/fresh-flow-mobile.v2.jpg",
+  "/projects/temporary/fresh-flow-placeholder.jpg": "/projects/temporary/fresh-flow-placeholder.v2.jpg",
+  "/projects/temporary/sohail-shop-desktop.jpg": "/projects/temporary/sohail-shop-desktop.v2.jpg",
+  "/projects/temporary/sohail-shop-mobile.jpg": "/projects/temporary/sohail-shop-mobile.v2.jpg",
+  "/projects/temporary/sohail-shop-placeholder.jpg": "/projects/temporary/sohail-shop-placeholder.v2.jpg",
+  "/projects/temporary/sohail-studio-desktop.jpg": "/projects/temporary/sohail-studio-desktop.v2.jpg",
+  "/projects/temporary/sohail-studio-mobile.jpg": "/projects/temporary/sohail-studio-mobile.v2.jpg",
+  "/projects/temporary/sohail-studio-placeholder.jpg": "/projects/temporary/sohail-studio-placeholder.v2.jpg",
+  "/projects/temporary/wedding-desktop.jpg": "/projects/temporary/wedding-desktop.v2.jpg",
+  "/projects/temporary/wedding-mobile.jpg": "/projects/temporary/wedding-mobile.v2.jpg",
+  "/projects/temporary/wedding-placeholder.jpg": "/projects/temporary/wedding-placeholder.v2.jpg",
+  "/projects/temporary/new-chapter-desktop.jpg": "/projects/temporary/new-chapter-desktop.v2.jpg",
+  "/projects/temporary/new-chapter-mobile.jpg": "/projects/temporary/new-chapter-mobile.v2.jpg",
+  "/projects/temporary/new-chapter-placeholder.jpg": "/projects/temporary/new-chapter-placeholder.v2.jpg",
+};
+
+export function resolveVersionedProjectImageUrl(url?: string | null): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  return VERSIONED_IMAGE_MAP[trimmed] || trimmed;
+}
+
 export const TEMPORARY_PROJECT_IMAGE_MAP: Record<string, ProjectImageSources> = {
   "sohail-shop": {
-    imageDesktop: "/projects/temporary/sohail-shop-desktop.jpg",
-    imageMobile: "/projects/temporary/sohail-shop-mobile.jpg",
+    imageDesktop: "/projects/temporary/sohail-shop-desktop.v2.jpg",
+    imageMobile: "/projects/temporary/sohail-shop-mobile.v2.jpg",
   },
   "sohail-studio": {
-    imageDesktop: "/projects/temporary/sohail-studio-desktop.jpg",
-    imageMobile: "/projects/temporary/sohail-studio-mobile.jpg",
+    imageDesktop: "/projects/temporary/sohail-studio-desktop.v2.jpg",
+    imageMobile: "/projects/temporary/sohail-studio-mobile.v2.jpg",
   },
   "fresh-flow": {
-    imageDesktop: "/projects/temporary/fresh-flow-desktop.jpg",
-    imageMobile: "/projects/temporary/fresh-flow-mobile.jpg",
+    imageDesktop: "/projects/temporary/fresh-flow-desktop.v2.jpg",
+    imageMobile: "/projects/temporary/fresh-flow-mobile.v2.jpg",
   },
   "wedding": {
-    imageDesktop: "/projects/temporary/wedding-desktop.jpg",
-    imageMobile: "/projects/temporary/wedding-mobile.jpg",
+    imageDesktop: "/projects/temporary/wedding-desktop.v2.jpg",
+    imageMobile: "/projects/temporary/wedding-mobile.v2.jpg",
   },
   "new-chapter": {
-    imageDesktop: "/projects/temporary/new-chapter-desktop.jpg",
-    imageMobile: "/projects/temporary/new-chapter-mobile.jpg",
+    imageDesktop: "/projects/temporary/new-chapter-desktop.v2.jpg",
+    imageMobile: "/projects/temporary/new-chapter-mobile.v2.jpg",
   },
 };
 
 /**
  * Resolves desktop and mobile project images with clean fallback hierarchy:
  * 1. TEMPORARY_PROJECT_IMAGE_MAP mapping by ID
- * 2. project.image from data as fallback for both
+ * 2. project.image from data as fallback for both (versioned)
  * 3. Default fallback placeholder
  */
 export function resolveProjectImages(project: UniverseProject): ProjectImageSources {
   const custom = TEMPORARY_PROJECT_IMAGE_MAP[project.id];
   if (custom) return custom;
 
-  const fallback = project.image || "/projects/temporary/sohail-shop-desktop.jpg";
+  const fallback = resolveVersionedProjectImageUrl(project.image) || "/projects/temporary/sohail-shop-desktop.v2.jpg";
   return {
     imageDesktop: fallback,
     imageMobile: fallback,
@@ -393,7 +422,7 @@ export default function ProjectsShowcase({
                       decoding="async"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          "/projects/temporary/sohail-shop-desktop.jpg";
+                          "/projects/temporary/sohail-shop-desktop.v2.jpg";
                       }}
                       className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
                     />

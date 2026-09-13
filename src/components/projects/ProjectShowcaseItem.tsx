@@ -35,6 +35,7 @@ import {
 import { FaAws, FaGithub } from "react-icons/fa";
 import type { UnifiedProject } from "./projectData";
 import { formatProjectStatus } from "../../lib/utils";
+import { resolveVersionedProjectImageUrl } from "../../lib/projectContent";
 
 interface ProjectShowcaseItemProps {
   project: UnifiedProject;
@@ -137,7 +138,7 @@ export default function ProjectShowcaseItem({
                 className="block h-full w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded-2xl"
               >
                 <img
-                  src={project.imageUrl}
+                  src={resolveVersionedProjectImageUrl(project.imageUrl)}
                   alt={`${project.title} preview`}
                   loading="lazy"
                   onError={(e) => {
@@ -145,8 +146,8 @@ export default function ProjectShowcaseItem({
                     if (!img.dataset.fallbackApplied) {
                       img.dataset.fallbackApplied = "1";
                       img.src =
-                        project.fallbackImageUrl ||
-                        "/projects/temporary/sohail-shop-desktop.jpg";
+                        resolveVersionedProjectImageUrl(project.fallbackImageUrl) ||
+                        "/projects/temporary/sohail-shop-desktop.v2.jpg";
                     }
                   }}
                   className="h-full w-full object-cover object-center brightness-[1.06] contrast-[1.05] saturate-[1.08] transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-110"
@@ -161,7 +162,7 @@ export default function ProjectShowcaseItem({
                 className="block h-full w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded-2xl"
               >
                 <img
-                  src={project.imageUrl}
+                  src={resolveVersionedProjectImageUrl(project.imageUrl)}
                   alt={`${project.title} preview`}
                   loading="lazy"
                   onError={(e) => {
@@ -169,8 +170,8 @@ export default function ProjectShowcaseItem({
                     if (!img.dataset.fallbackApplied) {
                       img.dataset.fallbackApplied = "1";
                       img.src =
-                        project.fallbackImageUrl ||
-                        "/projects/temporary/sohail-shop-desktop.jpg";
+                        resolveVersionedProjectImageUrl(project.fallbackImageUrl) ||
+                        "/projects/temporary/sohail-shop-desktop.v2.jpg";
                     }
                   }}
                   className="h-full w-full object-cover object-center brightness-[1.06] contrast-[1.05] saturate-[1.08] transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-110"

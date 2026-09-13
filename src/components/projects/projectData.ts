@@ -85,7 +85,7 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
         description: dbFlagship.description || proj.description,
         technologies: dbTech.length > 0 ? dbTech : (proj.technologies || []),
         imageUrl: images.imageDesktop,
-        fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.jpg",
+        fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.v2.jpg",
         githubUrl: dbFlagship.github_url || "https://github.com/sohail-24/django_ecommerce",
         liveUrl: "sohail-shop.sohailverse.com",
         internalUrl: "/projects/sohail-shop",
@@ -119,7 +119,7 @@ export async function loadUnifiedProjects(): Promise<UnifiedProject[]> {
           ? ["React", "TypeScript", "Hono", "PostgreSQL", "Docker"]
           : (proj.technologies || []),
       imageUrl: images.imageDesktop,
-      fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.jpg",
+      fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.v2.jpg",
       githubUrl: proj.id === "fresh-flow" ? "https://github.com/sohail-24" : undefined,
       liveUrl:
         proj.id === "sohail-studio"
