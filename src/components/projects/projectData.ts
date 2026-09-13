@@ -95,23 +95,40 @@ export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedP
       category:
         proj.id === "fresh-flow"
           ? "B2B Wholesale"
+          : proj.id === "sohail-studio"
+          ? "DevOps AI Control Plane"
           : (proj.category ||
-            (proj.id === "sohail-studio"
-              ? "AI / Platform"
-              : proj.id === "wedding"
+            (proj.id === "wedding"
               ? "Web Experience"
               : "Cloud & AI Initiative")),
       description:
         proj.id === "fresh-flow"
           ? "A B2B platform connecting business buyers with wholesale produce and supplier operations."
+          : proj.id === "sohail-studio"
+          ? "A local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions across three isolated execution planes."
           : proj.description,
       technologies:
         proj.id === "fresh-flow"
           ? ["React", "TypeScript", "Hono", "PostgreSQL", "Docker"]
+          : proj.id === "sohail-studio"
+          ? [
+              "React",
+              "TypeScript",
+              "Node.js",
+              "Tailwind CSS",
+              "Systems Design",
+              "Shell Execution",
+              "Local-First Architecture",
+            ]
           : (proj.technologies || []),
       imageUrl: images.imageDesktop,
       fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.v2.jpg",
-      githubUrl: proj.id === "fresh-flow" ? "https://github.com/sohail-24" : undefined,
+      githubUrl:
+        proj.id === "sohail-studio"
+          ? "https://github.com/sohail-24"
+          : proj.id === "fresh-flow"
+          ? "https://github.com/sohail-24"
+          : undefined,
       liveUrl:
         proj.id === "sohail-studio"
           ? "studio.sohailverse.com"
@@ -121,13 +138,26 @@ export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedP
           ? "memories.sohailverse.com"
           : undefined,
       internalUrl: `/projects/${proj.id}`,
-      status: proj.id === "fresh-flow" ? "Active" : formatProjectStatus(proj.statusLabel),
-      statusLabel: proj.id === "fresh-flow" ? "Active" : formatProjectStatus(proj.statusLabel),
+      status:
+        proj.id === "fresh-flow" || proj.id === "sohail-studio"
+          ? "Active"
+          : formatProjectStatus(proj.statusLabel),
+      statusLabel:
+        proj.id === "fresh-flow" || proj.id === "sohail-studio"
+          ? "Active"
+          : formatProjectStatus(proj.statusLabel),
       tagline:
         proj.id === "fresh-flow"
           ? "B2B Wholesale Produce Platform"
+          : proj.id === "sohail-studio"
+          ? "Local-First DevOps AI Control Plane & Engineering Workspace"
           : proj.tagline,
-      highlight: proj.id === "fresh-flow" ? undefined : proj.highlightMetric,
+      highlight:
+        proj.id === "fresh-flow"
+          ? undefined
+          : proj.id === "sohail-studio"
+          ? "Flagship Control Plane"
+          : proj.highlightMetric,
     };
   });
 

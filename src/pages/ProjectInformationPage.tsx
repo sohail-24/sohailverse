@@ -19,6 +19,15 @@ import {
   ShieldCheck,
   History,
   Image as ImageIcon,
+  Terminal,
+  Cpu,
+  Workflow,
+  FileSearch,
+  Lock,
+  Shield,
+  HardDrive,
+  Database,
+  Server,
 } from "lucide-react";
 import {
   SiKubernetes,
@@ -119,10 +128,13 @@ export default function ProjectInformationPage() {
 
   // Active navigation section
   const [activeSection, setActiveSection] = useState<
-    "overview" | "videos" | "docs" | "architecture" | "links"
+    "overview" | "planes" | "capabilities" | "persistence" | "videos" | "docs" | "architecture" | "links"
   >("overview");
 
   const overviewRef = useRef<HTMLDivElement>(null);
+  const planesRef = useRef<HTMLDivElement>(null);
+  const capabilitiesRef = useRef<HTMLDivElement>(null);
+  const persistenceRef = useRef<HTMLDivElement>(null);
   const videosRef = useRef<HTMLDivElement>(null);
   const docsRef = useRef<HTMLDivElement>(null);
   const architectureRef = useRef<HTMLDivElement>(null);
@@ -173,10 +185,23 @@ export default function ProjectInformationPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const scrollToSection = (section: "overview" | "videos" | "docs" | "architecture" | "links") => {
+  const scrollToSection = (
+    section:
+      | "overview"
+      | "planes"
+      | "capabilities"
+      | "persistence"
+      | "videos"
+      | "docs"
+      | "architecture"
+      | "links"
+  ) => {
     setActiveSection(section);
     let targetRef: React.RefObject<HTMLDivElement> | null = null;
     if (section === "overview") targetRef = overviewRef;
+    if (section === "planes") targetRef = planesRef;
+    if (section === "capabilities") targetRef = capabilitiesRef;
+    if (section === "persistence") targetRef = persistenceRef;
     if (section === "videos") targetRef = videosRef;
     if (section === "docs") targetRef = docsRef;
     if (section === "architecture") targetRef = architectureRef;
@@ -319,7 +344,19 @@ export default function ProjectInformationPage() {
     content.architecture.some((a) => a.image_url && a.image_url.trim().length > 0)
   );
 
+  // Flagship Case Study Sections
+  const hasPlanesSection = Boolean(
+    content.execution_planes && content.execution_planes.length > 0
+  );
+  const hasCapabilitiesSection = Boolean(
+    content.system_capabilities && content.system_capabilities.length > 0
+  );
+  const hasPersistenceSection = Boolean(content.persistence_architecture);
+
   const hasMultipleSections = Boolean(
+    hasPlanesSection ||
+    hasCapabilitiesSection ||
+    hasPersistenceSection ||
     isVideoSessionsVisible ||
     isDocumentsSectionVisible ||
     isArchitectureVisible ||
@@ -468,6 +505,48 @@ export default function ProjectInformationPage() {
               Overview
             </button>
 
+            {hasPlanesSection && (
+              <button
+                onClick={() => scrollToSection("planes")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  activeSection === "planes"
+                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
+                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
+                }`}
+              >
+                <span>Execution Planes</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-cyan-400/20 text-[11px] font-mono text-cyan-200">
+                  3
+                </span>
+              </button>
+            )}
+
+            {hasCapabilitiesSection && (
+              <button
+                onClick={() => scrollToSection("capabilities")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+                  activeSection === "capabilities"
+                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
+                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
+                }`}
+              >
+                Deep Inspector & Intelligence
+              </button>
+            )}
+
+            {hasPersistenceSection && (
+              <button
+                onClick={() => scrollToSection("persistence")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+                  activeSection === "persistence"
+                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
+                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
+                }`}
+              >
+                Persistence Architecture
+              </button>
+            )}
+
             {isVideoSessionsVisible && (
               <button
                 onClick={() => scrollToSection("videos")}
@@ -605,6 +684,28 @@ export default function ProjectInformationPage() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Core Engineering Philosophy Callout Banner */}
+          {content.core_philosophy && (
+            <div className="relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-blue-950/40 p-5 sm:p-6 backdrop-blur-md">
+              <div className="flex items-start gap-4">
+                <div className="mt-1 h-10 w-10 shrink-0 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)]">
+                  <Shield className="h-5 w-5" />
+                </div>
+                <div className="space-y-1.5 min-w-0">
+                  <span className="text-[11px] font-mono uppercase tracking-widest text-cyan-400 font-semibold flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3" /> Core Engineering Philosophy
+                  </span>
+                  <p className="font-display text-lg sm:text-xl font-bold text-white tracking-tight leading-snug">
+                    "{content.core_philosophy}"
+                  </p>
+                  <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed pt-1">
+                    Strict verification standard: every diagnostic, structural analysis, and recommended remediation must trace directly to concrete codebase artifacts, package manifests, and git history. Zero speculative hallucination or unverified mutations.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -779,6 +880,289 @@ export default function ProjectInformationPage() {
             </div>
           </div>
         </section>
+
+        {/* =========================================================================
+            FLAGSHIP CASE STUDY SECTION: THREE ISOLATED EXECUTION PLANES
+           ========================================================================= */}
+        {hasPlanesSection && content.execution_planes && (
+          <section ref={planesRef} id="section-planes" className="space-y-6 pt-4">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                  <span className="font-mono text-xs uppercase tracking-widest text-cyan-400 font-semibold">
+                    SYSTEM ARCHITECTURE & EXECUTION BOUNDARIES
+                  </span>
+                </div>
+                <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
+                  Three Isolated Execution Planes
+                </h2>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 font-mono text-xs">
+                <Lock className="h-3.5 w-3.5" />
+                <span>Strict Plane Isolation Enforced</span>
+              </span>
+            </div>
+
+            <p className="text-sm sm:text-base text-slate-300 font-light leading-relaxed max-w-4xl">
+              To protect host systems from unintended mutations, Sohail-Studio strictly decouples advisory artificial intelligence from shell execution and multi-stage workflow automation. AI chat is architecturally prohibited from directly mutating disk or executing commands without human confirmation.
+            </p>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pt-2">
+              {content.execution_planes.map((plane, idx) => {
+                const isAdvisory = plane.type === "advisory";
+                const isInteractive = plane.type === "interactive";
+
+                return (
+                  <div
+                    key={plane.name}
+                    className={`relative rounded-2xl border p-5 sm:p-6 backdrop-blur-md flex flex-col justify-between transition-all ${
+                      isAdvisory
+                        ? "border-cyan-500/30 bg-slate-900/50 hover:border-cyan-500/50"
+                        : isInteractive
+                        ? "border-emerald-500/30 bg-slate-900/50 hover:border-emerald-500/50"
+                        : "border-purple-500/30 bg-slate-900/50 hover:border-purple-500/50"
+                    }`}
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-medium border ${
+                            isAdvisory
+                              ? "border-cyan-400/30 bg-cyan-400/10 text-cyan-300"
+                              : isInteractive
+                              ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
+                              : "border-purple-400/30 bg-purple-400/10 text-purple-300"
+                          }`}
+                        >
+                          {isAdvisory && <Cpu className="h-3 w-3" />}
+                          {isInteractive && <Terminal className="h-3 w-3" />}
+                          {!isAdvisory && !isInteractive && <Workflow className="h-3 w-3" />}
+                          <span>{plane.badge}</span>
+                        </span>
+                        <span className="text-[11px] font-mono text-slate-500">
+                          PLANE 0{idx + 1}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h3 className="font-display text-lg font-bold text-white tracking-tight">
+                          {plane.name}
+                        </h3>
+                        <p
+                          className={`text-xs font-mono font-medium mt-0.5 ${
+                            isAdvisory
+                              ? "text-cyan-400"
+                              : isInteractive
+                              ? "text-emerald-400"
+                              : "text-purple-400"
+                          }`}
+                        >
+                          {plane.role}
+                        </p>
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
+                        {plane.description}
+                      </p>
+
+                      <div className="space-y-2 pt-2 border-t border-white/10">
+                        <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold block">
+                          Core Capabilities
+                        </span>
+                        <ul className="space-y-1.5 text-xs text-slate-300 font-light">
+                          {plane.capabilities.map((cap, cIdx) => (
+                            <li key={cIdx} className="flex items-start gap-2">
+                              <span
+                                className={`mt-1 h-1.5 w-1.5 rounded-full shrink-0 ${
+                                  isAdvisory
+                                    ? "bg-cyan-400"
+                                    : isInteractive
+                                    ? "bg-emerald-400"
+                                    : "bg-purple-400"
+                                }`}
+                              />
+                              <span>{cap}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 pt-4 border-t border-white/10">
+                      <div className="rounded-xl bg-black/40 border border-white/5 p-3 space-y-1">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1">
+                          <Lock className="h-2.5 w-2.5 text-amber-400" />
+                          Boundary Enforcement
+                        </span>
+                        <p className="text-[11px] text-slate-300 font-mono leading-relaxed">
+                          {plane.securityBoundary}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* =========================================================================
+            FLAGSHIP CASE STUDY SECTION: DEEP INSPECTOR & INTELLIGENCE
+           ========================================================================= */}
+        {hasCapabilitiesSection && content.system_capabilities && (
+          <section ref={capabilitiesRef} id="section-capabilities" className="space-y-6 pt-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                <span className="font-mono text-xs uppercase tracking-widest text-cyan-400 font-semibold">
+                  SYSTEM CAPABILITIES & EMPIRICAL DIAGNOSTICS
+                </span>
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
+                Deep Inspector & Project Intelligence
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {content.system_capabilities.map((cap) => (
+                <div
+                  key={cap.title}
+                  className="p-5 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-md space-y-4 hover:border-cyan-500/30 transition-all flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-400 font-semibold">
+                        {cap.tagline}
+                      </span>
+                      <FileSearch className="h-4 w-4 text-cyan-400" />
+                    </div>
+
+                    <h3 className="font-display text-lg font-bold text-white tracking-tight">
+                      {cap.title}
+                    </h3>
+
+                    <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
+                      {cap.description}
+                    </p>
+
+                    {cap.evidenceSource && (
+                      <div className="p-2.5 rounded-lg bg-black/30 border border-white/5 space-y-1">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+                          Grounding Evidence Sources
+                        </span>
+                        <p className="text-xs font-mono text-cyan-300/90 leading-relaxed">
+                          {cap.evidenceSource}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-white/10 space-y-2">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold block">
+                      Key Engineering Protocols
+                    </span>
+                    <ul className="space-y-1.5 text-xs text-slate-300 font-light">
+                      {cap.keyPoints.map((pt, pIdx) => (
+                        <li key={pIdx} className="flex items-start gap-2">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400 shrink-0 mt-0.5" />
+                          <span>{pt}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* =========================================================================
+            FLAGSHIP CASE STUDY SECTION: PERSISTENCE ARCHITECTURE
+           ========================================================================= */}
+        {hasPersistenceSection && content.persistence_architecture && (
+          <section ref={persistenceRef} id="section-persistence" className="space-y-6 pt-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                <span className="font-mono text-xs uppercase tracking-widest text-cyan-400 font-semibold">
+                  DATA ARCHITECTURE & DURABILITY MODEL
+                </span>
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
+                Persistence Architecture
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Current Implementation Card */}
+              <div className="p-6 rounded-2xl border border-emerald-500/30 bg-slate-900/50 backdrop-blur-md space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-xs font-mono font-medium">
+                    <HardDrive className="h-3.5 w-3.5" />
+                    <span>{content.persistence_architecture.currentStatus}</span>
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-400">ACTIVE RUNTIME</span>
+                </div>
+
+                <h3 className="font-display text-lg font-bold text-white tracking-tight">
+                  Local-First In-Memory & Structured File Engine
+                </h3>
+
+                <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
+                  {content.persistence_architecture.currentDescription}
+                </p>
+
+                <div className="space-y-2 pt-3 border-t border-white/10">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold block">
+                    Storage Engine Specifications
+                  </span>
+                  <ul className="space-y-2 text-xs text-slate-300 font-light">
+                    {content.persistence_architecture.currentStorage.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Future Roadmap Card */}
+              <div className="p-6 rounded-2xl border border-blue-500/30 bg-slate-900/50 backdrop-blur-md space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-blue-500/40 bg-blue-500/10 text-blue-300 text-xs font-mono font-medium">
+                    <Database className="h-3.5 w-3.5" />
+                    <span>{content.persistence_architecture.roadmapStatus}</span>
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-400">DISTRIBUTED EVOLUTION</span>
+                </div>
+
+                <h3 className="font-display text-lg font-bold text-white tracking-tight">
+                  Cloud SQL & PostgreSQL Telemetry Sync
+                </h3>
+
+                <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
+                  {content.persistence_architecture.roadmapDescription}
+                </p>
+
+                <div className="space-y-2 pt-3 border-t border-white/10">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold block">
+                    Target Distributed Infrastructure
+                  </span>
+                  <ul className="space-y-2 text-xs text-slate-300 font-light">
+                    {content.persistence_architecture.roadmapStorage.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <Server className="h-3.5 w-3.5 text-blue-400 shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* =========================================================================
             SECTION 2: VIDEO SESSIONS (Reusing Cinema/DevOps Video Player)

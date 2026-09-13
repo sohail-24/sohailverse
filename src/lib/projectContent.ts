@@ -129,6 +129,33 @@ export function createDefaultProjectDetail(
   };
 }
 
+export interface ExecutionPlane {
+  name: string;
+  role: string;
+  type: "advisory" | "interactive" | "automated";
+  badge: string;
+  description: string;
+  capabilities: string[];
+  securityBoundary: string;
+}
+
+export interface SystemCapability {
+  title: string;
+  tagline: string;
+  description: string;
+  evidenceSource?: string;
+  keyPoints: string[];
+}
+
+export interface PersistenceArchitecture {
+  currentStatus: string;
+  currentDescription: string;
+  currentStorage: string[];
+  roadmapStatus: string;
+  roadmapDescription: string;
+  roadmapStorage: string[];
+}
+
 export interface ProjectContentDetails {
   overview?: string;
   hero_image?: string;
@@ -143,6 +170,11 @@ export interface ProjectContentDetails {
   business_flow?: string;
   payment_security?: string;
   order_data_preservation?: string;
+  // Flagship Case Study Extensions
+  core_philosophy?: string;
+  execution_planes?: ExecutionPlane[];
+  system_capabilities?: SystemCapability[];
+  persistence_architecture?: PersistenceArchitecture;
   videos: ProjectVideoSession[];
   documents: ProjectDocument[];
   architecture: ProjectArchitectureDiagram[];
@@ -360,58 +392,201 @@ kubectl get pods -n shop-prod -l app=sohail-shop
   },
   "sohail-studio": {
     overview:
-      "Sohail Studio is an intelligent engineering workspace designed for rapid building, automation, and deployment of modern digital tools. Featuring responsive glassmorphic interfaces, real-time telemetry, and modular micro-apps, Studio acts as the command center for ongoing cloud experiments and workflow automation.",
+      "Sohail-Studio is a local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions.\n\nUnlike conventional AI coding assistants that perform unvetted file mutations or execute arbitrary shell scripts directly against developer machines, Sohail-Studio enforces strict architectural boundaries across three isolated execution planes: an advisory AI reasoning plane, an interactive human-in-the-loop terminal, and a deterministic workflow automation plane. Every architectural claim, diagnostic, and remediation recommendation is evidence-bound—grounded strictly in concrete codebase artifacts, package manifests, AST structures, and git history rather than speculative hallucination.",
     hero_image: "/projects/temporary/sohail-studio-desktop.v2.jpg",
-    videos: [
+    gallery_images: [
+      "/projects/temporary/sohail-studio-desktop.v2.jpg",
+      "/projects/temporary/sohail-studio-mobile.v2.jpg",
+    ],
+    git_url: "https://github.com/sohail-24",
+    website_url: "https://studio.sohailverse.com",
+    video_url: undefined,
+    pdf_url: undefined,
+    documentation_url: undefined,
+    core_philosophy: "Turn repository evidence into controlled engineering decisions.",
+    execution_planes: [
       {
-        id: "vid-studio-1",
-        title: "Engineering Workspace & Component System Tour",
-        name: "Session 01: Workspace Tour",
-        video_url: "https://www.youtube.com/watch?v=0k5G6FmE3s4",
-        thumbnail_url: "/projects/temporary/sohail-studio-desktop.v2.jpg",
-        duration: "10:15",
+        name: "Plane 1: AI Chat Plane",
+        role: "Advisory Reasoning & Architecture Consultant",
+        type: "advisory",
+        badge: "Advisory Boundary — Read-Only",
         description:
-          "Walkthrough of the component library, state synchronization architecture, and rapid prototyping workflows.",
+          "Provides contextual natural language reasoning, code audits, architecture retrospectives, and script previews. Strictly bounded as an advisory layer: it cannot directly mutate files on disk, execute unauthorized commands, or hijack the terminal session.",
+        capabilities: [
+          "Contextual codebase question answering grounded in verified repository manifests and AST files",
+          "Architectural defect detection, performance optimization suggestions, and Docker/K8s review",
+          "Interactive command previews with required human verification prior to terminal promotion",
+          "Zero-mutation guarantee eliminating unintended file edits or unverified git commits",
+        ],
+        securityBoundary:
+          "Read-only advisory sandbox. Zero direct filesystem write permissions or terminal execution capabilities without explicit human promotion.",
       },
-    ],
-    documents: [
       {
-        id: "doc-studio-1",
-        title: "Studio Design System & Architectural Blueprint",
-        type: "pdf",
-        url: "/resume.pdf",
+        name: "Plane 2: Interactive Terminal Plane",
+        role: "Human-in-the-Loop Controlled Shell",
+        type: "interactive",
+        badge: "Direct Execution — Human-in-the-Loop",
         description:
-          "Design tokens, responsive layouts, and containerized deployment specs for Sohail Studio.",
+          "A real-time bidirectional terminal interface connecting the engineer directly to local system execution. Provides full shell capabilities with streaming telemetry, command isolation, and environment awareness.",
+        capabilities: [
+          "Bidirectional streaming terminal with ANSI color formatting and sub-millisecond local response",
+          "Real-time process telemetry capturing exit codes, command execution duration, and stderr streams",
+          "Explicit human approval required for executing scripts promoted from AI Chat advisory output",
+          "Local workspace directory isolation ensuring consistent toolchain paths and security",
+        ],
+        securityBoundary:
+          "Human-gated execution. Commands run with user permissions in the local workspace directory, with all commands logged in local session history.",
       },
-    ],
-    architecture: [
       {
-        id: "arch-studio-1",
-        title: "Modular Workspace Component Hierarchy",
-        image_url: "/projects/temporary/sohail-studio-desktop.v2.jpg",
-        caption:
-          "Client-first modular architecture with serverless edge caching and asynchronous state updates.",
+        name: "Plane 3: Workflow / Agent Plane",
+        role: "Deterministic DevOps Pipeline Orchestrator",
+        type: "automated",
+        badge: "Deterministic Pipeline — Stage Gated",
+        description:
+          "A task automation and verification engine that executes deterministic multi-step DevOps pipelines (linting, test suites, Docker container builds, and deployment dry-runs) with clear stage gates and rollback protection.",
+        capabilities: [
+          "Declarative multi-stage pipeline execution with sequential assertions and parallel phase transitions",
+          "Pre-flight dependency and environment validation gates before executing critical build steps",
+          "Automated failure handling with deterministic error isolation and stack trace capturing",
+          "Explicit approval checkpoints for high-impact actions (e.g., git branch push, production release)",
+        ],
+        securityBoundary:
+          "Deterministic pipeline boundaries. Workflows adhere strictly to predefined step schemas and immediately halt upon unexpected state divergence or assertion failure.",
       },
     ],
+    system_capabilities: [
+      {
+        title: "Deep Inspector",
+        tagline: "Empirical Repository & Workspace Diagnostics",
+        description:
+          "Recursively inspects the workspace directory tree, dependency manifests, build configurations, and git version history to construct an authoritative in-memory map of system topology and health.",
+        evidenceSource:
+          "Filesystem AST, package manifests (package.json, requirements.txt, pom.xml), git commit log, Dockerfiles, and CI workflow configurations.",
+        keyPoints: [
+          "Automated detection of obsolete packages, configuration drift, and orphaned dependencies",
+          "Identification of architectural anti-patterns, security vulnerabilities, and circular module imports",
+          "Deep local filesystem indexing with sub-second analysis speed across large multi-module repositories",
+        ],
+      },
+      {
+        title: "Project Intelligence",
+        tagline: "Evidence-Bound Technical Context Formulation",
+        description:
+          "Transforms raw codebase artifacts into structured, queryable knowledge. Feeds accurate, unambiguous project context into the AI Chat plane to eliminate hallucinations and ground recommendations in verified facts.",
+        evidenceSource:
+          "Extracted TypeScript/Python type definitions, interface contracts, routing tables, and schema declarations.",
+        keyPoints: [
+          "100% verified facts: if an architectural detail cannot be proven by codebase evidence, it is not asserted",
+          "Contextual memory that maintains real-time awareness of active git branches, uncommitted diffs, and tool versions",
+          "Zero phantom claims: eliminates speculative AI advice by enforcing strict codebase grounding boundaries",
+        ],
+      },
+      {
+        title: "Evidence-Bound Engineering",
+        tagline: "Zero Assumptions, Verifiable Codebase Truth",
+        description:
+          "A foundational engineering protocol dictating that all diagnostics, suggested modifications, and system evaluations must trace back to verifiable artifacts in the repository.",
+        evidenceSource:
+          "Direct line references, file content hashes, git commit SHAs, and reproducible test outputs.",
+        keyPoints: [
+          "Prevents hallucinated library methods or imaginary API endpoints in AI-suggested code updates",
+          "Forces every proposed code change to include exact file paths, line ranges, and target verification proofs",
+          "Establishes developer trust through reproducible, verifiable engineering steps rather than black-box AI outputs",
+        ],
+      },
+      {
+        title: "Workflow Engine & Automation",
+        tagline: "Deterministic Pipelines with Human-in-the-Loop Oversight",
+        description:
+          "Executes repeatable engineering sequences such as lint verification, test suites, Docker containerization, and configuration validation with stage-by-stage feedback and safety checks.",
+        evidenceSource:
+          "Declarative pipeline definitions, process stdout/stderr logs, exit codes, and test result summaries.",
+        keyPoints: [
+          "Deterministic step execution with zero non-reproducible side effects",
+          "Immediate halt-on-error behavior to prevent cascading deployment faults or corrupted builds",
+          "Comprehensive session logging allowing exact auditing and replay of past workflow invocations",
+        ],
+      },
+    ],
+    persistence_architecture: {
+      currentStatus: "Local-First Runtime (Implemented)",
+      currentDescription:
+        "Sohail-Studio is currently architected as a local-first engineering workspace with zero external database dependencies. Workspace state, user preferences, and execution history are stored locally using high-performance in-memory session registries backed by structured disk persistence.",
+      currentStorage: [
+        "In-memory session registry for rapid sub-millisecond state access during active development sessions",
+        "Local structured file persistence: sessions/history.json for command history and workflow logs",
+        "Completely offline-capable: runs without network dependencies or external database latency",
+        "Zero telemetry leakage: all workspace analysis, shell logs, and session history remain strictly on the developer machine",
+      ],
+      roadmapStatus: "Distributed Cloud Persistence (Future Roadmap)",
+      roadmapDescription:
+        "Future architectural phases will introduce optional centralized database integration for multi-engineer teams and distributed cloud environments, without sacrificing the local-first execution model.",
+      roadmapStorage: [
+        "PostgreSQL / Cloud SQL relational database for enterprise multi-workspace telemetry and audit logs",
+        "Centralized session sync across developer workstations while maintaining local shell execution isolation",
+        "Role-based access control (RBAC) and team-wide workflow execution analytics",
+        "Dual-mode persistence adapter: seamless zero-downtime transition between local JSON storage and Cloud SQL",
+      ],
+    },
+    videos: [],
+    documents: [],
+    architecture: [],
     links: [
       {
-        id: "link-studio-1",
+        id: "link-studio-gh",
         title: "GitHub Workspace Repository",
         url: "https://github.com/sohail-24",
         type: "github",
       },
       {
-        id: "link-studio-2",
+        id: "link-studio-demo",
         title: "Live Studio Workspace",
         url: "https://studio.sohailverse.com",
         type: "demo",
       },
     ],
     highlightsList: [
-      "Component-driven design system with dark-mode optical balance",
-      "Edge-rendered serverless functions for sub-50ms API response times",
-      "Integrated telemetry and live build analytics",
+      "Three isolated execution planes: Advisory AI Chat, Interactive Terminal, and Workflow Agent",
+      "Evidence-bound Project Intelligence grounding all AI responses in verifiable repository artifacts",
+      "Deep Inspector engine performing recursive dependency, configuration, and health audits",
+      "Local-first architecture storing session history in sessions/history.json with zero database latency",
+      "Bidirectional streaming terminal with ANSI rendering, execution telemetry, and command isolation",
+      "Human-in-the-loop safety boundaries preventing AI chat from mutating disk or running unauthorized shell commands",
+      "Deterministic workflow engine with pre-flight assertions, stage gates, and audit logging",
+      "Planned PostgreSQL/Cloud SQL distributed persistence roadmap for multi-tenant collaboration",
     ],
+    implemented_features: [
+      "Three isolated execution planes: Advisory AI Chat, Interactive Terminal, and Workflow Agent",
+      "Evidence-bound Project Intelligence grounding all AI responses in verifiable repository artifacts",
+      "Deep Inspector engine performing recursive dependency, configuration, and health audits",
+      "Local-first architecture storing session history in sessions/history.json with zero database latency",
+      "Bidirectional streaming terminal with ANSI rendering, execution telemetry, and command isolation",
+      "Human-in-the-loop safety boundaries preventing AI chat from mutating disk or running unauthorized shell commands",
+      "Deterministic workflow engine with pre-flight assertions, stage gates, and audit logging",
+      "Planned PostgreSQL/Cloud SQL distributed persistence roadmap for multi-tenant collaboration",
+    ],
+    projectDetail: {
+      images: {
+        image1: {
+          url: "/projects/temporary/sohail-studio-desktop.v2.jpg",
+          enabled: true,
+        },
+        image2: {
+          url: "/projects/temporary/sohail-studio-mobile.v2.jpg",
+          enabled: true,
+        },
+        image3: { url: "", enabled: false },
+        image4: { url: "", enabled: false },
+        image5: { url: "", enabled: false },
+      },
+      gitRepository: { url: "https://github.com/sohail-24", enabled: true },
+      website: { url: "https://studio.sohailverse.com", enabled: true },
+      video: { url: "", enabled: false },
+      pdf: { url: "", enabled: false },
+      documentation: { url: "", content: "", enabled: false },
+      videoSessions: { enabled: false },
+      architecture: { enabled: false },
+    },
   },
   "fresh-flow": {
     overview:
@@ -686,6 +861,14 @@ export function parseProjectContentFromRecord(
         parsed.order_data_preservation !== undefined
           ? parsed.order_data_preservation
           : fallback?.order_data_preservation,
+      core_philosophy:
+        parsed.core_philosophy !== undefined ? parsed.core_philosophy : fallback?.core_philosophy,
+      execution_planes:
+        Array.isArray(parsed.execution_planes) ? parsed.execution_planes : fallback?.execution_planes,
+      system_capabilities:
+        Array.isArray(parsed.system_capabilities) ? parsed.system_capabilities : fallback?.system_capabilities,
+      persistence_architecture:
+        parsed.persistence_architecture || fallback?.persistence_architecture,
       videos: Array.isArray(parsed.videos) ? parsed.videos : fallback?.videos || [],
       documents: Array.isArray(parsed.documents) ? parsed.documents : fallback?.documents || [],
       architecture: Array.isArray(parsed.architecture)
@@ -732,6 +915,10 @@ export function parseProjectContentFromRecord(
     business_flow: fallback?.business_flow,
     payment_security: fallback?.payment_security,
     order_data_preservation: fallback?.order_data_preservation,
+    core_philosophy: fallback?.core_philosophy,
+    execution_planes: fallback?.execution_planes,
+    system_capabilities: fallback?.system_capabilities,
+    persistence_architecture: fallback?.persistence_architecture,
     videos: fallback?.videos || [],
     documents: fallback?.documents || [],
     architecture: fallback?.architecture || [],
@@ -785,18 +972,27 @@ export function buildFullProjectData(
   }
 
   const canonicalId = staticProj?.id || "sohail-shop";
-  const title = canonicalId === "fresh-flow" ? (dbRecord?.title || "AM Fruits") : (dbRecord?.title || staticProj?.name || "Project");
+  const title =
+    canonicalId === "fresh-flow"
+      ? (dbRecord?.title || "AM Fruits")
+      : (dbRecord?.title || staticProj?.name || "Project");
   const category =
     canonicalId === "fresh-flow"
       ? (dbRecord?.category || "B2B Wholesale Commerce")
+      : canonicalId === "sohail-studio"
+      ? (dbRecord?.category || "DevOps AI Control Plane")
       : dbRecord?.category || staticProj?.category || (staticProj ? "Cloud Architecture" : "Engineering");
   const description =
     canonicalId === "fresh-flow"
       ? (dbRecord?.description || "A full-stack B2B wholesale produce platform that combines buyer procurement with supplier business management.")
+      : canonicalId === "sohail-studio"
+      ? (dbRecord?.description || staticProj?.description || "A local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions across three isolated execution planes.")
       : dbRecord?.description || staticProj?.description || "";
   const tagline =
     canonicalId === "fresh-flow"
       ? "B2B Wholesale Produce & Business Management Platform"
+      : canonicalId === "sohail-studio"
+      ? (staticProj?.tagline || "Local-First DevOps AI Control Plane & Engineering Workspace")
       : staticProj?.tagline || "High-Performance Cloud System";
 
   const rawStatus = canonicalId === "fresh-flow" ? (dbRecord?.status || "Active") : (dbRecord?.status || staticProj?.statusLabel);
