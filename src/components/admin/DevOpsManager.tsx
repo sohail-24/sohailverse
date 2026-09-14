@@ -24,6 +24,7 @@ import {
   parsePillarResource,
   serializePillarResource,
 } from "../../lib/pillarContent";
+import { isDevOpsRecord } from "../../lib/projectDomain";
 
 interface DevOpsManagerProps {
   devops: DevOpsPost[];
@@ -65,7 +66,7 @@ export default function DevOpsManager({
 
   // Convert raw devops posts into clean PillarResource items
   const parsedResources: PillarResource[] = useMemo(() => {
-    return devops.map((item) => parsePillarResource(item));
+    return devops.filter(isDevOpsRecord).map((item) => parsePillarResource(item));
   }, [devops]);
 
   // Pillar counts

@@ -3,10 +3,13 @@ import DevOpsHero from "../components/devops/DevOpsHero";
 import DevOpsLearningJourney from "../components/devops/DevOpsLearningJourney";
 import DevOpsBottomNav from "../components/devops/DevOpsBottomNav";
 import { fetchApi, getCachedApi, isValidDevOpsProject, type DevOpsProject } from "../lib/api";
+import { isDevOpsRecord } from "../lib/projectDomain";
 
 export default function DevOpsPage() {
   const cached = getCachedApi<DevOpsProject>("/api/devops");
-  const [projects, setProjects] = useState<DevOpsProject[]>(cached || []);
+  const [projects, setProjects] = useState<DevOpsProject[]>(
+    (cached || []).filter(isDevOpsRecord)
+  );
   const [loading, setLoading] = useState(!cached || cached.length === 0);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +20,7 @@ export default function DevOpsPage() {
     setError(null);
     try {
       const data = await fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject);
-      setProjects(data);
+      setProjects(data.filter(isDevOpsRecord));
     } catch (err: any) {
       console.error("Failed to load devops projects:", err);
       if (projects.length === 0) {

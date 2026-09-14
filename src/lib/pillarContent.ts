@@ -327,6 +327,7 @@ export function serializePillarResource(data: {
   const slidesOrDocLink = linksList.find((l) => l !== githubLink && l.url.trim().length > 0);
 
   const payloadHighlights = JSON.stringify({
+    domain: "devops",
     name: data.name?.trim() || "",
     video_url: data.video_url?.trim() || "",
     video_duration: data.video_duration?.trim() || "",

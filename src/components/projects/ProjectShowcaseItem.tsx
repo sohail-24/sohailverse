@@ -124,15 +124,6 @@ export default function ProjectShowcaseItem({
               src={resolveVersionedProjectImageUrl(project.imageUrl)}
               alt={`${project.title} preview`}
               loading="lazy"
-              onError={(e) => {
-                const img = e.currentTarget;
-                if (!img.dataset.fallbackApplied) {
-                  img.dataset.fallbackApplied = "1";
-                  img.src =
-                    resolveVersionedProjectImageUrl(project.fallbackImageUrl) ||
-                    "/projects/temporary/sohail-shop-desktop.v2.jpg";
-                }
-              }}
               className="h-full w-full object-cover object-center brightness-[1.06] contrast-[1.05] saturate-[1.08] transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-110"
             />
           </div>

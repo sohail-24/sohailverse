@@ -631,6 +631,7 @@ export default function ProjectContentManagerModal({
       };
 
       const contentPayload = {
+        domain: "project" as const,
         overview: overview.trim(),
         tagline: tagline.trim() || undefined,
         hero_image: effectiveHeroImage,
@@ -692,7 +693,7 @@ export default function ProjectContentManagerModal({
             description: description.trim(),
             technologies: parsedTech.join(", "),
             status,
-            image_url: effectiveHeroImage || heroImage.trim() || "/projects/temporary/sohail-shop-desktop.v2.jpg",
+            image_url: effectiveHeroImage || heroImage.trim() || "",
             github_url: primaryGithub || "",
             highlights: JSON.stringify(contentPayload),
           }),

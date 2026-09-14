@@ -12,6 +12,7 @@ import {
   type TimelinePost,
 } from "../lib/api";
 import { ErrorState, LoadingSkeleton } from "../components/ui/StatusStates";
+import { isDevOpsRecord } from "../lib/projectDomain";
 
 const missions = [
   "SohailVerse V2",
@@ -48,7 +49,7 @@ export default function DashboardPage() {
       ]);
 
       setMovieCount(movies.length);
-      setDevopsCount(devops.length);
+      setDevopsCount(devops.filter(isDevOpsRecord).length);
       setTimelineCount(timeline.length);
     } catch (err: any) {
       console.error("Failed to load universe metrics:", err);

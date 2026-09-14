@@ -72,12 +72,9 @@ export function resolveProjectImages(project: ProjectImageSourceInput): ProjectI
   const custom = TEMPORARY_PROJECT_IMAGE_MAP[project.id];
   if (custom) return custom;
 
-  const fallback =
-    "/projects/temporary/sohail-shop-desktop.v2.jpg";
-
   return {
-    imageDesktop: fallback,
-    imageMobile: fallback,
+    imageDesktop: "",
+    imageMobile: "",
   };
 }
 

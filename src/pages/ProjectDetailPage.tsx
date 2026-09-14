@@ -2,21 +2,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { fetchDevOpsProjectById, getCachedDevOpsProjectById, type DevOpsProject } from "../lib/api";
+import { isDevOpsRecord } from "../lib/projectDomain";
 import { ErrorState, LoadingSkeleton } from "../components/ui/StatusStates";
 import ProjectHero from "../components/projects/ProjectHero";
-import ProjectMetrics from "../components/projects/ProjectMetrics";
-import MissionOverview from "../components/projects/MissionOverview";
-import ArchitectureDiagram from "../components/projects/ArchitectureDiagram";
-import TechnologyArsenal from "../components/projects/TechnologyArsenal";
-import InfrastructureBlueprint from "../components/projects/InfrastructureBlueprint";
-import ProductionIncidents from "../components/projects/ProductionIncidents";
-import LessonsLearned from "../components/projects/LessonsLearned";
-import MissionAssets from "../components/projects/MissionAssets";
 import ProjectLinks from "../components/projects/ProjectLinks";
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const initialCached = id ? getCachedDevOpsProjectById(id) : null;
+  const cachedRecord = id ? getCachedDevOpsProjectById(id) : null;
+  const initialCached = cachedRecord && isDevOpsRecord(cachedRecord) ? cachedRecord : null;
   const [project, setProject] = useState<DevOpsProject | null>(initialCached);
   const [loading, setLoading] = useState(!initialCached);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +40,12 @@ export default function ProjectDetailPage() {
 
     try {
       const data = await fetchDevOpsProjectById(numericId);
+      if (!isDevOpsRecord(data)) {
+        setProject(null);
+        setErrorCode(404);
+        setError(`Record ${numericId} belongs to the Project domain, not DevOps.`);
+        return;
+      }
       setProject(data);
     } catch (err: any) {
       console.error(`Failed to load devops project ID ${id}:`, err);
@@ -149,47 +149,16 @@ export default function ProjectDetailPage() {
     );
   }
 
-  const isFlagshipSohailShop =
-    project.id === 1 || project.title.toLowerCase().includes("sohailshop");
-
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-12 text-white">
       <ProjectHero project={project} />
-      {isFlagshipSohailShop ? (
-        <>
-          <ProjectMetrics />
-          <MissionOverview />
-          <ArchitectureDiagram />
-          <TechnologyArsenal />
-          <InfrastructureBlueprint />
-          <ProductionIncidents />
-          <LessonsLearned />
-          <MissionAssets pptUrl={project.ppt_url} githubUrl={project.github_url} />
-          <ProjectLinks primaryGithubUrl={project.github_url} isFlagship={true} />
-        </>
-      ) : (
-        <>
-          {project.highlights && (
-            <section className="mt-6 sm:mt-10 rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-950/50 p-5 sm:p-8">
-              <h2 className="mb-3 sm:mb-6 text-xl sm:text-3xl font-bold">
-                Mission Highlights
-              </h2>
-              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-                {project.highlights.split(",").map((highlight, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-slate-300"
-                  >
-                    <span className="text-cyan-400 font-bold">✓</span>
-                    <span className="text-sm leading-relaxed">{highlight.trim()}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-          <ProjectLinks primaryGithubUrl={project.github_url} isFlagship={false} />
-        </>
+      {project.highlights && (
+        <section className="mt-6 sm:mt-10 rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-950/50 p-5 sm:p-8">
+          <h2 className="mb-3 sm:mb-6 text-xl sm:text-3xl font-bold">DevOps Resource Details</h2>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{project.highlights}</p>
+        </section>
       )}
+      <ProjectLinks primaryGithubUrl={project.github_url} isFlagship={false} />
     </div>
   );
 }

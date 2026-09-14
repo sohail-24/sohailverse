@@ -12,6 +12,7 @@ import {
   findDbRecordForProject,
   invalidateUnifiedProjectsCache,
 } from "../components/projects/projectData";
+import { isProjectRecord, type ProjectDomain } from "./projectDomain";
 import {
   TEMPORARY_PROJECT_IMAGE_MAP,
   resolveVersionedProjectImageUrl,
@@ -161,6 +162,7 @@ export interface PersistenceArchitecture {
 }
 
 export interface ProjectContentDetails {
+  domain?: ProjectDomain;
   overview?: string;
   tagline?: string;
   hero_image?: string;
@@ -846,6 +848,7 @@ export function parseProjectContentFromRecord(
     }
 
     return {
+      domain: parsed.domain === "project" || parsed.domain === "devops" ? parsed.domain : undefined,
       overview: parsed.overview !== undefined ? parsed.overview : fallback?.overview || "",
       tagline: parsed.tagline !== undefined ? parsed.tagline : fallback?.tagline,
       hero_image: resolveVersionedProjectImageUrl(parsed.hero_image || gallery_images[0] || fallback?.hero_image || ""),
@@ -909,6 +912,7 @@ export function parseProjectContentFromRecord(
       );
 
   return {
+    domain: fallback ? "project" : undefined,
     overview: fallback?.overview || "",
     tagline: fallback?.tagline,
     hero_image: fallback?.hero_image || "",
@@ -955,26 +959,26 @@ export function buildFullProjectData(
     (p) => p.id.toLowerCase() === strId
   );
 
-  const isFlagshipRequest = strId === "1" || strId === "sohail-shop";
+  const projectRecords = (dbProjects || []).filter(isProjectRecord);
 
   let dbRecord: DevOpsProject | undefined;
-  if (dbProjects && dbProjects.length > 0) {
+  if (projectRecords.length > 0) {
     dbRecord = findDbRecordForProject(
       idOrSlug,
       staticProj?.name,
-      dbProjects,
+      projectRecords,
       staticProj?.databaseId
     );
   }
 
-  if (!staticProj && !isFlagshipRequest && !dbRecord) {
+  if (!staticProj && !dbRecord) {
     const error = new Error(`Project "${idOrSlug}" not found in portfolio catalog.`);
     (error as any).status = 404;
     throw error;
   }
 
   const canonicalId =
-    staticProj?.id || (strId === "1" ? "sohail-shop" : dbRecord ? String(dbRecord.id) : "sohail-shop");
+    staticProj?.id || (dbRecord ? String(dbRecord.id) : "");
   const title = dbRecord?.title || (canonicalId === "fresh-flow" ? "AM Fruits" : (staticProj?.name || "Project"));
   const category =
     dbRecord?.category ||
@@ -1010,6 +1014,25 @@ export function buildFullProjectData(
     dbRecord?.highlights,
     canonicalId in DEFAULT_PROJECT_CONTENTS ? canonicalId : undefined
   );
+
+  // image_url is the authoritative primary project image. The serialized
+  // content object may contain an older gallery image1 value, so reconcile
+  // that derived content with the persisted core column before rendering or
+  // hydrating the Admin form.
+  const persistedHeroImage =
+    dbRecord?.image_url && dbRecord.image_url !== "coming-soon"
+      ? resolveVersionedProjectImageUrl(dbRecord.image_url)
+      : "";
+  if (persistedHeroImage) {
+    content.hero_image = persistedHeroImage;
+    content.gallery_images = [
+      persistedHeroImage,
+      ...(content.gallery_images || []).slice(1),
+    ];
+    if (content.projectDetail?.images?.image1) {
+      content.projectDetail.images.image1.url = persistedHeroImage;
+    }
+  }
   const tagline =
     content.tagline ||
     (canonicalId === "fresh-flow"
@@ -1023,7 +1046,7 @@ export function buildFullProjectData(
   let heroImage =
     dbRecord?.image_url && dbRecord.image_url !== "coming-soon"
       ? resolveVersionedProjectImageUrl(dbRecord.image_url)
-      : resolveVersionedProjectImageUrl(content.hero_image) || staticImages?.imageDesktop || "/projects/temporary/sohail-shop-desktop.v2.jpg";
+      : resolveVersionedProjectImageUrl(content.hero_image) || staticImages?.imageDesktop || "";
 
   if (content.gallery_images && content.gallery_images.length > 0 && !heroImage) {
     heroImage = content.gallery_images[0];

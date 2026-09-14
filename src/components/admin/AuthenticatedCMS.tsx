@@ -10,6 +10,7 @@ import {
 import ProjectsManager from "./ProjectsManager";
 import CinemaManager from "./CinemaManager";
 import DevOpsManager from "./DevOpsManager";
+import { isDevOpsRecord } from "../../lib/projectDomain";
 
 export type Movie = {
   id: number;
@@ -207,7 +208,7 @@ export default function AuthenticatedCMS({
                   : "bg-white/10 text-slate-300"
               }`}
             >
-              {devops.length}
+              {devops.filter(isDevOpsRecord).length}
             </span>
           </button>
         </div>

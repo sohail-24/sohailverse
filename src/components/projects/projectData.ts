@@ -9,6 +9,7 @@ import { initialProjects } from "../../data/mission-control";
 import type { UniverseProject } from "../../types/mission-control";
 import { resolveProjectImages } from "./projectImages";
 import { formatProjectStatus } from "../../lib/utils";
+import { isProjectRecord } from "../../lib/projectDomain";
 
 export interface UnifiedProject {
   id: string | number;
@@ -126,12 +127,14 @@ function normalizeProjectIdentity(value: string): string {
  * The database is the single authoritative source of truth for all persisted fields (status, title, category, description, tech, urls).
  */
 export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedProject[] {
+  const projectRecords = dbProjects.filter(isProjectRecord);
+
   // Map initialProjects to UnifiedProject, merging with matching database records
   const mapped: UnifiedProject[] = initialProjects.map((proj: UniverseProject) => {
     const dbRecord = findDbRecordForProject(
       proj.id,
       proj.name,
-      dbProjects,
+      projectRecords,
       proj.databaseId
     );
     const images = resolveProjectImages({
@@ -154,7 +157,7 @@ export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedP
       description,
       technologies,
       imageUrl: images.imageDesktop,
-      fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.v2.jpg",
+      fallbackImageUrl: undefined,
       githubUrl: dbRecord?.github_url || proj.githubUrl,
       liveUrl: proj.liveUrl,
       internalUrl: `/projects/${proj.id}`,
@@ -172,7 +175,7 @@ export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedP
     mapped.map((p) => p.dbId).filter((id): id is number => typeof id === "number")
   );
 
-  const additionalDbProjects = dbProjects.filter((p) => !matchedDbIds.has(p.id));
+  const additionalDbProjects = projectRecords.filter((p) => !matchedDbIds.has(p.id));
   for (const db of additionalDbProjects) {
     mapped.push({
       id: db.id,
@@ -180,8 +183,8 @@ export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedP
       category: db.category || "DevOps Architecture",
       description: db.description || "",
       technologies: normalizeTechnologies(db.technologies),
-      imageUrl: db.image_url || "/projects/temporary/sohail-shop-desktop.v2.jpg",
-      fallbackImageUrl: "/projects/temporary/sohail-shop-desktop.v2.jpg",
+      imageUrl: resolveProjectImages({ id: String(db.id), image: db.image_url }).imageDesktop,
+      fallbackImageUrl: undefined,
       githubUrl: db.github_url || undefined,
       internalUrl: `/projects/${db.id}`,
       status: formatProjectStatus(db.status || "Ready"),

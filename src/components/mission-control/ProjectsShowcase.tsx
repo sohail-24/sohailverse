@@ -415,10 +415,6 @@ export default function ProjectsShowcase({
                       alt={`${project.title} preview`}
                       loading="lazy"
                       decoding="async"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "/projects/temporary/sohail-shop-desktop.v2.jpg";
-                      }}
                       className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
                     />
                   </picture>

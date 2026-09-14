@@ -104,24 +104,13 @@ export default function ProjectsManager({
 
   // Helper to determine if a project is backed by a real database record in /api/devops
   const getDatabaseRecordForProject = (project: UnifiedProject): DevOpsPost | undefined => {
-    // If ID is numeric, check directly
-    if (typeof project.id === "number") {
-      return devops.find((d) => d.id === project.id);
+    if (project.dbId !== undefined) {
+      return devops.find((d) => d.id === project.dbId);
     }
-    // If project is sohail-shop, it maps to devops record ID 1 or title matching
-    if (project.id === "sohail-shop") {
-      return devops.find(
-        (d) =>
-          d.id === 1 ||
-          d.title.toLowerCase().includes("sohail") ||
-          d.title.toLowerCase().includes("shop")
-      );
-    }
-    // Match by title
+
+    const normalizedTitle = project.title.toLowerCase().replace(/[^a-z0-9]/g, "");
     return devops.find(
-      (d) =>
-        d.title.toLowerCase().includes(String(project.title).toLowerCase()) ||
-        String(project.title).toLowerCase().includes(d.title.toLowerCase())
+      (d) => d.title.toLowerCase().replace(/[^a-z0-9]/g, "") === normalizedTitle
     );
   };
 
@@ -207,6 +196,7 @@ export default function ProjectsManager({
           description: formDescription.trim(),
           technologies: formTechnologies.trim() || undefined,
           status: formStatus.trim() || undefined,
+          highlights: JSON.stringify({ domain: "project" }),
         }),
       });
 
