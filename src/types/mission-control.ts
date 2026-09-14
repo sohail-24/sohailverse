@@ -2,6 +2,8 @@ export type MissionTone = "orbitBlue" | "auroraCyan" | "horizonTeal" | "signalCo
 
 export interface UniverseProject {
   id: string;
+  /** Stable physical record identity in devops_projects when persisted. */
+  databaseId?: number;
   name: string;
   category?: string;
   tagline: string;
@@ -11,6 +13,8 @@ export interface UniverseProject {
   featured?: boolean;
   technologies?: string[];
   link?: string;
+  githubUrl?: string;
+  liveUrl?: string;
   externalUrl?: string;
   complexity?: number;
   highlightMetric?: string;
@@ -99,4 +103,3 @@ export interface TimelinePreviewItem {
   description: string;
   tone: MissionTone;
 }
-

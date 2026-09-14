@@ -16,7 +16,11 @@ import {
   Info,
   Layers,
 } from "lucide-react";
-import { loadUnifiedProjects, type UnifiedProject } from "../projects/projectData";
+import {
+  loadUnifiedProjects,
+  type UnifiedProject,
+} from "../projects/projectData";
+import { invalidateProjectDetailsCache } from "../../lib/projectContent";
 import type { DevOpsPost } from "./AuthenticatedCMS";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import ProjectContentManagerModal from "./ProjectContentManagerModal";
@@ -78,10 +82,10 @@ export default function ProjectsManager({
   };
 
   // Load unified projects
-  const fetchProjects = async () => {
+  const fetchProjects = async (forceRefresh = false) => {
     try {
       setIsLoading(true);
-      const list = await loadUnifiedProjects();
+      const list = await loadUnifiedProjects({ forceRefresh });
       setProjects(list);
     } catch (err) {
       console.error("Failed to load unified projects:", err);
@@ -215,7 +219,7 @@ export default function ProjectsManager({
         });
         setIsAddModalOpen(false);
         await onRefreshDevops();
-        await fetchProjects();
+        await fetchProjects(true);
         clearFeedbackAfterDelay();
       } else {
         setFeedback({
@@ -292,9 +296,10 @@ export default function ProjectsManager({
           type: "success",
           message: `Project "${formTitle.trim()}" updated successfully in database.`,
         });
+        invalidateProjectDetailsCache(editingProject.id);
         setEditingProject(null);
         await onRefreshDevops();
-        await fetchProjects();
+        await fetchProjects(true);
         clearFeedbackAfterDelay();
       } else {
         setFeedback({
@@ -342,9 +347,10 @@ export default function ProjectsManager({
           type: "success",
           message: `Project "${deletingProject.title}" removed from database and portfolio.`,
         });
+        invalidateProjectDetailsCache(deletingProject.id);
         setDeletingProject(null);
         await onRefreshDevops();
-        await fetchProjects();
+        await fetchProjects(true);
         clearFeedbackAfterDelay();
       } else {
         setFeedback({
@@ -1014,7 +1020,7 @@ export default function ProjectsManager({
           onClose={() => setContentManagingProject(null)}
           onSaved={async () => {
             await onRefreshDevops();
-            await fetchProjects();
+            await fetchProjects(true);
           }}
         />
       )}

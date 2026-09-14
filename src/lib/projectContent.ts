@@ -6,7 +6,7 @@
  * Documentation/PDFs, Architecture Diagrams, and External Links).
  */
 
-import { fetchApi, getCachedApi, prefetchApi, invalidateApiCache, isValidDevOpsProject, type DevOpsProject } from "./api";
+import { fetchApi, getCachedApi, invalidateApiCache, isValidDevOpsProject, type DevOpsProject } from "./api";
 import { initialProjects } from "../data/mission-control";
 import {
   findDbRecordForProject,
@@ -15,7 +15,7 @@ import {
 import {
   TEMPORARY_PROJECT_IMAGE_MAP,
   resolveVersionedProjectImageUrl,
-} from "../components/mission-control/ProjectsShowcase";
+} from "../components/projects/projectImages";
 
 export { resolveVersionedProjectImageUrl };
 
@@ -162,6 +162,7 @@ export interface PersistenceArchitecture {
 
 export interface ProjectContentDetails {
   overview?: string;
+  tagline?: string;
   hero_image?: string;
   gallery_images?: string[]; // Up to 5 images (image 1 = main/hero, 2-5 = gallery)
   git_url?: string;
@@ -196,6 +197,7 @@ export interface FullProjectData {
   tagline?: string;
   status: ProjectStatus;
   statusLabel: ProjectStatus;
+  persistedStatus?: string;
   technologies: string[];
   hero_image: string;
   content: ProjectContentDetails;
@@ -845,6 +847,7 @@ export function parseProjectContentFromRecord(
 
     return {
       overview: parsed.overview !== undefined ? parsed.overview : fallback?.overview || "",
+      tagline: parsed.tagline !== undefined ? parsed.tagline : fallback?.tagline,
       hero_image: resolveVersionedProjectImageUrl(parsed.hero_image || gallery_images[0] || fallback?.hero_image || ""),
       gallery_images,
       git_url: parsed.git_url !== undefined ? (parsed.git_url && parsed.git_url.trim() ? parsed.git_url.trim() : undefined) : fallback?.git_url,
@@ -907,6 +910,7 @@ export function parseProjectContentFromRecord(
 
   return {
     overview: fallback?.overview || "",
+    tagline: fallback?.tagline,
     hero_image: fallback?.hero_image || "",
     gallery_images: fallback?.gallery_images || (fallback?.hero_image ? [fallback.hero_image] : []),
     git_url: fallback?.git_url,
@@ -952,18 +956,25 @@ export function buildFullProjectData(
   );
 
   const isFlagshipRequest = strId === "1" || strId === "sohail-shop";
-  if (!staticProj && !isFlagshipRequest) {
+
+  let dbRecord: DevOpsProject | undefined;
+  if (dbProjects && dbProjects.length > 0) {
+    dbRecord = findDbRecordForProject(
+      idOrSlug,
+      staticProj?.name,
+      dbProjects,
+      staticProj?.databaseId
+    );
+  }
+
+  if (!staticProj && !isFlagshipRequest && !dbRecord) {
     const error = new Error(`Project "${idOrSlug}" not found in portfolio catalog.`);
     (error as any).status = 404;
     throw error;
   }
 
-  let dbRecord: DevOpsProject | undefined;
-  if (dbProjects && dbProjects.length > 0) {
-    dbRecord = findDbRecordForProject(idOrSlug, staticProj?.name, dbProjects);
-  }
-
-  const canonicalId = staticProj?.id || (dbRecord ? String(dbRecord.id) : "sohail-shop");
+  const canonicalId =
+    staticProj?.id || (strId === "1" ? "sohail-shop" : dbRecord ? String(dbRecord.id) : "sohail-shop");
   const title = dbRecord?.title || (canonicalId === "fresh-flow" ? "AM Fruits" : (staticProj?.name || "Project"));
   const category =
     dbRecord?.category ||
@@ -979,13 +990,6 @@ export function buildFullProjectData(
       : canonicalId === "sohail-studio"
       ? "A local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions across three isolated execution planes."
       : staticProj?.description || "");
-  const tagline =
-    canonicalId === "fresh-flow"
-      ? "B2B Wholesale Produce & Business Management Platform"
-      : canonicalId === "sohail-studio"
-      ? (staticProj?.tagline || "Local-First DevOps AI Control Plane & Engineering Workspace")
-      : staticProj?.tagline || "High-Performance Cloud System";
-
   const rawStatus = dbRecord?.status || staticProj?.statusLabel;
   const status = normalizeProjectStatus(rawStatus);
 
@@ -1004,8 +1008,15 @@ export function buildFullProjectData(
   // Content (Overview, Videos, Docs, Architecture, Links, Gallery, Resources)
   const content = parseProjectContentFromRecord(
     dbRecord?.highlights,
-    canonicalId in DEFAULT_PROJECT_CONTENTS ? canonicalId : "sohail-shop"
+    canonicalId in DEFAULT_PROJECT_CONTENTS ? canonicalId : undefined
   );
+  const tagline =
+    content.tagline ||
+    (canonicalId === "fresh-flow"
+      ? "B2B Wholesale Produce & Business Management Platform"
+      : canonicalId === "sohail-studio"
+      ? (staticProj?.tagline || "Local-First DevOps AI Control Plane & Engineering Workspace")
+      : staticProj?.tagline || "High-Performance Cloud System");
 
   // Images
   const staticImages = TEMPORARY_PROJECT_IMAGE_MAP[canonicalId];
@@ -1044,6 +1055,7 @@ export function buildFullProjectData(
     tagline,
     status,
     statusLabel: status,
+    persistedStatus: dbRecord?.status || staticProj?.statusLabel,
     technologies: techList,
     hero_image: heroImage,
     content,
@@ -1067,7 +1079,8 @@ export function getCachedProjectDetailsById(idOrSlug: string | number): FullProj
 
   try {
     const dbProjects = getCachedApi<DevOpsProject>("/api/devops");
-    const data = buildFullProjectData(strId, dbProjects || undefined);
+    if (!dbProjects) return null;
+    const data = buildFullProjectData(strId, dbProjects);
     projectDetailsCache.set(strId, data);
     return data;
   } catch {
@@ -1080,7 +1093,7 @@ export function getCachedProjectDetailsById(idOrSlug: string | number): FullProj
  */
 export function prefetchProjectDetails(idOrSlug: string | number): void {
   const strId = String(idOrSlug).trim().toLowerCase();
-  prefetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject).then((db) => {
+  fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject).then((db) => {
     try {
       const data = buildFullProjectData(strId, db);
       projectDetailsCache.set(strId, data);
@@ -1124,9 +1137,8 @@ export async function fetchProjectDetailsById(
       { forceRefresh: options?.forceRefresh }
     );
   } catch (e) {
-    console.warn("[ProjectContent] /api/devops request failed, using local project records:", e);
-    const cached = getCachedProjectDetailsById(strId);
-    if (cached) return cached;
+    console.error("[ProjectContent] Failed to fetch authoritative /api/devops project data:", e);
+    throw e;
   }
 
   const freshData = buildFullProjectData(strId, dbProjects);

@@ -26,6 +26,22 @@ function json(data: unknown, status: number): Response {
   });
 }
 
+function formatProjectRecord(record: any) {
+  return {
+    id: record.id,
+    title: record.title || "",
+    category: record.category || "",
+    description: record.description || "",
+    image_url: record.imageUrl || record.image_url || "",
+    ppt_url: record.pptUrl || record.ppt_url || "",
+    github_url: record.githubUrl || record.github_url || "",
+    technologies: record.technologies || "",
+    highlights: record.highlights || "",
+    pdf_url: record.pdfUrl || record.pdf_url || "",
+    status: record.status || "Production Ready",
+  };
+}
+
 export async function onRequestGet({
   env,
   params,
@@ -68,22 +84,7 @@ export async function onRequestGet({
       );
     }
 
-    const r: any = records[0];
-    const project = {
-      id: r.id,
-      title: r.title || "",
-      category: r.category || "",
-      description: r.description || "",
-      image_url: r.imageUrl || r.image_url || "",
-      ppt_url: r.pptUrl || r.ppt_url || "",
-      github_url: r.githubUrl || r.github_url || "",
-      technologies: r.technologies || "",
-      highlights: r.highlights || "",
-      pdf_url: r.pdfUrl || r.pdf_url || "",
-      status: r.status || "Production Ready",
-    };
-
-    return json({ data: project }, 200);
+    return json({ data: formatProjectRecord(records[0]) }, 200);
   } catch (error: any) {
     console.error(`Error querying DevOps project ID ${id} from Neon:`, error);
 
@@ -253,7 +254,7 @@ export async function onRequestPut({
       {
         success: true,
         message: "DevOps project updated successfully",
-        data: updated[0],
+        data: formatProjectRecord(updated[0]),
       },
       200
     );

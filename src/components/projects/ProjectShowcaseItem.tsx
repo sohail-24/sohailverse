@@ -100,8 +100,6 @@ export default function ProjectShowcaseItem({
     canonicalIndexMap[String(project.id).toLowerCase()] ||
     String(index + 1).padStart(2, "0");
 
-  const isAmFruits = String(project.id).toLowerCase() === "fresh-flow";
-
   const cardContent = (
     <div
       className={`flex ${
@@ -143,7 +141,7 @@ export default function ProjectShowcaseItem({
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent opacity-50 group-hover:opacity-30 transition-opacity" />
 
           {/* Highlight metric badge on poster if present (omitted for clean poster) */}
-          {project.highlight && !isAmFruits && (
+          {project.highlight && (
             <div className="pointer-events-none absolute bottom-2 left-2 right-2 z-20">
               <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-slate-950/85 backdrop-blur-md px-2 py-0.5 text-[9px] min-[400px]:text-[10px] font-mono text-cyan-300 font-medium shadow-md max-w-full">
                 <span className="h-1 w-1 rounded-full bg-cyan-400 animate-pulse shrink-0" />
@@ -171,50 +169,45 @@ export default function ProjectShowcaseItem({
                 {displayIndex}
               </span>
               <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 min-[400px]:px-2.5 sm:px-3 py-0.5 text-[10px] sm:text-xs font-mono font-medium text-slate-300 truncate max-w-[95px] min-[400px]:max-w-[130px] sm:max-w-none">
-                {isAmFruits ? "B2B Wholesale" : project.category}
+                {project.category}
               </span>
             </div>
 
             {/* Rating badge if real rating is present, or status */}
-            {project.rating && !isAmFruits ? (
+            {project.rating ? (
               <div className="inline-flex items-center gap-1 rounded-full border border-amber-400/25 bg-amber-950/30 px-2 sm:px-2.5 py-0.5 text-[10px] sm:text-xs font-mono font-semibold text-amber-300 shrink-0">
                 <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                 <span>{Number(project.rating).toFixed(1)}</span>
               </div>
-            ) : (isAmFruits || project.status) ? (
+            ) : project.status ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-950/20 px-2 sm:px-2.5 py-0.5 text-[10px] sm:text-[11px] font-mono text-emerald-400 shrink-0">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                <span className="truncate max-w-[75px] sm:max-w-none">{isAmFruits ? "Active" : formatProjectStatus(project.status)}</span>
+                <span className="truncate max-w-[75px] sm:max-w-none">{formatProjectStatus(project.status)}</span>
               </span>
             ) : null}
           </div>
 
           {/* Project Title */}
           <h2 className="font-display text-[15px] min-[400px]:text-lg sm:text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight group-hover:text-cyan-300 transition-colors">
-            {isAmFruits ? "AM Fruits" : project.title}
+            {project.title}
           </h2>
 
           {/* Tagline / Subtitle */}
-          {(isAmFruits ? "B2B Wholesale Produce Platform" : project.tagline) && (
+          {project.tagline && (
             <p className="font-mono text-[10px] sm:text-xs md:text-sm text-cyan-400/90 font-medium truncate">
-              {isAmFruits ? "B2B Wholesale Produce Platform" : project.tagline}
+              {project.tagline}
             </p>
           )}
 
           {/* Narrative Description — clean wrapping with breathing room */}
           <p className="text-xs sm:text-sm md:text-base text-slate-300/90 leading-relaxed font-normal line-clamp-3 sm:line-clamp-4 md:line-clamp-none">
-            {isAmFruits
-              ? "A B2B platform connecting business buyers with wholesale produce and supplier operations."
-              : project.description}
+            {project.description}
           </p>
 
           {/* Technology Stack with Clean Branded Icons */}
           <div className="pt-0.5 sm:pt-1">
             <div className="flex flex-wrap gap-1 sm:gap-1.5 md:gap-2">
-              {(isAmFruits
-                ? ["React", "TypeScript", "Hono", "PostgreSQL", "Docker"]
-                : project.technologies.slice(0, 4)
-              ).map((tech) => (
+              {project.technologies.slice(0, 4).map((tech) => (
                 <span
                   key={tech}
                   className="inline-flex items-center gap-1 sm:gap-1.5 rounded-md sm:rounded-lg border border-white/10 bg-white/[0.03] px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-mono text-slate-200"
@@ -223,7 +216,7 @@ export default function ProjectShowcaseItem({
                   <span className="truncate max-w-[85px] sm:max-w-none">{tech}</span>
                 </span>
               ))}
-              {!isAmFruits && project.technologies.length > 4 && (
+              {project.technologies.length > 4 && (
                 <span className="inline-flex items-center rounded-md sm:rounded-lg border border-white/10 bg-white/[0.02] px-1.5 py-0.5 sm:px-2 sm:py-1 text-[9px] sm:text-xs font-mono text-slate-400">
                   +{project.technologies.length - 4}
                 </span>
@@ -232,7 +225,7 @@ export default function ProjectShowcaseItem({
           </div>
 
           {/* Website Link (for other projects only) */}
-          {!isAmFruits && project.liveUrl && (
+          {project.liveUrl && (
             <div className="pt-0.5">
               <div className="group/link inline-flex items-center gap-1.5 text-xs sm:text-sm font-mono text-cyan-400/90 group-hover:text-cyan-300 transition-colors">
                 <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0 transition-transform group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" />

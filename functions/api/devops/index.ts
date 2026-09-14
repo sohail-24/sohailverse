@@ -17,6 +17,22 @@ interface PagesContext {
   env: Env;
 }
 
+function formatProjectRecord(record: any) {
+  return {
+    id: record.id,
+    title: record.title || "",
+    category: record.category || "",
+    description: record.description || "",
+    image_url: record.imageUrl || record.image_url || "",
+    ppt_url: record.pptUrl || record.ppt_url || "",
+    github_url: record.githubUrl || record.github_url || "",
+    technologies: record.technologies || "",
+    highlights: record.highlights || "",
+    pdf_url: record.pdfUrl || record.pdf_url || "",
+    status: record.status || "Production Ready",
+  };
+}
+
 export async function onRequestGet({ env }: PagesContext): Promise<Response> {
   if (!env.DATABASE_URL) {
     return new Response(
@@ -38,19 +54,7 @@ export async function onRequestGet({ env }: PagesContext): Promise<Response> {
       .from(devops)
       .orderBy(desc(devops.id));
 
-    const formatted = records.map((r: any) => ({
-      id: r.id,
-      title: r.title || "",
-      category: r.category || "",
-      description: r.description || "",
-      image_url: r.imageUrl || r.image_url || "",
-      ppt_url: r.pptUrl || r.ppt_url || "",
-      github_url: r.githubUrl || r.github_url || "",
-      technologies: r.technologies || "",
-      highlights: r.highlights || "",
-      pdf_url: r.pdfUrl || r.pdf_url || "",
-      status: r.status || "Production Ready",
-    }));
+    const formatted = records.map(formatProjectRecord);
 
     return new Response(JSON.stringify({ data: formatted }), {
       status: 200,
@@ -176,7 +180,7 @@ export async function onRequestPost({
       JSON.stringify({
         success: true,
         message: "DevOps project added successfully",
-        data: inserted[0] || null,
+        data: inserted[0] ? formatProjectRecord(inserted[0]) : null,
       }),
       {
         status: 201,

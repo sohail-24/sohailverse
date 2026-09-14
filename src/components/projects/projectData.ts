@@ -7,7 +7,7 @@
 import { fetchApi, getCachedApi, invalidateApiCache, isValidDevOpsProject, type DevOpsProject } from "../../lib/api";
 import { initialProjects } from "../../data/mission-control";
 import type { UniverseProject } from "../../types/mission-control";
-import { resolveProjectImages } from "../mission-control/ProjectsShowcase";
+import { resolveProjectImages } from "./projectImages";
 import { formatProjectStatus } from "../../lib/utils";
 
 export interface UnifiedProject {
@@ -58,7 +58,8 @@ export const CANONICAL_PROJECT_ORDER: readonly string[] = [
 export function findDbRecordForProject(
   id: string | number,
   title?: string,
-  dbProjects: DevOpsProject[] = []
+  dbProjects: DevOpsProject[] = [],
+  databaseId?: number
 ): DevOpsProject | undefined {
   if (!dbProjects || dbProjects.length === 0) return undefined;
 
@@ -66,62 +67,58 @@ export function findDbRecordForProject(
   const numId = typeof id === "number" ? id : (!isNaN(Number(strId)) ? Number(strId) : null);
   const searchTitle = (title || "").toLowerCase().trim();
 
-  // 1. Direct numeric ID match
+  // 1. Stable catalog record identity. This remains valid when an admin edits
+  // the persisted title or other display fields.
+  if (databaseId !== undefined) {
+    const stableRecord = dbProjects.find((p) => p.id === databaseId);
+    if (stableRecord) return stableRecord;
+  }
+
+  // 2. Direct numeric ID match
   if (numId !== null && numId > 0) {
     const direct = dbProjects.find((p) => p.id === numId);
     if (direct) return direct;
   }
 
-  // 2. Canonical project identifiers
+  // 3. Canonical project identifiers. These aliases describe the existing
+  // portfolio catalog; they are not database IDs or status overrides.
   if (strId === "sohail-studio") {
-    return dbProjects.find(
-      (p) =>
-        p.id === 7 ||
-        p.title.toLowerCase().includes("sohail-studio") ||
-        (p.title.toLowerCase().includes("sohail") && p.title.toLowerCase().includes("studio"))
-    );
+    return dbProjects.find((p) => normalizeProjectIdentity(p.title) === "sohailstudio");
   }
 
   if (strId === "fresh-flow" || strId === "am-fruits") {
-    return dbProjects.find(
-      (p) =>
-        p.id === 5 ||
-        p.title.toLowerCase().includes("am fruits") ||
-        p.title.toLowerCase().includes("fresh flow") ||
-        p.title.toLowerCase().includes("fruit")
-    );
+    return dbProjects.find((p) => {
+      const identity = normalizeProjectIdentity(p.title);
+      return identity === "amfruits" || identity === "freshflow";
+    });
   }
 
   if (strId === "sohail-shop") {
-    return dbProjects.find(
-      (p) =>
-        p.id === 1 ||
-        p.title.toLowerCase().includes("sohailshop") ||
-        (p.title.toLowerCase().includes("sohail") && p.title.toLowerCase().includes("shop"))
-    );
+    return dbProjects.find((p) => normalizeProjectIdentity(p.title) === "sohailshop");
   }
 
   if (strId === "wedding" || strId === "wedding-page") {
-    return dbProjects.find(
-      (p) => p.id === 6 || p.title.toLowerCase().includes("wedding")
-    );
+    return dbProjects.find((p) => normalizeProjectIdentity(p.title) === "weddingpage");
   }
 
   if (strId === "new-chapter") {
     return dbProjects.find((p) => p.title.toLowerCase().includes("new chapter"));
   }
 
-  // 3. Match by exact or partial title if provided
+  // 4. Match by exact normalized title if provided
   if (searchTitle) {
-    const byTitle = dbProjects.find((p) => {
-      const pTitle = p.title.toLowerCase();
-      return pTitle === searchTitle || pTitle.includes(searchTitle) || searchTitle.includes(pTitle);
-    });
+    const searchIdentity = normalizeProjectIdentity(searchTitle);
+    const byTitle = dbProjects.find(
+      (p) => normalizeProjectIdentity(p.title) === searchIdentity
+    );
     if (byTitle) return byTitle;
   }
 
-  // 4. Fallback search by id substring in project title
-  return dbProjects.find((p) => p.title.toLowerCase().includes(strId));
+  return undefined;
+}
+
+function normalizeProjectIdentity(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 /**
@@ -131,8 +128,16 @@ export function findDbRecordForProject(
 export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedProject[] {
   // Map initialProjects to UnifiedProject, merging with matching database records
   const mapped: UnifiedProject[] = initialProjects.map((proj: UniverseProject) => {
-    const images = resolveProjectImages(proj);
-    const dbRecord = findDbRecordForProject(proj.id, proj.name, dbProjects);
+    const dbRecord = findDbRecordForProject(
+      proj.id,
+      proj.name,
+      dbProjects,
+      proj.databaseId
+    );
+    const images = resolveProjectImages({
+      id: proj.id,
+      image: dbRecord?.image_url || proj.image,
+    });
 
     // Database fields take strict precedence over static defaults
     const title = dbRecord?.title || (proj.id === "fresh-flow" ? "AM Fruits" : proj.name);
@@ -218,9 +223,7 @@ export function getCachedUnifiedProjects(): UnifiedProject[] | null {
     cachedUnifiedProjects = buildUnifiedProjects(dbProjects);
     return cachedUnifiedProjects;
   }
-  // Even if dbProjects isn't fetched yet, build from initialProjects so the page can render instantly
-  cachedUnifiedProjects = buildUnifiedProjects([]);
-  return cachedUnifiedProjects;
+  return null;
 }
 
 /**
@@ -243,7 +246,8 @@ export async function loadUnifiedProjects(options?: { forceRefresh?: boolean }):
       { forceRefresh: options?.forceRefresh }
     );
   } catch (err) {
-    console.warn("[Projects] Failed to fetch /api/devops, falling back to local dataset:", err);
+    console.error("[Projects] Failed to fetch authoritative /api/devops project data:", err);
+    throw err;
   }
 
   cachedUnifiedProjects = buildUnifiedProjects(dbProjects);

@@ -885,10 +885,18 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
               }
             } catch (dbError: any) {
               console.warn(
-                `[Neon Query Failed - switching to mock store] ${method} ${pathname}:`,
+                `[Neon Query Failed] ${method} ${pathname}:`,
                 dbError?.message || dbError
               );
             }
+          }
+
+          // Projects are database-backed. Never substitute mock project rows
+          // when the authoritative Neon read or mutation is unavailable.
+          if ((resource as string) === "devops") {
+            return sendJson(503, {
+              error: "Authoritative project database is unavailable.",
+            });
           }
 
           // In-memory mock store fallback
@@ -1244,4 +1252,3 @@ export default defineConfig({
     strictPort: true,
   },
 });
-

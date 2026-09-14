@@ -7,108 +7,79 @@ import {
   ArrowRight,
   ArrowUpRight,
 } from "lucide-react";
-import { initialProjects } from "../../data/mission-control";
-import type { UniverseProject } from "../../types/mission-control";
 import { formatProjectStatus } from "../../lib/utils";
 import { prefetchProjectDetails } from "../../lib/projectContent";
 import { prefetchRouteData } from "../navigation/Navbar";
+import {
+  getCachedUnifiedProjects,
+  loadUnifiedProjects,
+  type UnifiedProject,
+} from "../projects/projectData";
+import {
+  resolveProjectImages,
+} from "../projects/projectImages";
 
 interface ProjectsShowcaseProps {
-  projects?: UniverseProject[];
+  projects?: UnifiedProject[];
 }
 
-/**
- * Clean presentation-level dual image mapping supporting desktop and mobile phone screenshots.
- * Easily replaceable with real screenshots later.
- */
-export interface ProjectImageSources {
-  imageDesktop: string;
-  imageMobile: string;
-}
-
-/**
- * Deterministic mapping to versioned/fingerprinted project images.
- * Guarantees that browsers (Safari, iOS Mobile Safari, Brave, Chrome)
- * never hold stale disk cache entries when project images are published.
- */
-export const VERSIONED_IMAGE_MAP: Record<string, string> = {
-  "/projects/temporary/fresh-flow-desktop.jpg": "/projects/temporary/fresh-flow-desktop.v2.jpg",
-  "/projects/temporary/fresh-flow-mobile.jpg": "/projects/temporary/fresh-flow-mobile.v2.jpg",
-  "/projects/temporary/fresh-flow-placeholder.jpg": "/projects/temporary/fresh-flow-placeholder.v2.jpg",
-  "/projects/temporary/sohail-shop-desktop.jpg": "/projects/temporary/sohail-shop-desktop.v2.jpg",
-  "/projects/temporary/sohail-shop-mobile.jpg": "/projects/temporary/sohail-shop-mobile.v2.jpg",
-  "/projects/temporary/sohail-shop-placeholder.jpg": "/projects/temporary/sohail-shop-placeholder.v2.jpg",
-  "/projects/temporary/sohail-studio-desktop.jpg": "/projects/temporary/sohail-studio-desktop.v2.jpg",
-  "/projects/temporary/sohail-studio-mobile.jpg": "/projects/temporary/sohail-studio-mobile.v2.jpg",
-  "/projects/temporary/sohail-studio-placeholder.jpg": "/projects/temporary/sohail-studio-placeholder.v2.jpg",
-  "/projects/temporary/wedding-desktop.jpg": "/projects/temporary/wedding-desktop.v2.jpg",
-  "/projects/temporary/wedding-mobile.jpg": "/projects/temporary/wedding-mobile.v2.jpg",
-  "/projects/temporary/wedding-placeholder.jpg": "/projects/temporary/wedding-placeholder.v2.jpg",
-  "/projects/temporary/new-chapter-desktop.jpg": "/projects/temporary/new-chapter-desktop.v2.jpg",
-  "/projects/temporary/new-chapter-mobile.jpg": "/projects/temporary/new-chapter-mobile.v2.jpg",
-  "/projects/temporary/new-chapter-placeholder.jpg": "/projects/temporary/new-chapter-placeholder.v2.jpg",
-};
-
-export function resolveVersionedProjectImageUrl(url?: string | null): string {
-  if (!url) return "";
-  const trimmed = url.trim();
-  return VERSIONED_IMAGE_MAP[trimmed] || trimmed;
-}
-
-export const TEMPORARY_PROJECT_IMAGE_MAP: Record<string, ProjectImageSources> = {
-  "sohail-shop": {
-    imageDesktop: "/projects/temporary/sohail-shop-desktop.v2.jpg",
-    imageMobile: "/projects/temporary/sohail-shop-mobile.v2.jpg",
-  },
-  "sohail-studio": {
-    imageDesktop: "/projects/temporary/sohail-studio-desktop.v2.jpg",
-    imageMobile: "/projects/temporary/sohail-studio-mobile.v2.jpg",
-  },
-  "fresh-flow": {
-    imageDesktop: "/projects/temporary/fresh-flow-desktop.v2.jpg",
-    imageMobile: "/projects/temporary/fresh-flow-mobile.v2.jpg",
-  },
-  "wedding": {
-    imageDesktop: "/projects/temporary/wedding-desktop.v2.jpg",
-    imageMobile: "/projects/temporary/wedding-mobile.v2.jpg",
-  },
-  "new-chapter": {
-    imageDesktop: "/projects/temporary/new-chapter-desktop.v2.jpg",
-    imageMobile: "/projects/temporary/new-chapter-mobile.v2.jpg",
-  },
-};
-
-/**
- * Resolves desktop and mobile project images with clean fallback hierarchy:
- * 1. TEMPORARY_PROJECT_IMAGE_MAP mapping by ID
- * 2. project.image from data as fallback for both (versioned)
- * 3. Default fallback placeholder
- */
-export function resolveProjectImages(project: UniverseProject): ProjectImageSources {
-  const custom = TEMPORARY_PROJECT_IMAGE_MAP[project.id];
-  if (custom) return custom;
-
-  const fallback = resolveVersionedProjectImageUrl(project.image) || "/projects/temporary/sohail-shop-desktop.v2.jpg";
-  return {
-    imageDesktop: fallback,
-    imageMobile: fallback,
-  };
-}
-
-// Backward-compatible single image resolver
-export function resolveProjectImage(project: UniverseProject): string {
-  return resolveProjectImages(project).imageDesktop;
-}
+export {
+  resolveProjectImages,
+  resolveProjectImage,
+  resolveVersionedProjectImageUrl,
+  TEMPORARY_PROJECT_IMAGE_MAP,
+  VERSIONED_IMAGE_MAP,
+} from "../projects/projectImages";
 
 export default function ProjectsShowcase({
-  projects = initialProjects,
+  projects: providedProjects,
 }: ProjectsShowcaseProps) {
   const shouldReduceMotion = useReducedMotion();
   const carouselRef = useRef<HTMLDivElement>(null);
+  const cachedProjects = getCachedUnifiedProjects();
+  const [projects, setProjects] = useState<UnifiedProject[]>(
+    providedProjects || cachedProjects || []
+  );
+  const [isLoading, setIsLoading] = useState(
+    !providedProjects && !cachedProjects
+  );
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (providedProjects) {
+      setProjects(providedProjects);
+      setIsLoading(false);
+      setLoadError(null);
+      return;
+    }
+
+    let isMounted = true;
+    loadUnifiedProjects()
+      .then((data) => {
+        if (isMounted) {
+          setProjects(data);
+          setLoadError(null);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load Home project showcase:", error);
+        if (isMounted) {
+          setLoadError("Unable to load projects from the database.");
+          setProjects([]);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [providedProjects]);
 
   // Update arrow availability and active index on scroll and resize
   const checkScroll = useCallback(() => {
@@ -240,9 +211,10 @@ export default function ProjectsShowcase({
   };
 
   // Helper for project status indicator badge inside image top-right
-  const getProjectStatusStyle = (project: UniverseProject) => {
-    if (project.status === "live") {
-      if (project.id === "sohail-shop") {
+  const getProjectStatusStyle = (project: UnifiedProject) => {
+    const normalizedStatus = formatProjectStatus(project.status);
+    if (normalizedStatus === "Ready") {
+      if (String(project.id) === "sohail-shop") {
         return {
           badgeClass:
             "border-lime-400/40 bg-slate-950/85 text-lime-300 shadow-[0_2px_8px_rgba(163,230,53,0.15)]",
@@ -257,7 +229,7 @@ export default function ProjectsShowcase({
         pulse: true,
       };
     }
-    if (project.status === "building") {
+    if (normalizedStatus === "Active") {
       return {
         badgeClass:
           "border-cyan-400/40 bg-slate-950/85 text-cyan-300 shadow-[0_2px_8px_rgba(6,182,212,0.15)]",
@@ -374,17 +346,33 @@ export default function ProjectsShowcase({
             WebkitOverflowScrolling: "touch",
           }}
         >
-          {projects.map((project) => {
-            const theme = getProjectTheme(project.id);
+          {isLoading ? (
+            <div className="w-full py-12 text-center text-xs font-mono text-slate-400">
+              Loading projects from database...
+            </div>
+          ) : loadError ? (
+            <div className="w-full py-12 text-center text-xs font-mono text-amber-300">
+              {loadError}
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="w-full py-12 text-center text-xs font-mono text-slate-400">
+              No projects are currently available.
+            </div>
+          ) : (
+            projects.map((project) => {
+            const theme = getProjectTheme(String(project.id));
             const statusStyle = getProjectStatusStyle(project);
-            const projectImages = resolveProjectImages(project);
-            const projectUrl = project.link || `/projects/${project.id}`;
+            const projectImages = resolveProjectImages({
+              id: String(project.id),
+              image: project.imageUrl,
+            });
+            const projectUrl = project.internalUrl || `/projects/${project.id}`;
 
             return (
               <Link
                 key={project.id}
                 to={projectUrl}
-                aria-label={`Explore project ${project.name}`}
+                aria-label={`Explore project ${project.title}`}
                 onMouseEnter={() => prefetchProjectDetails(project.id)}
                 onFocus={() => prefetchProjectDetails(project.id)}
                 className={`project-card group relative flex flex-col shrink-0 snap-start rounded-2xl border border-slate-800/90 bg-[#0d1526]/95 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] overflow-hidden transition-all duration-300 hover:-translate-y-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 ${theme.accentBorder} w-[190px] min-[400px]:w-[205px] sm:w-[225px] md:w-[240px] cursor-pointer`}
@@ -424,7 +412,7 @@ export default function ProjectsShowcase({
                     />
                     <img
                       src={projectImages.imageDesktop}
-                      alt={`${project.name} preview`}
+                      alt={`${project.title} preview`}
                       loading="lazy"
                       decoding="async"
                       onError={(e) => {
@@ -444,7 +432,7 @@ export default function ProjectsShowcase({
                     {/* PROJECT TITLE & TAGLINE */}
                     <div>
                       <h3 className="font-display text-base sm:text-lg lg:text-xl font-bold text-white tracking-tight group-hover:text-lime-300 transition-colors leading-snug">
-                        {project.name}
+                        {project.title}
                       </h3>
                       {project.tagline && (
                         <p
@@ -461,7 +449,7 @@ export default function ProjectsShowcase({
                     </p>
 
                     {/* TECHNOLOGY BADGES */}
-                    {project.technologies && project.technologies.length > 0 && (
+                      {project.technologies.length > 0 && (
                       <div className="pt-0.5">
                         {/* Mobile: 3 technologies + overflow */}
                         <div className="flex sm:hidden flex-wrap gap-1">
@@ -512,7 +500,8 @@ export default function ProjectsShowcase({
                 </div>
               </Link>
             );
-          })}
+            })
+          )}
           {/* Spacer to give the last card comfortable end padding on mobile */}
           <div className="shrink-0 w-2 sm:hidden" aria-hidden="true" />
         </div>

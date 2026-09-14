@@ -18,6 +18,7 @@ export default function ProjectsPage() {
   const initialProjectsData = useMemo(() => getCachedUnifiedProjects(), []);
   const [projects, setProjects] = useState<UnifiedProject[]>(initialProjectsData || []);
   const [loading, setLoading] = useState<boolean>(!initialProjectsData || initialProjectsData.length === 0);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("ALL");
 
   useEffect(() => {
@@ -36,9 +37,14 @@ export default function ProjectsPage() {
             return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
           });
           setProjects(sorted);
+          setLoadError(null);
         }
       } catch (err) {
         console.error("Error loading unified projects:", err);
+        if (isMounted) {
+          setProjects([]);
+          setLoadError("Unable to load projects from the database.");
+        }
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -340,6 +346,10 @@ export default function ProjectsPage() {
               <p className="text-xs font-mono text-slate-400">
                 Loading production portfolio from database...
               </p>
+            </div>
+          ) : loadError ? (
+            <div className="py-16 text-center text-amber-300 text-sm font-mono border border-amber-400/20 rounded-2xl bg-amber-950/10">
+              {loadError}
             </div>
           ) : filteredProjects.length === 0 ? (
             <div className="py-16 text-center text-slate-400 text-sm font-mono border border-white/10 rounded-2xl bg-white/[0.02]">

@@ -259,32 +259,6 @@ export const FALLBACK_DATA: Record<string, any[]> = {
     { id: 7, skill: "ArgoCD & GitOps", category: "Continuous Delivery", level: "Advanced" },
     { id: 8, skill: "PostgreSQL & Databases", category: "Databases", level: "Intermediate" },
   ],
-  devops: [
-    {
-      id: 1,
-      title: "Sohail-Shop: Multi-Vendor Platform",
-      category: "Cloud Native Architecture",
-      description: "Production-grade e-commerce microservices platform with high availability, automated rollback, and real-time monitoring on AWS EKS.",
-      technologies: "Kubernetes, AWS EKS, Terraform, ArgoCD, Docker, PostgreSQL",
-      status: "Ready",
-    },
-    {
-      id: 2,
-      title: "Kubernetes Production Cluster Lab",
-      category: "Infrastructure",
-      description: "Bare-metal and cloud Kubernetes deployment equipped with Prometheus, Grafana, and Traefik ingress controller.",
-      technologies: "Kubernetes, Helm, Prometheus, Grafana, Traefik",
-      status: "Running",
-    },
-    {
-      id: 3,
-      title: "Automated Multi-Cloud Terraform Forge",
-      category: "Automation",
-      description: "Modular Infrastructure as Code repository defining VPCs, subnets, IAM policies, and compute instances across AWS.",
-      technologies: "Terraform, AWS, GitHub Actions, HashiCorp HCL",
-      status: "Ready",
-    },
-  ],
   atlas: [
     {
       id: 1,
@@ -631,4 +605,3 @@ export async function fetchDevOpsProjectById(id: number | string): Promise<DevOp
   }
   return fetchApiRecord<DevOpsProject>(`/api/devops/${numericId}`, isValidDevOpsProject);
 }
-

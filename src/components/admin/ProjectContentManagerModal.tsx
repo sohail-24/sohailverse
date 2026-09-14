@@ -632,6 +632,7 @@ export default function ProjectContentManagerModal({
 
       const contentPayload = {
         overview: overview.trim(),
+        tagline: tagline.trim() || undefined,
         hero_image: effectiveHeroImage,
         gallery_images: cleanedGallery,
         git_url: gitUrl.trim() || undefined,
@@ -659,14 +660,25 @@ export default function ProjectContentManagerModal({
 
       // Check if project has a numeric DB ID
       if (fullData?.numericId) {
+        const coreUpdates = {
+          title: title.trim() !== fullData.title ? title.trim() : undefined,
+          category: category.trim() !== fullData.category ? category.trim() : undefined,
+          description: description.trim() !== fullData.description ? description.trim() : undefined,
+          technologies:
+            parsedTech.join(", ") !== fullData.technologies.join(", ")
+              ? parsedTech.join(", ")
+              : undefined,
+          status: status !== fullData.status ? status : undefined,
+          image_url:
+            effectiveHeroImage && effectiveHeroImage !== fullData.hero_image
+              ? effectiveHeroImage
+              : undefined,
+          github_url:
+            primaryGithub !== (fullData.githubUrl || "") ? primaryGithub : undefined,
+        };
+
         await saveProjectContentToDatabase(fullData.numericId, {
-          title: title.trim(),
-          category: category.trim(),
-          description: description.trim(),
-          technologies: parsedTech.join(", "),
-          status,
-          image_url: effectiveHeroImage || heroImage.trim(),
-          github_url: primaryGithub,
+          ...coreUpdates,
           content: contentPayload,
         });
       } else {
