@@ -1,5 +1,20 @@
 # Cloudflare Pages Headers Configuration
 
+# Direct PDF Streaming & In-Browser Viewer Optimization
+/Master-Notes.pdf
+  Content-Type: application/pdf
+  Content-Disposition: inline; filename="Master-Notes.pdf"
+  Accept-Ranges: bytes
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+  Access-Control-Allow-Origin: *
+
+/*.pdf
+  Content-Type: application/pdf
+  Content-Disposition: inline
+  Accept-Ranges: bytes
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+  Access-Control-Allow-Origin: *
+
 # Immutable long-term caching for versioned/fingerprinted project images
 /projects/temporary/*.v2.jpg
   Cache-Control: public, max-age=31536000, immutable

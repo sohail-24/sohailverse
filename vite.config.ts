@@ -1211,36 +1211,31 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
 };
 
 function devApiPlugin(): Plugin {
+  const pdfHeaderMiddleware = (req: any, res: any, next: any) => {
+    if (req.url && (req.url === "/Master-Notes.pdf" || req.url.includes(".pdf"))) {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", 'inline; filename="Master-Notes.pdf"');
+      res.setHeader("Accept-Ranges", "bytes");
+      res.setHeader("Cache-Control", "public, max-age=86400");
+    }
+    next();
+  };
+
   return {
     name: "neon-dev-api",
     configureServer(server) {
+      server.middlewares.use(pdfHeaderMiddleware);
       server.middlewares.use(apiMiddleware);
     },
     configurePreviewServer(server) {
+      server.middlewares.use(pdfHeaderMiddleware);
       server.middlewares.use(apiMiddleware);
-    },
-  };
-}
-
-function publicAssetsMirrorPlugin(): Plugin {
-  return {
-    name: "vite-plugin-public-assets-mirror",
-    apply: "build",
-    generateBundle() {
-      const sourceFile = path.resolve(process.cwd(), "public/Master-Notes.pdf");
-      if (fs.existsSync(sourceFile)) {
-        this.emitFile({
-          type: "asset",
-          fileName: "public/Master-Notes.pdf",
-          source: fs.readFileSync(sourceFile),
-        });
-      }
     },
   };
 }
 
 export default defineConfig({
-  plugins: [react(), devApiPlugin(), publicAssetsMirrorPlugin()],
+  plugins: [react(), devApiPlugin()],
   build: {
     rollupOptions: {
       output: {

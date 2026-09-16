@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3000",
-    "build": "tsc -b && vite build && mkdir -p dist/public && cp public/Master-Notes.pdf dist/public/Master-Notes.pdf",
+    "build": "tsc -b && vite build",
     "lint": "tsc -b",
     "preview": "vite preview"
   },
