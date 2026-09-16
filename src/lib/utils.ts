@@ -4,6 +4,7 @@ export function cn(...values: Array<string | false | null | undefined>) {
 
 /**
  * Normalizes user-facing project status labels across SohailVerse:
+ * - "Live"                            -> "Live"
  * - "Production Ready" (and variants) -> "Ready"
  * - "In Development" (and variants)   -> "Active"
  * - "Coming Soon" (and variants)      -> "Upcoming"
@@ -13,10 +14,12 @@ export function formatProjectStatus(status?: string | null): string {
   const trimmed = status.trim();
   const lower = trimmed.toLowerCase();
 
+  if (lower === "live") {
+    return "Live";
+  }
   if (
     lower.includes("ready") ||
     lower.includes("production") ||
-    lower.includes("live") ||
     lower.includes("running")
   ) {
     return "Ready";

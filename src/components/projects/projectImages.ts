@@ -61,11 +61,11 @@ export const TEMPORARY_PROJECT_IMAGE_MAP: Record<string, ProjectImageSources> = 
 };
 
 export function resolveProjectImages(project: ProjectImageSourceInput): ProjectImageSources {
-  if (project.image) {
-    const persistedImage = resolveVersionedProjectImageUrl(project.image);
+  if (project.image && project.image.trim()) {
+    const trimmed = project.image.trim();
     return {
-      imageDesktop: persistedImage,
-      imageMobile: persistedImage,
+      imageDesktop: trimmed,
+      imageMobile: trimmed,
     };
   }
 

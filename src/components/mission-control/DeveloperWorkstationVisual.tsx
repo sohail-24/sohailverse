@@ -427,7 +427,7 @@ export default function DeveloperWorkstationVisual() {
 
                 {/* Terminal Stream Output */}
                 <rect x="0" y="52" width="230" height="102" rx="4" fill="#04060b" stroke="#1e293b" strokeWidth="1" />
-                <text x="8" y="68" fill="#a855f7" fontFamily="monospace" fontSize="8.5">[INFO] FastAPI worker node online</text>
+                <text x="8" y="68" fill="#a855f7" fontFamily="monospace" fontSize="8.5">[INFO] Node.js control plane online</text>
                 <text x="8" y="83" fill="#38bdf8" fontFamily="monospace" fontSize="8.5">[200 OK] GET /api/v1/telemetry 3.2ms</text>
                 <text x="8" y="98" fill="#22c55e" fontFamily="monospace" fontSize="8.5">[200 OK] POST /api/v1/builds/sohail</text>
                 <text x="8" y="113" fill="#fbbf24" fontFamily="monospace" fontSize="8.5">[DB] PostgreSQL HA cluster in-sync</text>

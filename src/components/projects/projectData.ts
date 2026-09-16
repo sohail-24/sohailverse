@@ -45,9 +45,9 @@ export function normalizeTechnologies(techInput?: string[] | string | null): str
 }
 
 export const CANONICAL_PROJECT_ORDER: readonly string[] = [
-  "sohail-studio",
   "fresh-flow",
   "sohail-shop",
+  "sohail-studio",
   "wedding",
   "new-chapter",
 ];
@@ -148,7 +148,10 @@ export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedP
     const description = dbRecord?.description || proj.description;
     const dbTech = dbRecord?.technologies ? normalizeTechnologies(dbRecord.technologies) : null;
     const technologies = dbTech && dbTech.length > 0 ? dbTech : (proj.technologies || []);
-    const status = formatProjectStatus(dbRecord?.status || proj.statusLabel);
+    const status =
+      proj.id === "fresh-flow" || dbRecord?.id === 5
+        ? "Live"
+        : formatProjectStatus(dbRecord?.status || proj.statusLabel);
 
     return {
       id: proj.id,
@@ -194,7 +197,7 @@ export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedP
   }
 
   // Enforce authoritative presentation order:
-  // 1. Sohail-Studio, 2. AM Fruits, 3. Sohail-Shop, 4. Wedding Page, 5. New Chapter Loading
+  // 1. AM Fruits, 2. SohailShop, 3. Sohail-Studio, 4. Wedding Page, 5. New Chapter Loading
   mapped.sort((a, b) => {
     const idA = String(a.id).toLowerCase();
     const idB = String(b.id).toLowerCase();
@@ -249,8 +252,8 @@ export async function loadUnifiedProjects(options?: { forceRefresh?: boolean }):
       { forceRefresh: options?.forceRefresh }
     );
   } catch (err) {
-    console.error("[Projects] Failed to fetch authoritative /api/devops project data:", err);
-    throw err;
+    console.warn("[Projects] Could not reach /api/devops, falling back to local project definitions:", err);
+    dbProjects = [];
   }
 
   cachedUnifiedProjects = buildUnifiedProjects(dbProjects);

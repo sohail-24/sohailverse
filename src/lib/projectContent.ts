@@ -20,7 +20,7 @@ import {
 
 export { resolveVersionedProjectImageUrl };
 
-export type ProjectStatus = "Ready" | "Active" | "Upcoming";
+export type ProjectStatus = "Live" | "Ready" | "Active" | "Upcoming";
 
 export interface ProjectVideoSession {
   id: string;
@@ -213,10 +213,12 @@ export interface FullProjectData {
  */
 export function normalizeProjectStatus(raw?: string | null): ProjectStatus {
   if (!raw) return "Ready";
-  const s = raw.toLowerCase();
+  const s = raw.toLowerCase().trim();
+  if (s === "live") {
+    return "Live";
+  }
   if (
     s.includes("ready") ||
-    s.includes("live") ||
     s.includes("production") ||
     s.includes("running")
   ) {
@@ -277,8 +279,30 @@ export function getProjectVideoEmbedUrl(url: string): string | null {
 const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
   "sohail-shop": {
     overview:
-      "Sohail-Shop is a production-grade multi-vendor e-commerce platform built to simulate high-throughput real-world commerce. Designed from the ground up on modern cloud-native principles, the architecture features multi-AZ Kubernetes deployment on AWS EKS, declarative Terraform infrastructure-as-code, automated ArgoCD GitOps pipelines, and multi-layer caching with Redis and PostgreSQL.",
+      "I designed and built a production-grade Django e-commerce backend from scratch and then deployed it using DevOps practices across two Kubernetes environments: a self-managed kubeadm cluster on EC2 and a production-ready AWS EKS setup.\n\nThis project helped me understand application design and infrastructure automation end-to-end — from backend architecture and containerization to Kubernetes, GitOps, AWS infrastructure, CI/CD, and real-world production debugging.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nBACKEND ENGINEERING\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nThe project was designed and built as a production-minded, modular monolith rather than presented as a simple tutorial e-commerce application:\n• Django 5 modular monolith architecture\n• Accounts, Products, Orders, and Payments modules with strict separation of concerns\n• Custom User Model decoupled from default framework assumptions\n• Snapshot-based order lifecycle preserving item costs, product states, and tax rates at checkout\n• Cart system supporting both anonymous session visitors and authenticated users\n• Stripe-ready payment layer with server-side transaction handling\n• Environment-based configuration adhering to 12-factor-style principles\n• PostgreSQL relational database replacing SQLite for ACID durability\n• Stateless application design enabling horizontal replica scaling behind reverse proxies\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nCONTAINERIZATION & EC2 DEPLOYMENT\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nArchitecture Flow:\n\nInternet\n   ↓\nNginx\n   ↓\nGunicorn\n   ↓\nDjango\n   ↓\nPostgreSQL\n\nReal Engineering Lessons:\n• Gunicorn does not serve static or media files directly; it is designed strictly as a Python WSGI HTTP server.\n• Nginx is used as the front-facing reverse proxy to handle client connections and route dynamic requests.\n• Docker services communicate reliably across internal networks using service names rather than ephemeral container IPs.\n• Redis configuration caused a real HTTP 500-error issue under session write operations that was diagnosed through logs and fixed.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nKUBERNETES — SELF-MANAGED KUBEADM\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nCluster Components:\n• 1 control plane + worker nodes bootstrapped with kubeadm on EC2\n• Calico CNI configured for pod networking and pod-to-pod network policy enforcement\n• local-path storage provisioner for cluster volume persistence\n• Django Deployment configured with rolling updates and resource quotas\n• PostgreSQL StatefulSet with PersistentVolumeClaim (PVC)\n• Redis cache and session instance\n\nReal Media-File Problem Solved:\n• Problem: Media files were not loading in the browser.\n• Root cause: Gunicorn cannot directly serve media files from container file storage.\n• Solution: Designed an Nginx-based architecture to serve media files separately.\n\nKubernetes Storage Lessons:\n• Understood ReadWriteOnce (RWO) volume binding limitations across multi-node scheduling.\n• Configured reverse proxy requirements (host headers, proxy pass, and client buffer limits).\n• Diagnosed real Kubernetes storage behavior and resolved a PVC Pending condition caused by a CSI driver issue.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nGITOPS + CI/CD ARCHITECTURE\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nPipeline Flow:\n\nGit Push\n   ↓\nGitHub Actions\n   ↓\nBuild Docker Image\n   ↓\nPush Image\n   ↓\nUpdate Infrastructure Repository\n   ↓\nArgoCD Sync\n   ↓\nKubernetes Deployment\n\nTwo-Repository Model:\n• Repository 1: Application source code and automated Docker container image build.\n• Repository 2: Infrastructure manifests, Kubernetes YAMLs, and Helm configuration.\n\nEngineering Principles:\n• Git as the single source of truth for all cluster workloads.\n• Immutable deployments: every rollout references a distinct, immutable image tag.\n• Automated rollout with real-time drift detection and reconciliation.\n• Clean separation of application source code and infrastructure configuration.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nHELM MIGRATION\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Migrated raw Kubernetes YAML manifests into structured Helm charts.\n• Parameterized container image configuration (repository, tag, pull policy).\n• Parameterized compute resources (CPU/memory requests and limits).\n• Parameterized environment configuration (ConfigMaps and Secret references).\n• Added Kubernetes liveness and readiness probes for zero-downtime rolling updates.\n• Debugged and corrected Helm YAML indentation and parsing problems during chart templating.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nAWS EKS PRODUCTION DEPLOYMENT\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nThe verified containerized application was promoted from the self-managed Kubernetes environment to AWS EKS:\n• Terraform Infrastructure-as-Code for repeatable cloud provisioning\n• EKS cluster with managed node groups across availability zones\n• IAM roles and IAM Roles for Service Accounts (IRSA) for least-privilege pod security\n• AWS Application Load Balancer (ALB) Ingress Controller for TLS termination and traffic routing\n• PostgreSQL backed by AWS Elastic Block Store (EBS) via EBS CSI driver\n• User-uploaded media storage offloaded to Amazon S3\n\nReal AWS Problem Solved:\n• Problem: S3 upload returned HTTP 500 error in production.\n• Root cause: Bucket mismatch following an AWS account change.\n• Fix: Updated the environment configuration and IAM role permissions.\n\nKey AWS Lessons:\n• Resolved IRSA vs. hardcoded access-key authentication conflict.\n• Diagnosed and resolved CI/CD authentication failures during pipeline execution.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nREAL PROBLEMS I SOLVED\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n1. PVC Pending\n   → CSI driver issue: Diagnosed PersistentVolumeClaim stuck in Pending status and resolved the underlying CSI driver provisioner configuration.\n\n2. Media Files Not Loading\n   → Gunicorn limitation: Identified that Gunicorn cannot serve media assets directly and designed an Nginx reverse proxy architecture to route and serve media separately.\n\n3. S3 Upload Returning HTTP 500\n   → Bucket mismatch: Isolated upload failures following an AWS account change and updated the environment configuration and IAM role permissions.\n\n4. Redis & Container Failures\n   → Redis configuration issue: Fixed container-level 500 errors caused by misconfigured Redis service connection parameters.\n\n5. CI/CD Pipeline Failures\n   → Docker & Git authentication: Diagnosed and resolved registry authentication and Git token permissions during automated GitHub Actions workflows.\n\n6. Helm Deployment Failures\n   → YAML parsing & indentation: Debugged templating syntax and whitespace indentation errors in Helm charts during deployment releases.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nFINAL SYSTEM\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nEnd-State Architecture:\n• Django backend\n• PostgreSQL\n• Docker\n• Nginx\n• Gunicorn\n• Redis\n• Kubernetes\n• Helm\n• GitHub Actions\n• ArgoCD\n• Terraform\n• AWS EKS\n• S3\n• ALB Ingress\n\nDeployment Model:\n\"One push → automated build → infrastructure update → GitOps synchronization → Kubernetes deployment.\"\n\nTarget Environments:\n• Self-managed kubeadm Kubernetes\n• AWS EKS\n\nInfrastructure Lifecycle:\n\"One destroy → clean infrastructure.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSTRONG CLOSING\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\"This project helped me understand not just how to deploy an application, but how to design backend systems, automate infrastructure, and debug real production issues across Kubernetes, AWS, and CI/CD pipelines.\"",
+    tagline: "Production-Grade E-Commerce / Cloud-Native Backend",
     hero_image: "/projects/temporary/sohail-shop-desktop.v2.jpg",
+    gallery_images: [
+      "/projects/temporary/sohail-shop-desktop.v2.jpg",
+      "/projects/temporary/sohail-shop-mobile.v2.jpg",
+    ],
+    git_url: "https://github.com/sohail-24/django_ecommerce",
+    website_url: "https://sohail-shop.sohailverse.com",
+    implemented_features: [
+      "Django 5 modular monolith architecture with Accounts, Products, Orders, and Payments modules",
+      "Custom User Model and snapshot-based order lifecycle preserving historical transaction state",
+      "Cart system supporting both guest sessions and authenticated users with state merge on login",
+      "Multi-container EC2 deployment: Nginx reverse proxy → Gunicorn WSGI → Django → PostgreSQL",
+      "Self-managed kubeadm Kubernetes cluster with Calico CNI, local-path storage, and StatefulSet",
+      "Production AWS EKS cluster provisioned with Terraform, IAM / IRSA, and ALB Ingress",
+      "Two-repository GitOps delivery pipeline: GitHub Actions build → ArgoCD cluster sync",
+      "Helm chart migration with parameterized resources, probes, and environment configs",
+      "Real production debugging: CSI driver PVCs, Gunicorn/Nginx media routing, and S3 IAM fixes",
+    ],
+    business_flow:
+      "Production Traffic Flow:\nInternet → Nginx Reverse Proxy → Gunicorn (WSGI) → Django 5 Application → PostgreSQL (ACID Storage) & Redis (Session Cache).\n\nGitOps Delivery Flow:\nGit Push → GitHub Actions (Build & Push Docker Image) → Update Infrastructure Repository → ArgoCD Sync → Automated Kubernetes Deployment.",
+    order_data_preservation:
+      "Snapshot-based order lifecycle immutably captures product descriptions, item prices, and tax rates at the exact moment an order is confirmed. Historical transaction records remain permanent and audit-compliant in PostgreSQL regardless of future catalog changes.",
     videos: [
       {
         id: "vid-shop-1",
@@ -325,30 +349,29 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
         title: "Kubernetes Manifests & Helm Configuration README",
         type: "readme",
         url: "https://github.com/sohail-24/django_ecommerce#readme",
-        content: `# Sohail-Shop Kubernetes Architecture
-## Cluster Specifications
-- **Provider**: AWS Elastic Kubernetes Service (EKS)
-- **Node Groups**: 3 Multi-AZ managed node groups with spot fallback
-- **Ingress**: AWS Load Balancer Controller with cert-manager SSL
-- **Database**: Amazon RDS PostgreSQL with multi-AZ replication
-- **Caching**: Redis Cluster with Sentinel high-availability
+        content: `# SohailShop Kubernetes & Production Operations Guide
+## 1. Cluster Environments
+- **Environment 1 (Self-Managed)**: 1 Control Plane + Worker Nodes bootstrapped with kubeadm on EC2, Calico CNI, local-path storage provisioner.
+- **Environment 2 (Production Cloud)**: AWS EKS with managed node groups across Availability Zones, provisioned via Terraform.
+- **Ingress**: AWS Application Load Balancer (ALB) Ingress Controller with TLS termination.
+- **Persistence**: PostgreSQL StatefulSet with AWS EBS (via EBS CSI Driver), Redis cache instance.
+- **Media Assets**: Offloaded to Amazon S3 with IAM / IRSA least-privilege credentials.
 
-## Deployment Runbook
-1. Initialize Terraform state backend:
-\`\`\`bash
-cd terraform/environments/prod
-terraform init && terraform apply
-\`\`\`
-2. Register ArgoCD application manifest:
-\`\`\`bash
-kubectl apply -f gitops/apps/sohail-shop-prod.yaml
-\`\`\`
-3. Verify pod readiness and health endpoints:
-\`\`\`bash
-kubectl get pods -n shop-prod -l app=sohail-shop
-\`\`\``,
+## 2. GitOps Continuous Delivery Pipeline
+1. Developer pushes code to Application Repository (Django 5 + Dockerfile).
+2. GitHub Actions CI pipeline runs unit tests, builds immutable Docker image, and pushes to registry with semantic git SHA tag.
+3. CI updates image tag in Infrastructure Repository (Kubernetes YAML / Helm manifests).
+4. ArgoCD detects repository drift and synchronizes live cluster state automatically.
+
+## 3. Real Production Incident Runbook
+- **Incident 1 (PVC Pending)**: Diagnosed PersistentVolumeClaim stuck in Pending state on kubeadm cluster; resolved underlying CSI driver volume binding and storage provisioner.
+- **Incident 2 (Media Files 404/Missing)**: Identified Gunicorn WSGI limitation for media serving; architected Nginx reverse proxy routing to serve media files directly.
+- **Incident 3 (S3 Upload HTTP 500)**: Traced production 500 errors during asset uploads to AWS bucket naming mismatch post-account migration; corrected environment config and IAM role policy.
+- **Incident 4 (Redis Connection 500)**: Resolved containerized session write failures caused by misconfigured Redis service hostname.
+- **Incident 5 (CI/CD Pipeline Failure)**: Diagnosed Docker registry authentication and repository write token scope errors in GitHub Actions.
+- **Incident 6 (Helm Chart Release Error)**: Fixed YAML indentation and template variable parsing errors during initial Helm migration.`,
         description:
-          "Complete architectural manifest guidelines and local reproduction instructions.",
+          "Complete architectural manifest guidelines and production incident resolution runbook.",
       },
     ],
     architecture: [
@@ -392,15 +415,15 @@ kubectl get pods -n shop-prod -l app=sohail-shop
       },
     ],
     highlightsList: [
-      "Zero-downtime rolling deployments managed declaratively with ArgoCD",
-      "Multi-AZ PostgreSQL cluster with read-replica scaling and automated backups",
-      "Low-latency Redis distributed session store and product cache layer",
-      "Prometheus & Grafana observability stack with real-time incident alerts",
+      "Production-grade Django 5 modular monolith with snapshot-based order lifecycle",
+      "Dual Kubernetes deployments: Self-managed kubeadm on EC2 and production AWS EKS",
+      "Automated GitOps pipeline with GitHub Actions, two-repo separation, and ArgoCD",
+      "Diagnosed and resolved 6 real production incidents across CSI, Nginx, and S3",
     ],
   },
   "sohail-studio": {
     overview:
-      "Sohail-Studio is a local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions.\n\nUnlike conventional AI coding assistants that perform unvetted file mutations or execute arbitrary shell scripts directly against developer machines, Sohail-Studio enforces strict architectural boundaries across three isolated execution planes: an advisory AI reasoning plane, an interactive human-in-the-loop terminal, and a deterministic workflow automation plane. Every architectural claim, diagnostic, and remediation recommendation is evidence-bound—grounded strictly in concrete codebase artifacts, package manifests, AST structures, and git history rather than speculative hallucination.",
+      "Sohail Studio is a local-first AI engineering workspace and DevOps AI Control Plane designed to explore a critical engineering problem: How can AI assist with engineering tasks without blindly guessing or directly controlling the system?\n\nConventional AI coding tools frequently take unbounded actions—hallucinating missing packages, mutating files across the repository without developer verification, or attempting to directly run unvetted scripts against host developer environments. Sohail-Studio solves this through a foundational engineering principle: No evidence means no assumption. Every architectural recommendation, diagnostic audit, and remediation step is strictly evidence-bound—grounded directly in concrete codebase artifacts, package manifests, Abstract Syntax Tree (AST) structures, runtime configurations, and git history.\n\nThe system is built on a modern full-stack architecture powered by Node.js, TypeScript, and Express on the backend, driving a responsive browser-based engineering workspace over low-latency WebSockets. Rather than shipping proprietary source code to external third-party model providers, Sohail-Studio integrates with local Ollama LLMs for private, on-device contextual inference. Interactive commands execute within a real local pseudo-terminal (PTY) session running directly on the host machine with full terminal fidelity, while the AI Control Plane enforces strict boundaries between advisory reasoning, human-in-the-loop terminal execution, and deterministic pipeline automation.",
     hero_image: "/projects/temporary/sohail-studio-desktop.v2.jpg",
     gallery_images: [
       "/projects/temporary/sohail-studio-desktop.v2.jpg",
@@ -411,55 +434,58 @@ kubectl get pods -n shop-prod -l app=sohail-shop
     video_url: undefined,
     pdf_url: undefined,
     documentation_url: undefined,
-    core_philosophy: "Turn repository evidence into controlled engineering decisions.",
+    core_philosophy:
+      "Sohail Studio is a local-first AI engineering workspace and DevOps AI Control Plane designed to explore a critical engineering problem: How can AI assist with engineering tasks without blindly guessing or directly controlling the system?\n\nSafety Principle: No evidence means no assumption.",
+    business_flow:
+      "1. Repository Ingestion & Deep Inspection: The Deep Inspector engine recursively traverses the repository, parsing package.json manifests, lockfiles, TypeScript ASTs, Docker configurations, and git commit history to extract verified system state.\n2. Project Intelligence Context Synthesis: Discovered artifacts are compiled into structured, queryable technical context. If a detail cannot be proven from codebase evidence, it is rejected ('No evidence means no assumption').\n3. Advisory AI Reasoning via Local Ollama: The AI Chat plane provides architectural consultation, code audits, and remediation plans using on-device Ollama LLM inference with zero data leakage and zero direct write authority.\n4. Human-in-the-Loop Verification: Proposed commands, patches, or Docker configurations are rendered in preview modals requiring explicit review and confirmation before promotion.\n5. Real Local PTY Terminal Execution: Approved commands stream directly through a real local pseudo-terminal (PTY) instance over WebSockets with ANSI formatting, environment isolation, and live exit code telemetry.\n6. Evidence-Bound Dockerize & Deterministic Validation: Multi-stage Docker builds and DevOps workflows execute through deterministic validation gates that immediately abort on state divergence.\n7. Telemetry & State Persistence: Local session logs are recorded to structured disk storage and synced to Neon PostgreSQL for durable audit tracking.",
     execution_planes: [
       {
         name: "Plane 1: AI Chat Plane",
-        role: "Advisory Reasoning & Architecture Consultant",
+        role: "Advisory Reasoning & Architecture Consultant (Ollama Local LLM)",
         type: "advisory",
         badge: "Advisory Boundary — Read-Only",
         description:
-          "Provides contextual natural language reasoning, code audits, architecture retrospectives, and script previews. Strictly bounded as an advisory layer: it cannot directly mutate files on disk, execute unauthorized commands, or hijack the terminal session.",
+          "Provides contextual natural language reasoning, architecture analysis, and remediation previews powered by local Ollama LLMs. Architecturally bounded as an advisory-only layer: it has zero direct access to file modification, cannot execute shell commands, and cannot mutate system state.",
         capabilities: [
-          "Contextual codebase question answering grounded in verified repository manifests and AST files",
-          "Architectural defect detection, performance optimization suggestions, and Docker/K8s review",
-          "Interactive command previews with required human verification prior to terminal promotion",
-          "Zero-mutation guarantee eliminating unintended file edits or unverified git commits",
+          "Contextual codebase queries grounded strictly in Project Intelligence verified facts",
+          "Zero-mutation guarantee: advisory AI output cannot directly touch disk or execute shell commands",
+          "Local Ollama inference ensuring complete privacy with zero cloud telemetry or proprietary code leakage",
+          "Command preview generation requiring explicit human promotion to the interactive terminal",
         ],
         securityBoundary:
-          "Read-only advisory sandbox. Zero direct filesystem write permissions or terminal execution capabilities without explicit human promotion.",
+          "Strict read-only sandbox. AI responses are purely advisory; cannot execute shell commands or write files directly to disk.",
       },
       {
         name: "Plane 2: Interactive Terminal Plane",
-        role: "Human-in-the-Loop Controlled Shell",
+        role: "Human-in-the-Loop Controlled Shell (Real Local PTY)",
         type: "interactive",
         badge: "Direct Execution — Human-in-the-Loop",
         description:
-          "A real-time bidirectional terminal interface connecting the engineer directly to local system execution. Provides full shell capabilities with streaming telemetry, command isolation, and environment awareness.",
+          "A real local pseudo-terminal (PTY) running directly on the host machine and bridged to the browser engineering workspace via WebSockets. Engineers maintain complete sovereign control over shell execution, environment variables, and process lifecycles.",
         capabilities: [
-          "Bidirectional streaming terminal with ANSI color formatting and sub-millisecond local response",
-          "Real-time process telemetry capturing exit codes, command execution duration, and stderr streams",
-          "Explicit human approval required for executing scripts promoted from AI Chat advisory output",
-          "Local workspace directory isolation ensuring consistent toolchain paths and security",
+          "Real local PTY terminal instance supporting interactive CLI commands (vim, top, git, npm, docker)",
+          "Bidirectional real-time streaming via WebSockets with ANSI formatting and process exit code monitoring",
+          "Human-in-the-loop gating: AI-suggested commands must be explicitly inspected and executed by the engineer",
+          "Sohail-Agent CLI integration for coordinated multi-tool workspace workflows",
         ],
         securityBoundary:
-          "Human-gated execution. Commands run with user permissions in the local workspace directory, with all commands logged in local session history.",
+          "Human-gated execution. Commands run with user permissions in the target workspace directory with real-time process monitoring.",
       },
       {
         name: "Plane 3: Workflow / Agent Plane",
-        role: "Deterministic DevOps Pipeline Orchestrator",
+        role: "Deterministic DevOps Pipeline Orchestrator & Evidence-Bound Dockerize",
         type: "automated",
         badge: "Deterministic Pipeline — Stage Gated",
         description:
-          "A task automation and verification engine that executes deterministic multi-step DevOps pipelines (linting, test suites, Docker container builds, and deployment dry-runs) with clear stage gates and rollback protection.",
+          "A deterministic automation engine that executes structured multi-step engineering sequences (linting, test verification, evidence-bound Dockerize builds, and container validation) with rigorous stage gates and rollback protection.",
         capabilities: [
-          "Declarative multi-stage pipeline execution with sequential assertions and parallel phase transitions",
-          "Pre-flight dependency and environment validation gates before executing critical build steps",
-          "Automated failure handling with deterministic error isolation and stack trace capturing",
-          "Explicit approval checkpoints for high-impact actions (e.g., git branch push, production release)",
+          "Declarative multi-stage pipeline execution with sequential assertions and deterministic error trapping",
+          "Evidence-Bound Dockerize workflow generating container configurations strictly from verified dependency manifests",
+          "Deterministic validation checkpoints that immediately abort execution on unexpected state divergence",
+          "Audit logging and execution telemetry persisted locally and synchronized with Neon PostgreSQL",
         ],
         securityBoundary:
-          "Deterministic pipeline boundaries. Workflows adhere strictly to predefined step schemas and immediately halt upon unexpected state divergence or assertion failure.",
+          "Deterministic pipeline boundaries. Workflows adhere strictly to predefined schemas with zero arbitrary runtime mutation.",
       },
     ],
     system_capabilities: [
@@ -467,73 +493,86 @@ kubectl get pods -n shop-prod -l app=sohail-shop
         title: "Deep Inspector",
         tagline: "Empirical Repository & Workspace Diagnostics",
         description:
-          "Recursively inspects the workspace directory tree, dependency manifests, build configurations, and git version history to construct an authoritative in-memory map of system topology and health.",
+          "Recursively traverses the project directory tree, parsing package manifests (package.json, lockfiles, etc.), AST structures, Dockerfiles, and environment configurations to construct an authoritative, empirical graph of codebase health.",
         evidenceSource:
-          "Filesystem AST, package manifests (package.json, requirements.txt, pom.xml), git commit log, Dockerfiles, and CI workflow configurations.",
+          "Filesystem AST, package manifests, build scripts, git status, environment definitions, and lockfiles.",
         keyPoints: [
-          "Automated detection of obsolete packages, configuration drift, and orphaned dependencies",
-          "Identification of architectural anti-patterns, security vulnerabilities, and circular module imports",
-          "Deep local filesystem indexing with sub-second analysis speed across large multi-module repositories",
+          "Automated identification of configuration drift, missing dependencies, and architectural anti-patterns",
+          "Extracts verified runtime requirements for the Evidence-Bound Dockerize engine",
+          "Zero assumptions: discovers true project topology directly from disk rather than heuristic guessing",
         ],
       },
       {
         title: "Project Intelligence",
         tagline: "Evidence-Bound Technical Context Formulation",
         description:
-          "Transforms raw codebase artifacts into structured, queryable knowledge. Feeds accurate, unambiguous project context into the AI Chat plane to eliminate hallucinations and ground recommendations in verified facts.",
+          "Transforms raw repository artifacts into structured, verifiable context for the AI Control Plane. Enforces the core safety principle: 'No evidence means no assumption'. If an architectural claim cannot be proven from code, it is rejected.",
         evidenceSource:
-          "Extracted TypeScript/Python type definitions, interface contracts, routing tables, and schema declarations.",
+          "Extracted TypeScript interfaces, Express route definitions, dependency graphs, and git commit history.",
         keyPoints: [
-          "100% verified facts: if an architectural detail cannot be proven by codebase evidence, it is not asserted",
-          "Contextual memory that maintains real-time awareness of active git branches, uncommitted diffs, and tool versions",
-          "Zero phantom claims: eliminates speculative AI advice by enforcing strict codebase grounding boundaries",
+          "Eliminates AI hallucinations by restricting reasoning context to verified codebase artifacts",
+          "Maintains real-time awareness of active git branches, uncommitted diffs, and installed toolchains",
+          "Bridges empirical codebase truth directly to the advisory AI reasoning plane",
         ],
       },
       {
-        title: "Evidence-Bound Engineering",
-        tagline: "Zero Assumptions, Verifiable Codebase Truth",
+        title: "Evidence-Bound Dockerize",
+        tagline: "Containerization Grounded in Repository Truth",
         description:
-          "A foundational engineering protocol dictating that all diagnostics, suggested modifications, and system evaluations must trace back to verifiable artifacts in the repository.",
+          "A specialized workflow that inspects project runtime requirements, package managers, port bindings, and build scripts to generate optimized, production-grade Dockerfiles and container configurations without generic templates.",
         evidenceSource:
-          "Direct line references, file content hashes, git commit SHAs, and reproducible test outputs.",
+          "Package manifests, runtime version specifications, build scripts, port declarations, and environment variables.",
         keyPoints: [
-          "Prevents hallucinated library methods or imaginary API endpoints in AI-suggested code updates",
-          "Forces every proposed code change to include exact file paths, line ranges, and target verification proofs",
-          "Establishes developer trust through reproducible, verifiable engineering steps rather than black-box AI outputs",
+          "Generates minimal, multi-stage Docker builds tailored strictly to discovered project dependencies",
+          "Validates container buildability and health checks with deterministic verification steps",
+          "Prevents configuration errors and missing dependencies before container deployment",
         ],
       },
       {
-        title: "Workflow Engine & Automation",
-        tagline: "Deterministic Pipelines with Human-in-the-Loop Oversight",
+        title: "Deterministic Validation",
+        tagline: "Zero-Tolerance Assertion & Safety Gates",
         description:
-          "Executes repeatable engineering sequences such as lint verification, test suites, Docker containerization, and configuration validation with stage-by-stage feedback and safety checks.",
+          "Enforces strict precondition and postcondition assertions on all pipeline executions. Every build, test, and containerization step must satisfy deterministic criteria before advancing to the next operational phase.",
         evidenceSource:
-          "Declarative pipeline definitions, process stdout/stderr logs, exit codes, and test result summaries.",
+          "Process exit codes, compiler diagnostics, container health status, and unit test assertions.",
         keyPoints: [
-          "Deterministic step execution with zero non-reproducible side effects",
-          "Immediate halt-on-error behavior to prevent cascading deployment faults or corrupted builds",
-          "Comprehensive session logging allowing exact auditing and replay of past workflow invocations",
+          "Instant halt-on-error protocol prevents cascading failures and corrupt deployment states",
+          "Ensures reproducible execution outcomes across local development and CI/CD pipelines",
+          "Maintains transparent audit records of all execution telemetry for retrospective analysis",
+        ],
+      },
+      {
+        title: "Sohail-Agent CLI & Local PTY Terminal",
+        tagline: "Sovereign Shell Execution & Workspace Bridge",
+        description:
+          "Bridges the browser engineering workspace with a real local PTY terminal process running on the host system, accompanied by the Sohail-Agent CLI for headless automation and terminal integration.",
+        evidenceSource:
+          "POSIX PTY process, WebSocket bidirectional byte streams, ANSI terminal sequences, and local environment variables.",
+        keyPoints: [
+          "True local PTY terminal preserving full interactive CLI fidelity (vim, top, git, npm, docker)",
+          "Low-latency WebSocket streaming with live process lifecycle and exit code telemetry",
+          "Sohail-Agent CLI allows executing headless audits and pipeline invocations from standard terminal sessions",
         ],
       },
     ],
     persistence_architecture: {
-      currentStatus: "Local-First Runtime (Implemented)",
+      currentStatus: "Dual-Tier Architecture: Local-First Runtime + Neon PostgreSQL Sync",
       currentDescription:
-        "Sohail-Studio is currently architected as a local-first engineering workspace with zero external database dependencies. Workspace state, user preferences, and execution history are stored locally using high-performance in-memory session registries backed by structured disk persistence.",
+        "Sohail Studio combines a local-first engineering workspace with Neon PostgreSQL cloud synchronization. Local development sessions benefit from zero-latency memory registries and structured disk storage, while audit logs, project metadata, and telemetry synchronize with Neon PostgreSQL.",
       currentStorage: [
-        "In-memory session registry for rapid sub-millisecond state access during active development sessions",
-        "Local structured file persistence: sessions/history.json for command history and workflow logs",
-        "Completely offline-capable: runs without network dependencies or external database latency",
-        "Zero telemetry leakage: all workspace analysis, shell logs, and session history remain strictly on the developer machine",
+        "Local in-memory session registry for sub-millisecond responsiveness during active engineering tasks",
+        "Structured disk persistence for local session history, terminal logs, and workflow states",
+        "Neon PostgreSQL serverless database integration for centralized telemetry, audit records, and project synchronization",
+        "Completely operational offline: local execution continues uninterrupted without network connectivity",
       ],
-      roadmapStatus: "Distributed Cloud Persistence (Future Roadmap)",
+      roadmapStatus: "Distributed Multi-Agent Architecture (Roadmap)",
       roadmapDescription:
-        "Future architectural phases will introduce optional centralized database integration for multi-engineer teams and distributed cloud environments, without sacrificing the local-first execution model.",
+        "Expanding the AI Control Plane into a distributed multi-agent collaborative platform with decentralized worker nodes, remote PTY terminal multiplexing, and cross-team pipeline orchestration.",
       roadmapStorage: [
-        "PostgreSQL / Cloud SQL relational database for enterprise multi-workspace telemetry and audit logs",
-        "Centralized session sync across developer workstations while maintaining local shell execution isolation",
-        "Role-based access control (RBAC) and team-wide workflow execution analytics",
-        "Dual-mode persistence adapter: seamless zero-downtime transition between local JSON storage and Cloud SQL",
+        "Distributed worker nodes executing deterministic pipelines across heterogeneous cloud and bare-metal environments",
+        "Cross-team collaborative sessions with end-to-end encrypted WebSocket terminal multiplexing",
+        "Advanced telemetry analytics and automated incident diagnosis stored in Neon PostgreSQL",
+        "Enhanced multi-model AI routing balancing local Ollama instances with specialized cloud foundation models",
       ],
     },
     videos: [],
@@ -554,24 +593,30 @@ kubectl get pods -n shop-prod -l app=sohail-shop
       },
     ],
     highlightsList: [
-      "Three isolated execution planes: Advisory AI Chat, Interactive Terminal, and Workflow Agent",
+      "Three isolated execution planes: Advisory AI Chat, Interactive PTY Terminal, and Deterministic Workflow Engine",
       "Evidence-bound Project Intelligence grounding all AI responses in verifiable repository artifacts",
-      "Deep Inspector engine performing recursive dependency, configuration, and health audits",
-      "Local-first architecture storing session history in sessions/history.json with zero database latency",
-      "Bidirectional streaming terminal with ANSI rendering, execution telemetry, and command isolation",
-      "Human-in-the-loop safety boundaries preventing AI chat from mutating disk or running unauthorized shell commands",
-      "Deterministic workflow engine with pre-flight assertions, stage gates, and audit logging",
-      "Planned PostgreSQL/Cloud SQL distributed persistence roadmap for multi-tenant collaboration",
+      "Deep Inspector engine performing recursive AST, dependency manifest, and configuration drift audits",
+      "Evidence-Bound Dockerize workflow generating production Dockerfiles strictly from verified codebase truth",
+      "Deterministic validation gates halting multi-stage DevOps operations upon any state divergence",
+      "Real local PTY terminal instance supporting interactive CLI workflows (git, docker, npm, vim) with ANSI rendering",
+      "Local Ollama LLM integration ensuring 100% private, on-device contextual AI reasoning with zero data leakage",
+      "Browser-based engineering workspace with low-latency WebSockets and xterm.js terminal integration",
+      "Node.js, TypeScript, and Express backend providing robust process isolation and safety control",
+      "Sohail-Agent CLI integrating interactive terminal workflows directly with the browser-based workspace",
+      "Dual-tier persistence architecture combining local-first runtime storage with Neon PostgreSQL cloud telemetry sync",
     ],
     implemented_features: [
-      "Three isolated execution planes: Advisory AI Chat, Interactive Terminal, and Workflow Agent",
+      "Three isolated execution planes: Advisory AI Chat, Interactive PTY Terminal, and Deterministic Workflow Engine",
       "Evidence-bound Project Intelligence grounding all AI responses in verifiable repository artifacts",
-      "Deep Inspector engine performing recursive dependency, configuration, and health audits",
-      "Local-first architecture storing session history in sessions/history.json with zero database latency",
-      "Bidirectional streaming terminal with ANSI rendering, execution telemetry, and command isolation",
-      "Human-in-the-loop safety boundaries preventing AI chat from mutating disk or running unauthorized shell commands",
-      "Deterministic workflow engine with pre-flight assertions, stage gates, and audit logging",
-      "Planned PostgreSQL/Cloud SQL distributed persistence roadmap for multi-tenant collaboration",
+      "Deep Inspector engine performing recursive AST, dependency manifest, and configuration drift audits",
+      "Evidence-Bound Dockerize workflow generating production Dockerfiles strictly from verified codebase truth",
+      "Deterministic validation gates halting multi-stage DevOps operations upon any state divergence",
+      "Real local PTY terminal instance supporting interactive CLI workflows (git, docker, npm, vim) with ANSI rendering",
+      "Local Ollama LLM integration ensuring 100% private, on-device contextual AI reasoning with zero data leakage",
+      "Browser-based engineering workspace with low-latency WebSockets and xterm.js terminal integration",
+      "Node.js, TypeScript, and Express backend providing robust process isolation and safety control",
+      "Sohail-Agent CLI integrating interactive terminal workflows directly with the browser-based workspace",
+      "Dual-tier persistence architecture combining local-first runtime storage with Neon PostgreSQL cloud telemetry sync",
     ],
     projectDetail: {
       images: {
@@ -764,7 +809,10 @@ export function parseProjectContentFromRecord(
       ? parsed.gallery_images.filter((img: any) => typeof img === "string" && img.trim().length > 0)
       : fallback?.gallery_images || (parsed.hero_image ? [parsed.hero_image] : fallback?.hero_image ? [fallback.hero_image] : []);
 
-    const gallery_images = rawGallery.map(resolveVersionedProjectImageUrl).slice(0, 5);
+    const gallery_images = rawGallery
+      .map((img: string) => (typeof img === "string" ? img.trim() : ""))
+      .filter(Boolean)
+      .slice(0, 5);
 
     const rawDetail = parsed.projectDetail;
     let projectDetail: ProjectDetailVisibility;
@@ -774,33 +822,26 @@ export function parseProjectContentFromRecord(
       projectDetail = {
         images: {
           image1: {
-            url: resolveVersionedProjectImageUrl(
-              typeof rawImgs.image1?.url === "string" ? rawImgs.image1.url : (gallery_images[0] || parsed.hero_image || fallback?.hero_image || "")
-            ),
+            url:
+              typeof rawImgs.image1?.url === "string" && rawImgs.image1.url.trim()
+                ? rawImgs.image1.url.trim()
+                : (gallery_images[0] || (typeof parsed.hero_image === "string" ? parsed.hero_image.trim() : "") || fallback?.hero_image || ""),
             enabled: typeof rawImgs.image1?.enabled === "boolean" ? rawImgs.image1.enabled : Boolean(gallery_images[0] || parsed.hero_image),
           },
           image2: {
-            url: resolveVersionedProjectImageUrl(
-              typeof rawImgs.image2?.url === "string" ? rawImgs.image2.url : (gallery_images[1] || "")
-            ),
+            url: typeof rawImgs.image2?.url === "string" ? rawImgs.image2.url.trim() : (gallery_images[1] || ""),
             enabled: typeof rawImgs.image2?.enabled === "boolean" ? rawImgs.image2.enabled : Boolean(gallery_images[1]),
           },
           image3: {
-            url: resolveVersionedProjectImageUrl(
-              typeof rawImgs.image3?.url === "string" ? rawImgs.image3.url : (gallery_images[2] || "")
-            ),
+            url: typeof rawImgs.image3?.url === "string" ? rawImgs.image3.url.trim() : (gallery_images[2] || ""),
             enabled: typeof rawImgs.image3?.enabled === "boolean" ? rawImgs.image3.enabled : false,
           },
           image4: {
-            url: resolveVersionedProjectImageUrl(
-              typeof rawImgs.image4?.url === "string" ? rawImgs.image4.url : (gallery_images[3] || "")
-            ),
+            url: typeof rawImgs.image4?.url === "string" ? rawImgs.image4.url.trim() : (gallery_images[3] || ""),
             enabled: typeof rawImgs.image4?.enabled === "boolean" ? rawImgs.image4.enabled : false,
           },
           image5: {
-            url: resolveVersionedProjectImageUrl(
-              typeof rawImgs.image5?.url === "string" ? rawImgs.image5.url : (gallery_images[4] || "")
-            ),
+            url: typeof rawImgs.image5?.url === "string" ? rawImgs.image5.url.trim() : (gallery_images[4] || ""),
             enabled: typeof rawImgs.image5?.enabled === "boolean" ? rawImgs.image5.enabled : false,
           },
         },
@@ -847,11 +888,24 @@ export function parseProjectContentFromRecord(
           );
     }
 
+    const isStaleStudioOverview =
+      fallbackKey === "sohail-studio" &&
+      (!parsed.overview ||
+        parsed.overview.includes("glassmorphic interfaces") ||
+        parsed.overview.includes("ongoing cloud experiments"));
+
     return {
       domain: parsed.domain === "project" || parsed.domain === "devops" ? parsed.domain : undefined,
-      overview: parsed.overview !== undefined ? parsed.overview : fallback?.overview || "",
+      overview:
+        isStaleStudioOverview && fallback?.overview
+          ? fallback.overview
+          : parsed.overview !== undefined
+          ? parsed.overview
+          : fallback?.overview || "",
       tagline: parsed.tagline !== undefined ? parsed.tagline : fallback?.tagline,
-      hero_image: resolveVersionedProjectImageUrl(parsed.hero_image || gallery_images[0] || fallback?.hero_image || ""),
+      hero_image: typeof parsed.hero_image === "string" && parsed.hero_image.trim()
+        ? parsed.hero_image.trim()
+        : (gallery_images[0] || fallback?.hero_image || ""),
       gallery_images,
       git_url: parsed.git_url !== undefined ? (parsed.git_url && parsed.git_url.trim() ? parsed.git_url.trim() : undefined) : fallback?.git_url,
       website_url: parsed.website_url !== undefined ? (parsed.website_url && parsed.website_url.trim() ? parsed.website_url.trim() : undefined) : fallback?.website_url,
@@ -861,10 +915,18 @@ export function parseProjectContentFromRecord(
         parsed.documentation_url !== undefined ? (parsed.documentation_url && parsed.documentation_url.trim() ? parsed.documentation_url.trim() : undefined) : fallback?.documentation_url,
       documentation_content:
         parsed.documentation_content !== undefined ? parsed.documentation_content : fallback?.documentation_content,
-      implemented_features: Array.isArray(parsed.implemented_features)
-        ? parsed.implemented_features.filter((f: any) => typeof f === "string" && f.trim().length > 0)
-        : fallback?.implemented_features || parsed.highlightsList || fallback?.highlightsList || [],
-      business_flow: parsed.business_flow !== undefined ? parsed.business_flow : fallback?.business_flow,
+      implemented_features:
+        isStaleStudioOverview && fallback?.implemented_features
+          ? fallback.implemented_features
+          : Array.isArray(parsed.implemented_features) && parsed.implemented_features.length > 0
+          ? parsed.implemented_features.filter((f: any) => typeof f === "string" && f.trim().length > 0)
+          : fallback?.implemented_features || parsed.highlightsList || fallback?.highlightsList || [],
+      business_flow:
+        isStaleStudioOverview && fallback?.business_flow
+          ? fallback.business_flow
+          : parsed.business_flow !== undefined
+          ? parsed.business_flow
+          : fallback?.business_flow,
       payment_security:
         parsed.payment_security !== undefined ? parsed.payment_security : fallback?.payment_security,
       order_data_preservation:
@@ -872,22 +934,39 @@ export function parseProjectContentFromRecord(
           ? parsed.order_data_preservation
           : fallback?.order_data_preservation,
       core_philosophy:
-        parsed.core_philosophy !== undefined ? parsed.core_philosophy : fallback?.core_philosophy,
+        isStaleStudioOverview && fallback?.core_philosophy
+          ? fallback.core_philosophy
+          : parsed.core_philosophy !== undefined
+          ? parsed.core_philosophy
+          : fallback?.core_philosophy,
       execution_planes:
-        Array.isArray(parsed.execution_planes) ? parsed.execution_planes : fallback?.execution_planes,
+        isStaleStudioOverview && fallback?.execution_planes
+          ? fallback.execution_planes
+          : Array.isArray(parsed.execution_planes) && parsed.execution_planes.length > 0
+          ? parsed.execution_planes
+          : fallback?.execution_planes,
       system_capabilities:
-        Array.isArray(parsed.system_capabilities) ? parsed.system_capabilities : fallback?.system_capabilities,
+        isStaleStudioOverview && fallback?.system_capabilities
+          ? fallback.system_capabilities
+          : Array.isArray(parsed.system_capabilities) && parsed.system_capabilities.length > 0
+          ? parsed.system_capabilities
+          : fallback?.system_capabilities,
       persistence_architecture:
-        parsed.persistence_architecture || fallback?.persistence_architecture,
+        isStaleStudioOverview && fallback?.persistence_architecture
+          ? fallback.persistence_architecture
+          : parsed.persistence_architecture || fallback?.persistence_architecture,
       videos: Array.isArray(parsed.videos) ? parsed.videos : fallback?.videos || [],
       documents: Array.isArray(parsed.documents) ? parsed.documents : fallback?.documents || [],
       architecture: Array.isArray(parsed.architecture)
         ? parsed.architecture
         : fallback?.architecture || [],
       links: Array.isArray(parsed.links) ? parsed.links : fallback?.links || [],
-      highlightsList: Array.isArray(parsed.highlightsList)
-        ? parsed.highlightsList
-        : fallback?.highlightsList || [],
+      highlightsList:
+        isStaleStudioOverview && fallback?.highlightsList
+          ? fallback.highlightsList
+          : Array.isArray(parsed.highlightsList) && parsed.highlightsList.length > 0
+          ? parsed.highlightsList
+          : fallback?.highlightsList || [],
       projectDetail,
     };
   }
@@ -981,25 +1060,45 @@ export function buildFullProjectData(
     staticProj?.id || (dbRecord ? String(dbRecord.id) : "");
   const title = dbRecord?.title || (canonicalId === "fresh-flow" ? "AM Fruits" : (staticProj?.name || "Project"));
   const category =
-    dbRecord?.category ||
-    (canonicalId === "fresh-flow"
-      ? "B2B Wholesale Commerce"
-      : canonicalId === "sohail-studio"
+    canonicalId === "sohail-studio"
       ? "DevOps AI Control Plane"
-      : staticProj?.category || "Cloud Architecture");
+      : canonicalId === "fresh-flow"
+      ? "B2B Wholesale Commerce"
+      : dbRecord?.category || staticProj?.category || "Cloud Architecture";
   const description =
-    dbRecord?.description ||
-    (canonicalId === "fresh-flow"
+    canonicalId === "sohail-studio"
+      ? (staticProj?.description ||
+        "A local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions across three isolated execution planes.")
+      : canonicalId === "fresh-flow"
       ? "A full-stack B2B wholesale produce platform that combines buyer procurement with supplier business management."
-      : canonicalId === "sohail-studio"
-      ? "A local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions across three isolated execution planes."
-      : staticProj?.description || "");
-  const rawStatus = dbRecord?.status || staticProj?.statusLabel;
+      : dbRecord?.description || staticProj?.description || "";
+  const rawStatus =
+    canonicalId === "fresh-flow" || dbRecord?.id === 5
+      ? "Live"
+      : dbRecord?.status || staticProj?.statusLabel;
   const status = normalizeProjectStatus(rawStatus);
 
   // Technologies
   let techList: string[] = [];
-  if (dbRecord?.technologies) {
+  if (canonicalId === "sohail-studio") {
+    techList = staticProj?.technologies || [
+      "Node.js",
+      "TypeScript",
+      "Express",
+      "React",
+      "Tailwind CSS",
+      "Ollama Local LLM",
+      "AI Control Plane",
+      "WebSocket",
+      "Real Local PTY",
+      "Sohail-Agent CLI",
+      "Deep Inspector",
+      "Project Intelligence",
+      "Neon PostgreSQL",
+      "Evidence-Bound Dockerize",
+      "Deterministic Validation",
+    ];
+  } else if (dbRecord?.technologies) {
     techList = dbRecord.technologies
       .split(",")
       .map((t) => t.trim())
@@ -1021,7 +1120,7 @@ export function buildFullProjectData(
   // hydrating the Admin form.
   const persistedHeroImage =
     dbRecord?.image_url && dbRecord.image_url !== "coming-soon"
-      ? resolveVersionedProjectImageUrl(dbRecord.image_url)
+      ? dbRecord.image_url.trim()
       : "";
   if (persistedHeroImage) {
     content.hero_image = persistedHeroImage;
@@ -1044,9 +1143,10 @@ export function buildFullProjectData(
   // Images
   const staticImages = TEMPORARY_PROJECT_IMAGE_MAP[canonicalId];
   let heroImage =
-    dbRecord?.image_url && dbRecord.image_url !== "coming-soon"
-      ? resolveVersionedProjectImageUrl(dbRecord.image_url)
-      : resolveVersionedProjectImageUrl(content.hero_image) || staticImages?.imageDesktop || "";
+    persistedHeroImage ||
+    content.hero_image ||
+    resolveVersionedProjectImageUrl(staticImages?.imageDesktop) ||
+    "";
 
   if (content.gallery_images && content.gallery_images.length > 0 && !heroImage) {
     heroImage = content.gallery_images[0];
@@ -1128,11 +1228,8 @@ export function prefetchProjectDetails(idOrSlug: string | number): void {
  * Invalidate project details cache for a specific ID or all projects.
  */
 export function invalidateProjectDetailsCache(idOrSlug?: string | number): void {
-  if (idOrSlug !== undefined && idOrSlug !== null) {
-    projectDetailsCache.delete(String(idOrSlug).trim().toLowerCase());
-  } else {
-    projectDetailsCache.clear();
-  }
+  // Clear the full details cache to eliminate any slug vs numeric ID discrepancy
+  projectDetailsCache.clear();
   invalidateUnifiedProjectsCache();
   invalidateApiCache("/api/devops");
 }

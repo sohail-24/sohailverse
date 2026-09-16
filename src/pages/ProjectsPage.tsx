@@ -28,7 +28,7 @@ export default function ProjectsPage() {
         const data = await loadUnifiedProjects();
         if (isMounted) {
           // Explicitly guarantee authoritative presentation order:
-          // 1. Sohail-Studio, 2. AM Fruits, 3. Sohail-Shop, 4. Wedding Page, 5. New Chapter Loading
+          // 1. AM Fruits, 2. SohailShop, 3. Sohail-Studio, 4. Wedding Page, 5. New Chapter Loading
           const sorted = [...data].sort((a, b) => {
             const idA = String(a.id).toLowerCase();
             const idB = String(b.id).toLowerCase();
@@ -67,7 +67,8 @@ export default function ProjectsPage() {
           p.status?.toLowerCase().includes("production") ||
           p.status?.toLowerCase().includes("running") ||
           p.statusLabel?.toLowerCase().includes("ready") ||
-          p.statusLabel?.toLowerCase().includes("production")
+          p.statusLabel?.toLowerCase().includes("production") ||
+          p.statusLabel?.toLowerCase().includes("live")
       );
     }
     if (filter === "BUILDING") {

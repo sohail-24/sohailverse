@@ -213,7 +213,7 @@ export default function ProjectsShowcase({
   // Helper for project status indicator badge inside image top-right
   const getProjectStatusStyle = (project: UnifiedProject) => {
     const normalizedStatus = formatProjectStatus(project.status);
-    if (normalizedStatus === "Ready") {
+    if (normalizedStatus === "Ready" || normalizedStatus === "Live") {
       if (String(project.id) === "sohail-shop") {
         return {
           badgeClass:

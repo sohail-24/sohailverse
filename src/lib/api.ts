@@ -259,6 +259,132 @@ export const FALLBACK_DATA: Record<string, any[]> = {
     { id: 7, skill: "ArgoCD & GitOps", category: "Continuous Delivery", level: "Advanced" },
     { id: 8, skill: "PostgreSQL & Databases", category: "Databases", level: "Intermediate" },
   ],
+  devops: [
+    {
+      id: 1,
+      title: "Networking & OSI Model Master Notes",
+      category: "Notes",
+      description: "Comprehensive engineering notebook covering Layer 2 to Layer 7 packet transport, TCP handshakes, NAT traversal, and common networking diagnostics with curl and dig.",
+      image_url: "/dev-real-2102415.jpg",
+      ppt_url: "https://www.youtube.com/watch?v=0k5G6FmE3s4",
+      pdf_url: "/resume.pdf",
+      github_url: "https://github.com/sohail-24/networking-runbooks",
+      technologies: "TCP/IP, OSI 7-Layer, DNS, NAT, Wireshark, BGP",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=0k5G6FmE3s4",
+        video_duration: "14:20",
+        pdf_url: "/resume.pdf",
+        takeaways: "Understand packet lifecycles, ARP tables, and why 80% of distributed system outages trace back to DNS and MTU misconfigurations.",
+        links: [
+          { title: "GitHub Runbook Repo", url: "https://github.com/sohail-24/networking-runbooks", type: "github" },
+          { title: "RFC 1918 Private Addressing", url: "https://datatracker.ietf.org/doc/html/rfc1918", type: "docs" },
+          { title: "OSI Architecture Slides", url: "https://slides.com/sohail/osi-model", type: "slides" }
+        ]
+      }),
+      status: "Published Note",
+    },
+    {
+      id: 2,
+      title: "VPC Subnetting & CIDR Calculation Deep Dive",
+      category: "Networking",
+      description: "Step-by-step architectural breakdown of calculating subnets, public vs private routing tables, internet gateways, and NAT gateway placement for zero-trust VPC design.",
+      image_url: "/dev-real-3183150.jpg",
+      ppt_url: "https://www.youtube.com/watch?v=s_Ntt6eTn94",
+      github_url: "https://github.com/sohail-24/terraform-aws-vpc-modular",
+      technologies: "VPC, CIDR, Subnets, Route Tables, IGW, NAT",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=s_Ntt6eTn94",
+        video_duration: "18:45",
+        takeaways: "Master slash-notation subnetting (/24 vs /28), understand AWS reserved IPs (.0 to .3 and .255), and enforce strict egress filtering.",
+        links: [
+          { title: "Terraform VPC Module", url: "https://github.com/sohail-24/terraform-aws-vpc-modular", type: "github" },
+          { title: "AWS VPC Architecture Guide", url: "https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html", type: "docs" }
+        ]
+      }),
+      status: "Active",
+    },
+    {
+      id: 3,
+      title: "Multi-AZ High Availability Architecture on AWS",
+      category: "AWS",
+      description: "Production multi-availability zone infrastructure deploying Application Load Balancers, auto-scaling EC2 groups, and Amazon Aurora multi-master databases with automated failover.",
+      image_url: "/dev-real-2582937.jpg",
+      ppt_url: "https://www.youtube.com/watch?v=Ia-UEYYR44s",
+      github_url: "https://github.com/sohail-24/aws-multi-az-reference",
+      technologies: "AWS, EC2, ALB, Auto Scaling, Aurora, CloudWatch",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=Ia-UEYYR44s",
+        video_duration: "22:10",
+        takeaways: "Eliminate single points of failure across data centers with multi-region health checks and sub-minute database replica failovers.",
+        links: [
+          { title: "Infrastructure Blueprint Repo", url: "https://github.com/sohail-24/aws-multi-az-reference", type: "github" },
+          { title: "AWS Well-Architected Framework", url: "https://aws.amazon.com/architecture/well-architected/", type: "docs" }
+        ]
+      }),
+      status: "Production Ready",
+    },
+    {
+      id: 4,
+      title: "Sohail-Shop: Multi-Vendor Platform on EKS",
+      category: "DevOps",
+      description: "Production-grade e-commerce microservices platform with high availability, automated rollback, and real-time monitoring on AWS EKS.",
+      image_url: "/dev-real-1779487.jpg",
+      ppt_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
+      github_url: "https://github.com/sohail-24/django_ecommerce",
+      technologies: "Kubernetes, AWS EKS, Terraform, ArgoCD, Docker, PostgreSQL",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
+        video_duration: "25:30",
+        takeaways: "Multi-cluster GitOps deployment with zero-downtime rolling updates, ArgoCD sync waves, and automated cluster autoscaling.",
+        links: [
+          { title: "Main Application Repo", url: "https://github.com/sohail-24/django_ecommerce", type: "github" },
+          { title: "Kubeadm & Helm Manifests", url: "https://github.com/sohail-24/devops-ecommerce-kubeadm", type: "github" },
+          { title: "Terraform EKS Platform", url: "https://github.com/sohail-24/terraform-eks-platform", type: "github" }
+        ]
+      }),
+      status: "Production Ready",
+    },
+    {
+      id: 5,
+      title: "Deploy a Static Website on AWS S3 & CloudFront",
+      category: "Learn & Test Projects",
+      description: "Hands-on guided lab: Provision an S3 bucket configured for static hosting, associate an ACM SSL certificate, route custom DNS with Route 53, and enable edge caching via CloudFront CDN.",
+      image_url: "/dev-desk-1.jpg",
+      ppt_url: "https://www.youtube.com/watch?v=mls8tii06cE",
+      github_url: "https://github.com/sohail-24/s3-cloudfront-starter",
+      technologies: "AWS S3, CloudFront, Route 53, ACM SSL, OAC",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=mls8tii06cE",
+        video_duration: "16:05",
+        takeaways: "Enforce Origin Access Control (OAC) to completely disallow public S3 bucket reads while serving global visitors in under 30ms.",
+        links: [
+          { title: "Starter Lab Code", url: "https://github.com/sohail-24/s3-cloudfront-starter", type: "github" },
+          { title: "CloudFront OAC Guide", url: "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html", type: "docs" }
+        ]
+      }),
+      status: "Beginner Lab",
+    },
+    {
+      id: 6,
+      title: "Deploy on Kubernetes: Rolling Zero-Downtime Updates",
+      category: "Learn & Test Projects",
+      description: "Hands-on guided lab: Containerize a Python web application, craft Kubernetes Deployment and Service YAMLs, configure readiness and liveness probes, and test zero-downtime rolling updates with Apache Bench.",
+      image_url: "/dev-real-2102415.jpg",
+      ppt_url: "https://www.youtube.com/watch?v=VnvRFRk_51k",
+      github_url: "https://github.com/sohail-24/k8s-rolling-deploy-lab",
+      technologies: "Kubernetes, Docker, Readiness Probes, Rolling Updates, Helm",
+      highlights: JSON.stringify({
+        video_url: "https://www.youtube.com/watch?v=VnvRFRk_51k",
+        video_duration: "20:15",
+        takeaways: "Configure maxSurge and maxUnavailable, observe pod replacement in real-time with kubectl rollout status, and benchmark with zero HTTP 502 errors.",
+        links: [
+          { title: "Lab Kubernetes Manifests", url: "https://github.com/sohail-24/k8s-rolling-deploy-lab", type: "github" },
+          { title: "Kubernetes Rolling Update Docs", url: "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment", type: "docs" }
+        ]
+      }),
+      status: "Hands-on Lab",
+    },
+  ],
   atlas: [
     {
       id: 1,

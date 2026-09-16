@@ -28,6 +28,7 @@ import {
   HardDrive,
   Database,
   Server,
+  ArrowDown,
 } from "lucide-react";
 import {
   SiKubernetes,
@@ -324,6 +325,11 @@ export default function ProjectInformationPage() {
 
   const hasAnyResource = Boolean(gitUrl || websiteUrl || videoUrl || pdfUrl || docUrl);
 
+  const isSohailShop =
+    project.id === "sohail-shop" ||
+    project.id === "1" ||
+    project.title.toLowerCase().replace(/[^a-z0-9]/g, "") === "sohailshop";
+
   // Video Sessions: Must be enabled AND have at least one valid video URL
   const isVideoSessionsVisible = Boolean(
     detail?.videoSessions?.enabled &&
@@ -372,6 +378,10 @@ export default function ProjectInformationPage() {
 
   // Status styling
   const statusStyles = {
+    Live: {
+      badge: "bg-emerald-500/15 border-emerald-500/30 text-emerald-300",
+      dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]",
+    },
     Ready: {
       badge: "bg-emerald-500/15 border-emerald-500/30 text-emerald-300",
       dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]",
@@ -384,7 +394,10 @@ export default function ProjectInformationPage() {
       badge: "bg-sky-500/15 border-sky-500/30 text-sky-300",
       dot: "bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.6)]",
     },
-  }[project.status];
+  }[project.status] || {
+    badge: "bg-emerald-500/15 border-emerald-500/30 text-emerald-300",
+    dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]",
+  };
 
   return (
     <div
@@ -709,6 +722,265 @@ export default function ProjectInformationPage() {
             </div>
           )}
 
+          {/* Two Kubernetes Environments & Engineering Evolution Flow (SohailShop Special Section) */}
+          {isSohailShop && (
+            <div className="space-y-6 sm:space-y-8">
+              {/* Section Header */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                  <span className="font-mono text-xs uppercase tracking-widest text-cyan-400 font-semibold">
+                    Dual-Cluster Deployment Architecture
+                  </span>
+                </div>
+                <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                  Two Kubernetes Environments
+                </h2>
+                <p className="text-sm text-slate-300 font-light max-w-3xl">
+                  I built the same application and learned deployment across two Kubernetes environments.
+                </p>
+              </div>
+
+              {/* Side-by-side 2 Environment Boxes */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                {/* Box 1: Self-Managed Kubernetes — kubeadm */}
+                <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/50 backdrop-blur-sm p-5 sm:p-6 space-y-4 flex flex-col justify-between hover:border-cyan-500/40 transition-colors">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                          <SiKubernetes className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-semibold block">
+                            SELF-MANAGED
+                          </span>
+                          <span className="text-xs font-mono text-slate-400">kubeadm</span>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-[11px] font-mono text-cyan-300">
+                        EC2 Cluster
+                      </span>
+                    </div>
+
+                    <h3 className="font-display text-lg font-bold text-white tracking-tight">
+                      Self-Managed Kubernetes — kubeadm
+                    </h3>
+
+                    <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
+                      First deployed the application on a self-managed Kubernetes cluster using kubeadm, learning cluster networking, storage, workloads, and reverse-proxy behavior.
+                    </p>
+
+                    <div className="space-y-2 pt-1 border-t border-white/5">
+                      <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold block">
+                        Documented Points:
+                      </span>
+                      <ul className="space-y-1.5 text-xs text-slate-300 font-light">
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                          <span>1 Control Plane + Worker Nodes</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                          <span>Calico CNI</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                          <span>local-path storage</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                          <span>Django Deployment</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                          <span>PostgreSQL StatefulSet + PVC</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                          <span>Redis</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                          <span>Nginx-based media serving</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Real media issue */}
+                  <div className="mt-4 p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 text-xs text-amber-200/90 leading-relaxed">
+                    <span className="font-semibold text-amber-300 block mb-0.5 font-mono text-[11px] uppercase tracking-wider">
+                      Real Media Issue Solved:
+                    </span>
+                    Media files initially failed because Gunicorn cannot directly serve media. Nginx was introduced to serve media separately.
+                  </div>
+                </div>
+
+                {/* Box 2: AWS EKS */}
+                <div className="rounded-2xl border border-amber-500/20 bg-slate-900/50 backdrop-blur-sm p-5 sm:p-6 space-y-4 flex flex-col justify-between hover:border-amber-500/40 transition-colors">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
+                          <FaAws className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-semibold block">
+                            AWS MANAGED
+                          </span>
+                          <span className="text-xs font-mono text-slate-400">EKS</span>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-[11px] font-mono text-amber-300">
+                        AWS Cloud
+                      </span>
+                    </div>
+
+                    <h3 className="font-display text-lg font-bold text-white tracking-tight">
+                      AWS EKS
+                    </h3>
+
+                    <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
+                      The same application architecture was then implemented on AWS EKS using Terraform and AWS-native infrastructure.
+                    </p>
+
+                    <div className="space-y-2 pt-1 border-t border-white/5">
+                      <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold block">
+                        Documented Points:
+                      </span>
+                      <ul className="space-y-1.5 text-xs text-slate-300 font-light">
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span>Amazon EKS</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span>Terraform-managed infrastructure</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span>EKS Node Group</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span>IAM / IRSA</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span>ALB Ingress</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span>PostgreSQL → EBS</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span>Media → S3</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Real S3 issue */}
+                  <div className="mt-4 p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 text-xs text-amber-200/90 leading-relaxed">
+                    <span className="font-semibold text-amber-300 block mb-0.5 font-mono text-[11px] uppercase tracking-wider">
+                      Real S3 Issue Solved:
+                    </span>
+                    S3 uploads returned HTTP 500 because of a bucket mismatch after an AWS account change. The environment configuration and IAM role were corrected.
+                  </div>
+                </div>
+              </div>
+
+              {/* Engineering Evolution Flow */}
+              <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/40 backdrop-blur-sm p-6 sm:p-7 space-y-5">
+                <div className="space-y-1">
+                  <span className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-semibold flex items-center gap-2">
+                    <Workflow className="h-4 w-4 text-cyan-400" />
+                    <span>Project Evolution</span>
+                  </span>
+                  <h3 className="font-display text-lg sm:text-xl font-bold text-white tracking-tight">
+                    Engineering Evolution Flow
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-400 font-light">
+                    Clear conceptual progression from monolithic backend to automated cloud-native Kubernetes deployment.
+                  </p>
+                </div>
+
+                {/* Conceptual Flow Sequence */}
+                <div className="flex flex-col items-center max-w-md mx-auto py-2 w-full">
+                  {/* Step 1 */}
+                  <div className="w-full text-center p-3 sm:p-3.5 rounded-xl border border-white/10 bg-slate-800/80 shadow-sm">
+                    <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Stage 01</div>
+                    <div className="text-sm sm:text-base font-semibold text-white">Django Backend</div>
+                  </div>
+
+                  <div className="py-2 text-cyan-400/70 flex items-center justify-center">
+                    <ArrowDown className="h-4 w-4" />
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="w-full text-center p-3 sm:p-3.5 rounded-xl border border-white/10 bg-slate-800/80 shadow-sm">
+                    <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Stage 02</div>
+                    <div className="text-sm sm:text-base font-semibold text-white">Docker + Nginx + Gunicorn</div>
+                  </div>
+
+                  <div className="py-2 text-cyan-400/70 flex items-center justify-center">
+                    <ArrowDown className="h-4 w-4" />
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="w-full text-center p-3 sm:p-3.5 rounded-xl border border-white/10 bg-slate-800/80 shadow-sm">
+                    <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Stage 03</div>
+                    <div className="text-sm sm:text-base font-semibold text-white">EC2 Deployment</div>
+                  </div>
+
+                  <div className="py-2 text-cyan-400/70 flex items-center justify-center">
+                    <ArrowDown className="h-4 w-4" />
+                  </div>
+
+                  {/* Step 4 */}
+                  <div className="w-full text-center p-3.5 rounded-xl border border-cyan-500/30 bg-cyan-950/30 shadow-sm">
+                    <div className="text-[11px] font-mono text-cyan-400 uppercase tracking-wider">Stage 04 · Self-Managed Cluster</div>
+                    <div className="text-sm sm:text-base font-semibold text-cyan-200">Self-Managed Kubernetes</div>
+                    <div className="text-xs font-mono text-slate-400 mt-0.5">(kubeadm + Calico)</div>
+                  </div>
+
+                  <div className="py-2 text-cyan-400/70 flex items-center justify-center">
+                    <ArrowDown className="h-4 w-4" />
+                  </div>
+
+                  {/* Step 5 */}
+                  <div className="w-full text-center p-3 sm:p-3.5 rounded-xl border border-white/10 bg-slate-800/80 shadow-sm">
+                    <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Stage 05</div>
+                    <div className="text-sm sm:text-base font-semibold text-white">Helm + GitHub Actions</div>
+                  </div>
+
+                  <div className="py-2 text-cyan-400/70 flex items-center justify-center">
+                    <ArrowDown className="h-4 w-4" />
+                  </div>
+
+                  {/* Step 6 */}
+                  <div className="w-full text-center p-3 sm:p-3.5 rounded-xl border border-white/10 bg-slate-800/80 shadow-sm">
+                    <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Stage 06</div>
+                    <div className="text-sm sm:text-base font-semibold text-white">ArgoCD GitOps</div>
+                  </div>
+
+                  <div className="py-2 text-cyan-400/70 flex items-center justify-center">
+                    <ArrowDown className="h-4 w-4" />
+                  </div>
+
+                  {/* Step 7 */}
+                  <div className="w-full text-center p-3 sm:p-3.5 rounded-xl border border-amber-500/30 bg-amber-950/30 shadow-sm">
+                    <div className="text-[11px] font-mono text-amber-400 uppercase tracking-wider">Stage 07 · Production Cloud-Native</div>
+                    <div className="text-sm sm:text-base font-semibold text-amber-200">AWS EKS</div>
+                    <div className="text-xs font-mono text-slate-400 mt-0.5">(Terraform + ALB + S3)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Project Overview */}
           {(content.overview || project.description) && (
             <div className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-3">
@@ -824,7 +1096,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Payment System & Security */}
-          {content.payment_security && content.payment_security.trim() && (
+          {!isSohailShop && content.payment_security && content.payment_security.trim() && (
             <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
               <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />

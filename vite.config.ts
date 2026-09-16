@@ -197,24 +197,24 @@ const mockStore = {
     },
     {
       id: 4,
-      title: "Sohail-Shop: Multi-Vendor Platform on EKS",
-      category: "DevOps",
-      description: "Production-grade e-commerce microservices platform with high availability, automated rollback, and real-time monitoring on AWS EKS.",
-      image_url: "/dev-real-1779487.jpg",
+      title: "SohailShop",
+      category: "Production-Grade E-Commerce / Cloud-Native Backend",
+      description: "I designed and built a production-grade Django e-commerce backend from scratch and then deployed it using DevOps practices across two Kubernetes environments: a self-managed kubeadm cluster on EC2 and a production-ready AWS EKS setup.",
+      image_url: "/projects/temporary/sohail-shop-desktop.v2.jpg",
       ppt_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
       github_url: "https://github.com/sohail-24/django_ecommerce",
-      technologies: "Kubernetes, AWS EKS, Terraform, ArgoCD, Docker, PostgreSQL",
+      technologies: "Django, Python, PostgreSQL, Docker, Nginx, Gunicorn, Redis, Kubernetes, kubeadm, Calico, Helm, GitHub Actions, ArgoCD, Terraform, AWS EKS, AWS S3, ALB Ingress, IAM / IRSA",
       highlights: JSON.stringify({
         video_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
         video_duration: "25:30",
-        takeaways: "Multi-cluster GitOps deployment with zero-downtime rolling updates, ArgoCD sync waves, and automated cluster autoscaling.",
+        takeaways: "One push → automated build → infrastructure update → GitOps synchronization → Kubernetes deployment across kubeadm and AWS EKS.",
         links: [
           { title: "Main Application Repo", url: "https://github.com/sohail-24/django_ecommerce", type: "github" },
           { title: "Kubeadm & Helm Manifests", url: "https://github.com/sohail-24/devops-ecommerce-kubeadm", type: "github" },
           { title: "Terraform EKS Platform", url: "https://github.com/sohail-24/terraform-eks-platform", type: "github" }
         ]
       }),
-      status: "Production Ready",
+      status: "Live",
     },
     {
       id: 5,
@@ -889,14 +889,6 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                 dbError?.message || dbError
               );
             }
-          }
-
-          // Projects are database-backed. Never substitute mock project rows
-          // when the authoritative Neon read or mutation is unavailable.
-          if ((resource as string) === "devops") {
-            return sendJson(503, {
-              error: "Authoritative project database is unavailable.",
-            });
           }
 
           // In-memory mock store fallback

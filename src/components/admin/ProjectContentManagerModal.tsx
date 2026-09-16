@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Sparkles,
   Image as ImageIcon,
+  ImageOff,
   Clock,
   Code2,
   Download,
@@ -78,6 +79,7 @@ export default function ProjectContentManagerModal({
   // Gallery Images State (Up to 5 slots: url + enabled switch)
   const [galleryImages, setGalleryImages] = useState<string[]>(["", "", "", "", ""]);
   const [galleryEnabled, setGalleryEnabled] = useState<boolean[]>([true, true, false, false, false]);
+  const [imageSlotErrors, setImageSlotErrors] = useState<Record<number, boolean>>({});
 
   // Project Resources (Optional) & Switches
   const [gitUrl, setGitUrl] = useState("");
@@ -185,8 +187,9 @@ export default function ProjectContentManagerModal({
       setIsLoading(true);
       setError(null);
       setSuccess(null);
+      setImageSlotErrors({});
       try {
-        const details = await fetchProjectDetailsById(project.id);
+        const details = await fetchProjectDetailsById(project.id, { forceRefresh: true });
         setFullData(details);
 
         // Populate fields
@@ -196,13 +199,18 @@ export default function ProjectContentManagerModal({
         setOverview(details.content.overview || details.description);
         setTagline(details.tagline || "");
         setStatus(details.status);
-        setHeroImage(details.hero_image || "");
+        const resolvedHero =
+          details.hero_image ||
+          details.content.projectDetail?.images?.image1?.url ||
+          details.content.gallery_images?.[0] ||
+          "";
+        setHeroImage(resolvedHero);
         setTechnologiesText(details.technologies.join(", "));
 
         // Populate gallery (up to 5 slots)
         const incomingGallery = details.content.gallery_images || [];
         const initialGallery: string[] = [
-          incomingGallery[0] || details.hero_image || "",
+          incomingGallery[0] || resolvedHero || "",
           incomingGallery[1] || "",
           incomingGallery[2] || "",
           incomingGallery[3] || "",
@@ -213,7 +221,7 @@ export default function ProjectContentManagerModal({
         const pd = details.content.projectDetail;
         if (pd) {
           const imgs = [
-            pd.images?.image1?.url ?? initialGallery[0] ?? "",
+            pd.images?.image1?.url ?? resolvedHero ?? "",
             pd.images?.image2?.url ?? initialGallery[1] ?? "",
             pd.images?.image3?.url ?? initialGallery[2] ?? "",
             pd.images?.image4?.url ?? initialGallery[3] ?? "",
@@ -586,20 +594,25 @@ export default function ProjectContentManagerModal({
         .map((t) => t.trim())
         .filter(Boolean);
 
-      const cleanedGallery = galleryImages
+      const primaryHero = (heroImage.trim() || galleryImages[0]?.trim() || "").trim();
+
+      const syncedGallery = [...galleryImages];
+      syncedGallery[0] = primaryHero;
+
+      const cleanedGallery = syncedGallery
         .map((img) => img.trim())
         .filter(Boolean)
         .slice(0, 5);
 
-      const effectiveHeroImage = cleanedGallery[0] || heroImage.trim() || undefined;
+      const effectiveHeroImage = primaryHero || cleanedGallery[0] || "";
 
       const detailPayload: ProjectDetailVisibility = {
         images: {
-          image1: { url: galleryImages[0]?.trim() || heroImage.trim(), enabled: galleryEnabled[0] },
-          image2: { url: galleryImages[1]?.trim() || "", enabled: galleryEnabled[1] },
-          image3: { url: galleryImages[2]?.trim() || "", enabled: galleryEnabled[2] },
-          image4: { url: galleryImages[3]?.trim() || "", enabled: galleryEnabled[3] },
-          image5: { url: galleryImages[4]?.trim() || "", enabled: galleryEnabled[4] },
+          image1: { url: primaryHero, enabled: galleryEnabled[0] },
+          image2: { url: syncedGallery[1]?.trim() || "", enabled: galleryEnabled[1] },
+          image3: { url: syncedGallery[2]?.trim() || "", enabled: galleryEnabled[2] },
+          image4: { url: syncedGallery[3]?.trim() || "", enabled: galleryEnabled[3] },
+          image5: { url: syncedGallery[4]?.trim() || "", enabled: galleryEnabled[4] },
         },
         gitRepository: {
           url: gitUrl.trim(),
@@ -634,7 +647,7 @@ export default function ProjectContentManagerModal({
         domain: "project" as const,
         overview: overview.trim(),
         tagline: tagline.trim() || undefined,
-        hero_image: effectiveHeroImage,
+        hero_image: effectiveHeroImage || undefined,
         gallery_images: cleanedGallery,
         git_url: gitUrl.trim() || undefined,
         website_url: websiteUrl.trim() || undefined,
@@ -670,10 +683,7 @@ export default function ProjectContentManagerModal({
               ? parsedTech.join(", ")
               : undefined,
           status: status !== fullData.status ? status : undefined,
-          image_url:
-            effectiveHeroImage && effectiveHeroImage !== fullData.hero_image
-              ? effectiveHeroImage
-              : undefined,
+          image_url: primaryHero,
           github_url:
             primaryGithub !== (fullData.githubUrl || "") ? primaryGithub : undefined,
         };
@@ -693,7 +703,7 @@ export default function ProjectContentManagerModal({
             description: description.trim(),
             technologies: parsedTech.join(", "),
             status,
-            image_url: effectiveHeroImage || heroImage.trim() || "",
+            image_url: primaryHero,
             github_url: primaryGithub || "",
             highlights: JSON.stringify(contentPayload),
           }),
@@ -703,6 +713,18 @@ export default function ProjectContentManagerModal({
           const body = await res.json().catch(() => null);
           throw new Error(body?.error || "Failed to persist project record.");
         }
+      }
+
+      if (fullData) {
+        setFullData({
+          ...fullData,
+          hero_image: primaryHero,
+          content: {
+            ...fullData.content,
+            ...contentPayload,
+            projectDetail: detailPayload,
+          },
+        });
       }
 
       setSuccess("Project content & media saved successfully to database!");
@@ -910,6 +932,7 @@ export default function ProjectContentManagerModal({
                         onChange={(e) => setStatus(e.target.value as ProjectStatus)}
                         className="w-full px-3.5 py-2 rounded-xl border border-white/10 bg-slate-900 text-sm text-white focus:border-emerald-400 focus:outline-none"
                       >
+                        <option value="Live">Live</option>
                         <option value="Ready">Ready (Production)</option>
                         <option value="Active">Active (In Development)</option>
                         <option value="Upcoming">Upcoming (Coming Soon)</option>
@@ -923,7 +946,15 @@ export default function ProjectContentManagerModal({
                       <input
                         type="text"
                         value={heroImage}
-                        onChange={(e) => setHeroImage(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setHeroImage(val);
+                          setGalleryImages((prev) => {
+                            const updated = [...prev];
+                            updated[0] = val;
+                            return updated;
+                          });
+                        }}
                         placeholder="/projects/temporary/sohail-shop-desktop.v2.jpg"
                         className="w-full px-3.5 py-2 rounded-xl border border-white/10 bg-slate-900 text-sm text-white focus:border-emerald-400 focus:outline-none"
                       />
@@ -1048,6 +1079,10 @@ export default function ProjectContentManagerModal({
                                     const updated = [...galleryImages];
                                     updated[slotIdx] = "";
                                     setGalleryImages(updated);
+                                    if (isHero) {
+                                      setHeroImage("");
+                                    }
+                                    setImageSlotErrors((prev) => ({ ...prev, [slotIdx]: false }));
                                   }}
                                   className="text-[11px] font-mono text-red-400 hover:text-red-300 flex items-center gap-1"
                                 >
@@ -1070,6 +1105,9 @@ export default function ProjectContentManagerModal({
                                   if (isHero) {
                                     setHeroImage(e.target.value);
                                   }
+                                  if (imageSlotErrors[slotIdx]) {
+                                    setImageSlotErrors((prev) => ({ ...prev, [slotIdx]: false }));
+                                  }
                                 }}
                                 placeholder={
                                   isHero
@@ -1088,17 +1126,30 @@ export default function ProjectContentManagerModal({
                               </div>
                             </div>
 
-                            {imgVal && (
-                              <div className="shrink-0 w-24 h-16 rounded-lg overflow-hidden border border-white/10 bg-slate-950">
-                                <img
-                                  src={imgVal}
-                                  alt={`Slot ${slotIdx + 1} preview`}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    (e.currentTarget as HTMLImageElement).src =
-                                      "/projects/temporary/fresh-flow-desktop.v2.jpg";
-                                  }}
-                                />
+                            {imgVal.trim() && (
+                              <div className="shrink-0 w-24 h-16 rounded-lg overflow-hidden border border-white/10 bg-slate-950 flex items-center justify-center">
+                                {!imageSlotErrors[slotIdx] ? (
+                                  <img
+                                    key={imgVal.trim()}
+                                    src={imgVal.trim()}
+                                    alt={`Slot ${slotIdx + 1} preview`}
+                                    className="w-full h-full object-cover"
+                                    referrerPolicy="no-referrer"
+                                    onError={() => {
+                                      setImageSlotErrors((prev) => ({
+                                        ...prev,
+                                        [slotIdx]: true,
+                                      }));
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center bg-red-950/20 border border-red-500/20 text-red-300">
+                                    <ImageOff className="h-4 w-4 text-red-400 shrink-0" />
+                                    <span className="text-[9px] font-mono leading-tight mt-0.5">
+                                      Unable to load
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
