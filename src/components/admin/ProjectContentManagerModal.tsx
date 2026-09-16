@@ -167,7 +167,7 @@ export default function ProjectContentManagerModal({
     id?: string;
     title: string;
     url: string;
-    type: "github" | "demo" | "docs" | "deploy" | "other";
+    type: ProjectLinkItem["type"];
   }>({
     title: "",
     url: "",

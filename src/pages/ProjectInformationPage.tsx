@@ -29,6 +29,10 @@ import {
   Database,
   Server,
   ArrowDown,
+  ShoppingCart,
+  Store,
+  CreditCard,
+  Mail,
 } from "lucide-react";
 import {
   SiKubernetes,
@@ -54,6 +58,7 @@ import {
   SiZod,
   SiDrizzle,
   SiNginx,
+  SiCloudflare,
 } from "react-icons/si";
 import { FaAws, FaGithub } from "react-icons/fa";
 import {
@@ -97,6 +102,9 @@ function getTechBadgeIcon(name: string) {
   if (n.includes("zod")) return <SiZod className="text-blue-500" />;
   if (n.includes("drizzle")) return <SiDrizzle className="text-lime-400" />;
   if (n.includes("nginx")) return <SiNginx className="text-emerald-400" />;
+  if (n.includes("cloudflare")) return <SiCloudflare className="text-orange-400" />;
+  if (n.includes("razorpay")) return <CreditCard className="text-blue-400" />;
+  if (n.includes("resend")) return <Mail className="text-white" />;
   return <Code2 className="text-cyan-400" />;
 }
 
@@ -286,17 +294,30 @@ export default function ProjectInformationPage() {
   const galleryList = enabledImages.slice(0, 5);
   const activeImage = galleryList[selectedGalleryIndex] || galleryList[0] || null;
 
+  const isAmFruits =
+    project.id === "fresh-flow" ||
+    project.id === "5" ||
+    project.title.toLowerCase().replace(/[^a-z0-9]/g, "").includes("amfruits") ||
+    project.title.toLowerCase().includes("am fruit");
+
   // Optional project resources: Must have valid content AND enabled === true
-  const gitUrl = (
-    detail?.gitRepository?.enabled
-      ? (detail.gitRepository.url || content.git_url || project.githubUrl || "")
-      : ""
-  ).trim();
+  // For AM Fruits, the GitHub repository link is COMPLETELY removed per explicit directive.
+  const gitUrl = isAmFruits
+    ? ""
+    : (
+        detail?.gitRepository?.enabled
+          ? (detail.gitRepository.url || content.git_url || project.githubUrl || "")
+          : ""
+      ).trim();
 
   const websiteUrl = (
-    detail?.website?.enabled
-      ? (detail.website.url || content.website_url || project.liveUrl || "")
-      : ""
+    isAmFruits
+      ? "https://amfruits.shop"
+      : (
+          detail?.website?.enabled
+            ? (detail.website.url || content.website_url || project.liveUrl || "")
+            : ""
+        )
   ).trim();
 
   const videoUrl = (
@@ -452,8 +473,7 @@ export default function ProjectInformationPage() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-semibold transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]"
               >
-                <span>Live App</span>
-                <ExternalLink className="h-3.5 w-3.5" />
+                <span>Live App ↗</span>
               </a>
             )}
           </div>
@@ -982,7 +1002,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Project Overview */}
-          {(content.overview || project.description) && (
+          {(content.overview || project.description) && !isAmFruits && (
             <div className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-3">
               <h2 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-cyan-400" />
@@ -990,6 +1010,312 @@ export default function ProjectInformationPage() {
               </h2>
               <div className="text-sm sm:text-base text-slate-300 leading-relaxed font-light whitespace-pre-line space-y-3">
                 {content.overview || project.description}
+              </div>
+            </div>
+          )}
+
+          {/* =========================================================================
+              AM FRUITS DEDICATED ARCHITECTURE & BUSINESS SYSTEM
+             ========================================================================= */}
+          {isAmFruits && (
+            <div className="space-y-6 sm:space-y-8">
+              {/* 1. Project Overview & Two-Sided Platform */}
+              <div className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-5">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                    <span className="font-mono text-xs uppercase tracking-widest text-cyan-400 font-semibold">
+                      B2B WHOLESALE COMMERCE PLATFORM
+                    </span>
+                  </div>
+                  <h2 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-cyan-400" />
+                    <span>Project Overview</span>
+                  </h2>
+                </div>
+
+                <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-light">
+                  AM Fruits is a B2B wholesale fruit and grocery platform designed to make wholesale buying easier for business customers while giving the supplier one system to manage the business.
+                </p>
+
+                {/* Core Concept Callout Banner */}
+                <div className="p-4 rounded-xl border border-cyan-500/20 bg-cyan-950/20 flex items-center justify-between gap-4 flex-wrap text-xs sm:text-sm font-mono">
+                  <div className="flex items-center gap-2 text-cyan-300">
+                    <ShoppingCart className="h-4 w-4 text-cyan-400 shrink-0" />
+                    <span className="font-semibold text-white">Buyer</span>
+                    <span className="text-slate-400">→</span>
+                    <span className="text-cyan-200">Buy products</span>
+                  </div>
+                  <div className="h-4 w-px bg-white/10 hidden sm:block" />
+                  <div className="flex items-center gap-2 text-emerald-300">
+                    <Store className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span className="font-semibold text-white">Owner/Admin</span>
+                    <span className="text-slate-400">→</span>
+                    <span className="text-emerald-200">Manage business</span>
+                  </div>
+                </div>
+
+                {/* Two Sides: Buyer vs Owner/Admin */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 pt-1">
+                  {/* Buyer Side */}
+                  <div className="p-5 rounded-2xl border border-cyan-500/20 bg-slate-900/60 space-y-3 hover:border-cyan-500/40 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                        <ShoppingCart className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-display text-sm font-bold text-white uppercase tracking-wider">
+                          Buyer Capabilities
+                        </h3>
+                        <span className="text-[11px] font-mono text-cyan-400">Customer Procurement Workflow</span>
+                      </div>
+                    </div>
+                    <ul className="space-y-2 text-xs sm:text-sm text-slate-300 font-light">
+                      {[
+                        "Browse/search wholesale products",
+                        "Cart",
+                        "Checkout",
+                        "Orders",
+                        "Online payment",
+                        "Order tracking",
+                      ].map((item, idx) => (
+                        <li key={idx} className="flex items-center gap-2.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Owner/Admin Side */}
+                  <div className="p-5 rounded-2xl border border-emerald-500/20 bg-slate-900/60 space-y-3 hover:border-emerald-500/40 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                        <Store className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-display text-sm font-bold text-white uppercase tracking-wider">
+                          Owner / Admin Operations
+                        </h3>
+                        <span className="text-[11px] font-mono text-emerald-400">Supplier Business Management</span>
+                      </div>
+                    </div>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-slate-300 font-light">
+                      {[
+                        "Products",
+                        "Categories",
+                        "Inventory",
+                        "Warehouses",
+                        "Customers",
+                        "Orders",
+                        "Invoices",
+                        "Delivery areas",
+                        "Shipping methods",
+                        "Reports",
+                      ].map((item, idx) => (
+                        <li key={idx} className="flex items-center gap-2.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Technical Architecture */}
+              <div className="p-6 sm:p-7 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-4">
+                <div className="flex items-center gap-2">
+                  <Server className="h-4 w-4 text-cyan-400" />
+                  <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight">
+                    Technical Architecture
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { label: "Frontend", value: "React 19 + TypeScript + Vite", icon: <SiReact className="text-cyan-400" /> },
+                    { label: "API", value: "tRPC", icon: <SiTrpc className="text-blue-400" /> },
+                    { label: "Backend", value: "Node.js + Hono", icon: <SiHono className="text-orange-400" /> },
+                    { label: "Database", value: "Neon PostgreSQL + Drizzle ORM", icon: <SiPostgresql className="text-sky-400" /> },
+                    { label: "Validation", value: "Zod", icon: <SiZod className="text-blue-500" /> },
+                    { label: "Payments", value: "Razorpay", icon: <CreditCard className="text-blue-400" /> },
+                    { label: "Email", value: "Resend", icon: <Mail className="text-white" /> },
+                    { label: "Deployment", value: "Docker + Nginx + AWS EC2 + Cloudflare", icon: <SiDocker className="text-blue-400" /> },
+                  ].map((item, idx) => (
+                    <div key={idx} className="p-3.5 rounded-xl border border-white/5 bg-slate-900/60 space-y-1.5">
+                      <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400 font-medium">
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </div>
+                      <p className="text-xs sm:text-sm font-semibold text-white leading-snug font-mono">
+                        {item.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. Business Flow Card */}
+              <div className="p-5 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-3.5">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Workflow className="h-4 w-4 text-cyan-400" />
+                    <h3 className="font-display text-sm sm:text-base font-bold text-white tracking-tight">
+                      End-to-End Business Flow
+                    </h3>
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-400">Architectural Pipeline</span>
+                </div>
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap py-1">
+                  {[
+                    { label: "Business", color: "border-slate-700 bg-slate-800/90 text-slate-200" },
+                    { label: "Buyer/Admin", color: "border-cyan-500/30 bg-cyan-950/40 text-cyan-300" },
+                    { label: "React", color: "border-sky-500/30 bg-sky-950/40 text-sky-300" },
+                    { label: "tRPC", color: "border-blue-500/30 bg-blue-950/40 text-blue-300" },
+                    { label: "Hono", color: "border-orange-500/30 bg-orange-950/40 text-orange-300" },
+                    { label: "Drizzle", color: "border-lime-500/30 bg-lime-950/40 text-lime-300" },
+                    { label: "Neon", color: "border-emerald-500/30 bg-emerald-950/40 text-emerald-300" },
+                    { label: "Razorpay/Resend", color: "border-purple-500/30 bg-purple-950/40 text-purple-300" },
+                    { label: "Docker", color: "border-blue-500/30 bg-blue-950/40 text-blue-300" },
+                    { label: "Nginx", color: "border-teal-500/30 bg-teal-950/40 text-teal-300" },
+                    { label: "AWS", color: "border-amber-500/30 bg-amber-950/40 text-amber-300" },
+                    { label: "Cloudflare", color: "border-orange-500/30 bg-orange-950/40 text-orange-300" },
+                  ].map((node, idx, arr) => (
+                    <React.Fragment key={node.label}>
+                      <span className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-medium shadow-sm ${node.color}`}>
+                        {node.label}
+                      </span>
+                      {idx < arr.length - 1 && (
+                        <span className="text-slate-500 text-xs font-mono select-none px-0.5">→</span>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4. Key Engineering Features */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                  <h3 className="font-display text-lg sm:text-xl font-bold text-white tracking-tight">
+                    Key Engineering Features
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    "Role-based access for buyers and administrators",
+                    "PostgreSQL business data model",
+                    "Product and inventory management",
+                    "Cart and order lifecycle",
+                    "Order-item snapshots preserving historical transaction data",
+                    "Razorpay payment integration with server-side payment verification",
+                    "Resend transactional email notifications",
+                    "Docker-based production deployment",
+                    "Nginx reverse proxy",
+                    "Cloudflare production domain/DNS",
+                  ].map((feat, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-start gap-3 p-3.5 rounded-xl border border-white/5 bg-slate-900/40 text-xs sm:text-sm text-slate-200 hover:border-emerald-500/30 transition-colors"
+                    >
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <span className="leading-snug">{feat}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 5. Core Business Flow */}
+              <div className="p-5 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-3.5">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-cyan-400" />
+                    <h3 className="font-display text-sm sm:text-base font-bold text-white tracking-tight">
+                      Core Business Flow
+                    </h3>
+                  </div>
+                  <span className="text-[11px] font-mono text-cyan-400 font-semibold">Commerce Lifecycle</span>
+                </div>
+                <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-2 no-scrollbar">
+                  {[
+                    "Product",
+                    "Cart",
+                    "Checkout",
+                    "Payment",
+                    "Order",
+                    "Invoice",
+                    "Inventory",
+                  ].map((step, idx, arr) => (
+                    <React.Fragment key={step}>
+                      <div className="px-3.5 py-2 rounded-xl border border-cyan-500/30 bg-cyan-950/30 text-xs sm:text-sm font-mono text-cyan-200 whitespace-nowrap flex items-center gap-2 shadow-sm">
+                        <span className="text-[10px] text-cyan-400 font-bold">0{idx + 1}</span>
+                        <span className="font-medium">{step}</span>
+                      </div>
+                      {idx < arr.length - 1 && (
+                        <span className="text-slate-500 text-xs font-mono select-none px-0.5">→</span>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+
+              {/* 6. Production Architecture */}
+              <div className="p-6 sm:p-7 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-5">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-cyan-400" />
+                    <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight">
+                      Production Architecture
+                    </h3>
+                  </div>
+                  <span className="text-[11px] font-mono text-emerald-400">Live Infrastructure Topology</span>
+                </div>
+
+                {/* Vertical Ingress Architecture Diagram */}
+                <div className="max-w-md mx-auto space-y-2 py-1">
+                  {[
+                    { title: "Customer", desc: "Browser / Client Application", color: "border-slate-700 bg-slate-800/80 text-white" },
+                    { title: "Cloudflare", desc: "Edge CDN, DNS & DDoS Protection", color: "border-orange-500/30 bg-orange-950/20 text-orange-200" },
+                    { title: "Nginx", desc: "Reverse Proxy, Rate Limiting & SSL Termination", color: "border-teal-500/30 bg-teal-950/20 text-teal-200" },
+                    { title: "Docker / Node.js + Hono", desc: "Containerized Backend API & Application Server on AWS EC2", color: "border-cyan-500/30 bg-cyan-950/20 text-cyan-200" },
+                    { title: "Neon PostgreSQL", desc: "Serverless Database with Drizzle ORM", color: "border-sky-500/30 bg-sky-950/20 text-sky-200" },
+                  ].map((tier, idx, arr) => (
+                    <React.Fragment key={tier.title}>
+                      <div className={`p-3 rounded-xl border text-center space-y-0.5 ${tier.color}`}>
+                        <div className="text-xs sm:text-sm font-bold font-mono">{tier.title}</div>
+                        <div className="text-[11px] font-light opacity-80">{tier.desc}</div>
+                      </div>
+                      {idx < arr.length - 1 && (
+                        <div className="flex justify-center text-cyan-400/60 py-0.5">
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </div>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+
+                {/* External Services */}
+                <div className="pt-3 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3.5 rounded-xl border border-white/5 bg-slate-900/60 space-y-1">
+                    <span className="font-mono font-semibold text-cyan-300 block">External Service: Razorpay</span>
+                    <p className="text-slate-300 font-light leading-relaxed">
+                      Handles secure checkout payments with server-side HMAC-SHA256 signature verification.
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-xl border border-white/5 bg-slate-900/60 space-y-1">
+                    <span className="font-mono font-semibold text-purple-300 block">External Service: Resend</span>
+                    <p className="text-slate-300 font-light leading-relaxed">
+                      Transactional email delivery dispatching order receipts, invoices, and operational alerts.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 7. Strong Short Closing */}
+              <div className="p-5 sm:p-6 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-slate-900/40 backdrop-blur-sm">
+                <p className="text-xs sm:text-sm md:text-base text-cyan-100/90 font-light leading-relaxed italic text-center">
+                  &ldquo;AM Fruits connects the complete wholesale business workflow — from product discovery and purchasing to payment, order management, invoicing, inventory, and supplier operations — in one production-oriented platform.&rdquo;
+                </p>
               </div>
             </div>
           )}
@@ -1021,7 +1347,7 @@ export default function ProjectInformationPage() {
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-cyan-500/30 bg-cyan-950/40 hover:bg-cyan-900/50 text-xs sm:text-sm font-medium text-cyan-300 hover:text-cyan-200 transition-colors shadow-sm"
                   >
                     <ExternalLink className="h-4 w-4 text-cyan-400" />
-                    <span>Website</span>
+                    <span>{isAmFruits ? "Live App ↗" : "Website"}</span>
                   </a>
                 )}
                 {videoUrl && (
@@ -1062,7 +1388,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Implemented Features */}
-          {implementedFeatures.length > 0 && (
+          {!isAmFruits && implementedFeatures.length > 0 && (
             <div className="space-y-4">
               <h3 className="font-display text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-emerald-400" />
@@ -1083,7 +1409,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Important Business Flow */}
-          {content.business_flow && content.business_flow.trim() && (
+          {!isAmFruits && content.business_flow && content.business_flow.trim() && (
             <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
               <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <Layers className="h-4 w-4 text-cyan-400" />
@@ -1096,7 +1422,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Payment System & Security */}
-          {!isSohailShop && content.payment_security && content.payment_security.trim() && (
+          {!isSohailShop && !isAmFruits && content.payment_security && content.payment_security.trim() && (
             <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
               <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
@@ -1109,7 +1435,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Order Data / Historical Records */}
-          {content.order_data_preservation && content.order_data_preservation.trim() && (
+          {!isAmFruits && content.order_data_preservation && content.order_data_preservation.trim() && (
             <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
               <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <History className="h-4 w-4 text-cyan-400" />
@@ -1756,43 +2082,71 @@ export default function ProjectInformationPage() {
         {/* =========================================================================
             SECTION 5: PROJECT LINKS & REPOSITORIES
            ========================================================================= */}
-        {content.links.length > 0 && (
-          <section ref={linksRef} id="section-links" className="space-y-6 pt-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-cyan-400" />
-                <span className="font-mono text-xs uppercase tracking-widest text-cyan-400 font-semibold">
-                  EXTERNAL ECOSYSTEM
-                </span>
-              </div>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
-                Project Links & Resources
-              </h2>
-            </div>
+        {(() => {
+          const linksToRender = isAmFruits
+            ? content.links
+                .filter(
+                  (link) =>
+                    link.type !== "github" &&
+                    !link.title.toLowerCase().includes("git") &&
+                    !link.url.toLowerCase().includes("github.com")
+                )
+                .map((link) =>
+                  link.type === "demo" || link.type === "live"
+                    ? { ...link, title: "Live App ↗", url: "https://amfruits.shop" }
+                    : link
+                )
+            : content.links;
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-              {content.links.map((link) => (
-                <a
-                  key={link.id}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group p-4 rounded-2xl border border-white/10 bg-slate-900/40 hover:bg-slate-900/80 hover:border-cyan-500/40 transition-all flex items-center justify-between gap-3 shadow-sm"
-                >
-                  <div className="space-y-1 min-w-0">
-                    <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-400 font-semibold block">
-                      {link.type}
-                    </span>
-                    <h4 className="font-display text-sm font-bold text-white group-hover:text-cyan-200 transition-colors truncate">
-                      {link.title}
-                    </h4>
-                  </div>
-                  <ExternalLink className="h-4 w-4 text-slate-400 group-hover:text-cyan-300 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 shrink-0" />
-                </a>
-              ))}
-            </div>
-          </section>
-        )}
+          if (isAmFruits && !linksToRender.some((l) => l.url === "https://amfruits.shop")) {
+            linksToRender.unshift({
+              id: "link-amfruits-live-ecosystem",
+              title: "Live App ↗",
+              url: "https://amfruits.shop",
+              type: "live",
+            });
+          }
+
+          if (linksToRender.length === 0) return null;
+
+          return (
+            <section ref={linksRef} id="section-links" className="space-y-6 pt-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                  <span className="font-mono text-xs uppercase tracking-widest text-cyan-400 font-semibold">
+                    EXTERNAL ECOSYSTEM
+                  </span>
+                </div>
+                <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
+                  Project Links & Resources
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                {linksToRender.map((link) => (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group p-4 rounded-2xl border border-white/10 bg-slate-900/40 hover:bg-slate-900/80 hover:border-cyan-500/40 transition-all flex items-center justify-between gap-3 shadow-sm"
+                  >
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-400 font-semibold block">
+                        {link.type}
+                      </span>
+                      <h4 className="font-display text-sm font-bold text-white group-hover:text-cyan-200 transition-colors truncate">
+                        {link.title}
+                      </h4>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-slate-400 group-hover:text-cyan-300 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 shrink-0" />
+                  </a>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
 
         {/* Bottom Back to Projects Button */}
         <div className="pt-8 border-t border-white/10 flex justify-center">

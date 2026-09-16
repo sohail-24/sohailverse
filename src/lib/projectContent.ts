@@ -53,7 +53,7 @@ export interface ProjectLinkItem {
   id: string;
   title: string;
   url: string;
-  type: "github" | "demo" | "docs" | "deploy" | "other";
+  type: "github" | "demo" | "docs" | "deploy" | "other" | "live";
 }
 
 export interface ProjectImageSlot {
@@ -643,40 +643,56 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
   },
   "fresh-flow": {
     overview:
-      "AM Fruits is a wholesale produce commerce platform connecting buyers with fruit distributors and farm suppliers. Grocers and food businesses can browse the wholesale catalog, compare volume pricing, manage purchase orders, and track fulfillment in real time.\n\nThe application unifies wholesale buyer ordering directly with supplier business management in a single streamlined system.",
+      "AM Fruits is a B2B wholesale fruit and grocery platform designed to make wholesale buying easier for business customers while giving the supplier one system to manage the business.",
     hero_image: "/projects/temporary/fresh-flow-desktop.v2.jpg",
     gallery_images: [
       "/projects/temporary/fresh-flow-desktop.v2.jpg",
       "/projects/temporary/fresh-flow-mobile.v2.jpg",
     ],
-    git_url: "https://github.com/sohail-24",
-    website_url: undefined,
+    git_url: "",
+    website_url: "https://amfruits.shop",
     video_url: undefined,
     documentation_url: undefined,
     implemented_features: [
-      "Wholesale produce catalog with real-time stock availability and volume pricing tiers",
-      "Bulk shopping cart with custom quantity increments and wholesale packaging specs",
-      "Streamlined checkout with delivery scheduling and destination logistics",
-      "Live order tracking from placement through fulfillment and delivery",
-      "Supplier catalog management, pricing controls, and customer accounts",
-      "Automated order invoice generation with immutable historical records",
-      "Secure payment processing supporting both Cash on Delivery and online verification",
+      "Role-based access for buyers and administrators",
+      "PostgreSQL business data model",
+      "Product and inventory management",
+      "Cart and order lifecycle",
+      "Order-item snapshots preserving historical transaction data",
+      "Razorpay payment integration with server-side payment verification",
+      "Resend transactional email notifications",
+      "Docker-based production deployment",
+      "Nginx reverse proxy",
+      "Cloudflare production domain/DNS",
     ],
     business_flow:
-      "When a buyer places a bulk order, the system confirms item quantities, applies delivery zone rules, and validates the selected settlement method. Once confirmed, the order generates an immutable record with an official order invoice, updates available inventory, and notifies both buyer and supplier operations.",
+      "Business → Buyer/Admin → React → tRPC → Hono → Drizzle → Neon → Razorpay/Resend → Docker → Nginx → AWS → Cloudflare",
     payment_security:
-      "AM Fruits provides flexible settlement options including Cash on Delivery and online payment integration via Razorpay. Online transactions use server-side cryptographic signature verification (HMAC-SHA256) with timing-safe comparison to guarantee transaction integrity before confirming orders.",
+      "Razorpay payment integration featuring server-side cryptographic verification of order IDs and signatures, guaranteeing financial ledger integrity.",
     order_data_preservation:
-      "All historical orders preserve an exact record of items, unit costs, descriptions, and tax rates as they existed at checkout time. This ensures past purchase records and invoices remain 100% accurate and audit-compliant, even when current catalog prices or produce varieties are updated.",
+      "Order-item snapshots preserving historical transaction data, ensuring past invoices and purchasing records remain immutable regardless of catalog changes.",
     videos: [],
     documents: [],
     architecture: [],
-    links: [],
+    links: [
+      {
+        id: "link-amfruits-live",
+        title: "Live App ↗",
+        url: "https://amfruits.shop",
+        type: "live",
+      },
+    ],
     highlightsList: [
-      "Full-stack B2B wholesale platform unifying buyer ordering with supplier operations",
-      "End-to-end type safety with tRPC, Zod validation, and Drizzle ORM on PostgreSQL",
-      "Server-side Razorpay signature verification with timing-safe HMAC-SHA256 comparison",
-      "Historical order record immutability preserving price, product details, and tax snapshots",
+      "Role-based access for buyers and administrators",
+      "PostgreSQL business data model",
+      "Product and inventory management",
+      "Cart and order lifecycle",
+      "Order-item snapshots preserving historical transaction data",
+      "Razorpay payment integration with server-side payment verification",
+      "Resend transactional email notifications",
+      "Docker-based production deployment",
+      "Nginx reverse proxy",
+      "Cloudflare production domain/DNS",
     ],
     projectDetail: {
       images: {
@@ -686,8 +702,8 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
         image4: { url: "", enabled: false },
         image5: { url: "", enabled: false },
       },
-      gitRepository: { url: "https://github.com/sohail-24", enabled: true },
-      website: { url: "https://freshflow.app", enabled: true },
+      gitRepository: { url: "", enabled: false },
+      website: { url: "https://amfruits.shop", enabled: true },
       video: { url: "", enabled: false },
       pdf: { url: "", enabled: false },
       documentation: { url: "", content: "", enabled: false },
@@ -1070,7 +1086,8 @@ export function buildFullProjectData(
       ? (staticProj?.description ||
         "A local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions across three isolated execution planes.")
       : canonicalId === "fresh-flow"
-      ? "A full-stack B2B wholesale produce platform that combines buyer procurement with supplier business management."
+      ? (staticProj?.description ||
+        "AM Fruits is a B2B wholesale fruit and grocery platform designed to make wholesale buying easier for business customers while giving the supplier one system to manage the business.")
       : dbRecord?.description || staticProj?.description || "";
   const rawStatus =
     canonicalId === "fresh-flow" || dbRecord?.id === 5
@@ -1080,7 +1097,25 @@ export function buildFullProjectData(
 
   // Technologies
   let techList: string[] = [];
-  if (canonicalId === "sohail-studio") {
+  if (canonicalId === "fresh-flow") {
+    techList = staticProj?.technologies || [
+      "React 19",
+      "TypeScript",
+      "Vite",
+      "tRPC",
+      "Node.js",
+      "Hono",
+      "Neon PostgreSQL",
+      "Drizzle ORM",
+      "Zod",
+      "Razorpay",
+      "Resend",
+      "Docker",
+      "Nginx",
+      "AWS EC2",
+      "Cloudflare",
+    ];
+  } else if (canonicalId === "sohail-studio") {
     techList = staticProj?.technologies || [
       "Node.js",
       "TypeScript",
@@ -1153,7 +1188,30 @@ export function buildFullProjectData(
   }
 
   // Synthesize links with DB github/live if missing
-  if (dbRecord?.github_url) {
+  if (canonicalId === "fresh-flow") {
+    // Completely remove all GitHub repository links for AM Fruits
+    content.git_url = "";
+    if (content.projectDetail) {
+      content.projectDetail.gitRepository = { url: "", enabled: false };
+      content.projectDetail.website = { url: "https://amfruits.shop", enabled: true };
+    }
+    content.website_url = "https://amfruits.shop";
+    content.links = (content.links || [])
+      .filter((l) => l.type !== "github" && !l.url?.toLowerCase().includes("github.com"))
+      .map((l) =>
+        l.type === "demo" || l.type === "live"
+          ? { ...l, title: "Live App ↗", url: "https://amfruits.shop" }
+          : l
+      );
+    if (!content.links.some((l) => l.url === "https://amfruits.shop")) {
+      content.links.unshift({
+        id: "link-amfruits-live",
+        title: "Live App ↗",
+        url: "https://amfruits.shop",
+        type: "live",
+      });
+    }
+  } else if (dbRecord?.github_url) {
     if (!content.git_url) content.git_url = dbRecord.github_url;
     if (content.projectDetail && !content.projectDetail.gitRepository.url) {
       content.projectDetail.gitRepository.url = dbRecord.github_url;
@@ -1184,11 +1242,15 @@ export function buildFullProjectData(
     content,
     isDatabaseBacked: Boolean(dbRecord),
     githubUrl:
-      content.git_url || dbRecord?.github_url || content.links.find((l) => l.type === "github")?.url,
+      canonicalId === "fresh-flow"
+        ? undefined
+        : (content.git_url || dbRecord?.github_url || content.links.find((l) => l.type === "github")?.url),
     liveUrl:
-      content.website_url ||
-      content.links.find((l) => l.type === "demo")?.url ||
-      (staticProj?.link?.includes("http") ? staticProj.link : undefined),
+      canonicalId === "fresh-flow"
+        ? "https://amfruits.shop"
+        : (content.website_url ||
+          content.links.find((l) => l.type === "demo")?.url ||
+          (staticProj?.link?.includes("http") ? staticProj.link : undefined)),
   };
 }
 
