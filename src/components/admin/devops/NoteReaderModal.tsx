@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Copy, Check, BookOpen, ExternalLink, Video, FileText } from "lucide-react";
 import type { PillarResource } from "../../../lib/pillarContent";
-import { PILLAR_CONFIG } from "../../../lib/pillarContent";
+import { PILLAR_CONFIG, normalizePdfUrl } from "../../../lib/pillarContent";
 
 interface NoteReaderModalProps {
   resource: PillarResource | null;
@@ -160,7 +160,7 @@ export default function NoteReaderModal({
               </div>
             </div>
             <a
-              href={resource.pdf_url}
+              href={normalizePdfUrl(resource.pdf_url) || resource.pdf_url}
               target="_blank"
               rel="noopener noreferrer"
               className="px-3.5 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-400 text-slate-950 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"

@@ -13,7 +13,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import type { PillarResource, ResourceLink } from "../../../lib/pillarContent";
-import { PILLAR_CONFIG } from "../../../lib/pillarContent";
+import { PILLAR_CONFIG, normalizePdfUrl } from "../../../lib/pillarContent";
 
 interface ResourceCardProps {
   resource: PillarResource;
@@ -174,7 +174,7 @@ export default function ResourceCard({
             </div>
 
             <a
-              href={resource.pdf_url}
+              href={normalizePdfUrl(resource.pdf_url) || resource.pdf_url}
               target="_blank"
               rel="noopener noreferrer"
               className="px-2.5 py-1 rounded-lg bg-purple-500 hover:bg-purple-400 text-slate-950 text-xs font-semibold shrink-0 transition-colors inline-flex items-center gap-1 cursor-pointer"

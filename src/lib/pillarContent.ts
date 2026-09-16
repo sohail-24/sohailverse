@@ -13,6 +13,23 @@ export interface ResourceLink {
   type?: "github" | "docs" | "slides" | "video" | "demo" | "other";
 }
 
+/**
+ * Normalizes PDF URL ensuring compatibility between standard Vite public-root URL
+ * (/Master-Notes.pdf) and existing /public/ paths stored in CMS databases (/public/Master-Notes.pdf).
+ */
+export function normalizePdfUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  const trimmed = url.trim();
+  if (!trimmed) return undefined;
+  if (trimmed.startsWith("/public/")) {
+    return trimmed.replace(/^\/public\//, "/");
+  }
+  if (trimmed.startsWith("public/")) {
+    return "/" + trimmed.replace(/^public\//, "");
+  }
+  return trimmed;
+}
+
 export interface PillarResource {
   id: number;
   title: string;
@@ -294,7 +311,7 @@ export function parsePillarResource(raw: Partial<DevOpsProject>): PillarResource
     image_url,
     video_url,
     video_duration,
-    pdf_url: pdf_url || undefined,
+    pdf_url: normalizePdfUrl(pdf_url),
     links,
     technologies: raw.technologies || "",
     highlights: takeaways,

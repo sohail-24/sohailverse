@@ -267,13 +267,13 @@ export const FALLBACK_DATA: Record<string, any[]> = {
       description: "Comprehensive engineering notebook covering Layer 2 to Layer 7 packet transport, TCP handshakes, NAT traversal, and common networking diagnostics with curl and dig.",
       image_url: "/dev-real-2102415.jpg",
       ppt_url: "https://www.youtube.com/watch?v=0k5G6FmE3s4",
-      pdf_url: "/resume.pdf",
+      pdf_url: "/Master-Notes.pdf",
       github_url: "https://github.com/sohail-24/networking-runbooks",
       technologies: "TCP/IP, OSI 7-Layer, DNS, NAT, Wireshark, BGP",
       highlights: JSON.stringify({
         video_url: "https://www.youtube.com/watch?v=0k5G6FmE3s4",
         video_duration: "14:20",
-        pdf_url: "/resume.pdf",
+        pdf_url: "/Master-Notes.pdf",
         takeaways: "Understand packet lifecycles, ARP tables, and why 80% of distributed system outages trace back to DNS and MTU misconfigurations.",
         links: [
           { title: "GitHub Runbook Repo", url: "https://github.com/sohail-24/networking-runbooks", type: "github" },

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Copy, Check, FileText, Sparkles, Code2, ExternalLink } from "lucide-react";
 import type { DevOpsNote } from "../../types/devops";
+import { normalizePdfUrl } from "../../lib/pillarContent";
 
 interface DevOpsNoteModalProps {
   note: DevOpsNote | null;
@@ -88,7 +89,7 @@ export default function DevOpsNoteModal({ note, onClose }: DevOpsNoteModalProps)
               </div>
             </div>
             <a
-              href={note.pdf_url}
+              href={normalizePdfUrl(note.pdf_url) || note.pdf_url}
               target="_blank"
               rel="noopener noreferrer"
               className="px-3.5 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-400 text-slate-950 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"

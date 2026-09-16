@@ -1,0 +1,3 @@
+# Cloudflare Pages Redirects
+/public/Master-Notes.pdf /Master-Notes.pdf 301
+/public/* /:splat 301

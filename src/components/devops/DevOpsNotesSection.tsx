@@ -7,7 +7,7 @@ import VideoPlayerModal from "../admin/devops/VideoPlayerModal";
 import { devopsNotes } from "../../data/devopsData";
 import type { DevOpsNote } from "../../types/devops";
 import type { DevOpsProject } from "../../lib/api";
-import { parsePillarResource, PillarResource } from "../../lib/pillarContent";
+import { parsePillarResource, PillarResource, normalizePdfUrl } from "../../lib/pillarContent";
 
 interface DevOpsNotesSectionProps {
   dynamicNotes?: DevOpsProject[];
@@ -126,7 +126,7 @@ export default function DevOpsNotesSection({
                         <span>PDF Document</span>
                       </span>
                       <a
-                        href={res.pdf_url}
+                        href={normalizePdfUrl(res.pdf_url) || res.pdf_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}

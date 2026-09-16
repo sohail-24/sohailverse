@@ -1,5 +1,6 @@
 import { FileText, ArrowRight, ExternalLink } from "lucide-react";
 import type { DevOpsNote } from "../../types/devops";
+import { normalizePdfUrl } from "../../lib/pillarContent";
 
 interface DevOpsNoteCardProps {
   note: DevOpsNote;
@@ -80,7 +81,7 @@ export default function DevOpsNoteCard({ note, onClick }: DevOpsNoteCardProps) {
               <span>PDF Cheat Sheet</span>
             </span>
             <a
-              href={note.pdf_url}
+              href={normalizePdfUrl(note.pdf_url) || note.pdf_url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}

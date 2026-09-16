@@ -6,7 +6,7 @@ import DevOpsPathModal from "./DevOpsPathModal";
 import DevOpsFinalCTA from "./DevOpsFinalCTA";
 import DevOpsPillarVideoSessions from "./DevOpsPillarVideoSessions";
 import { learningPathStages, devopsNotes } from "../../data/devopsData";
-import { parsePillarResource, detectPillar, type PillarResource } from "../../lib/pillarContent";
+import { parsePillarResource, detectPillar, normalizePdfUrl, type PillarResource } from "../../lib/pillarContent";
 import type { LearningPathStage, DevOpsProject } from "../../types/devops";
 
 interface DevOpsLearningJourneyProps {
@@ -52,7 +52,7 @@ export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJ
       if (dynamicNote) {
         const parsed = parsePillarResource(dynamicNote);
         if (parsed.pdf_url && parsed.pdf_url.trim()) {
-          return parsed.pdf_url.trim();
+          return normalizePdfUrl(parsed.pdf_url.trim()) || parsed.pdf_url.trim();
         }
       }
     }
@@ -60,7 +60,7 @@ export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJ
     // Fall back to curated devopsNotes in static definitions
     const curatedNoteWithPdf = devopsNotes.find((n) => n.pdf_url && n.pdf_url.trim());
     if (curatedNoteWithPdf?.pdf_url) {
-      return curatedNoteWithPdf.pdf_url.trim();
+      return normalizePdfUrl(curatedNoteWithPdf.pdf_url.trim()) || curatedNoteWithPdf.pdf_url.trim();
     }
 
     return null;
