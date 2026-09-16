@@ -443,7 +443,7 @@ export const devopsNotes: DevOpsNote[] = [
     accentColor: "pink",
     tags: ["CIDR", "DNS", "Ports", "TCP/UDP", "Firewalls"],
     lastUpdated: "Updated 2026",
-    pdf_url: "/Master-Notes.pdf",
+    pdf_url: "public/Master-Notes.pdf",
     summary:
       "Sohail's curated engineering notes on computer networking, OSI layers, IP routing, subnet calculators, and network diagnostics for cloud and DevOps engineers.",
     keyPrinciples: [

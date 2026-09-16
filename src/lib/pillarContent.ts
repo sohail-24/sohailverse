@@ -21,12 +21,6 @@ export function normalizePdfUrl(url?: string | null): string | undefined {
   if (!url) return undefined;
   const trimmed = url.trim();
   if (!trimmed) return undefined;
-  if (trimmed.startsWith("/public/")) {
-    return trimmed.replace(/^\/public\//, "/");
-  }
-  if (trimmed.startsWith("public/")) {
-    return "/" + trimmed.replace(/^public\//, "");
-  }
   return trimmed;
 }
 
