@@ -13,6 +13,7 @@ import {
   createClearSessionCookie,
   bytesToHex,
 } from "./functions/api/auth/_utils";
+import { onRequestGet as handleMasterNotesPdf } from "./functions/api/notes/master-notes.pdf";
 
 let runtimeSessionSecret: string | undefined = undefined;
 
@@ -439,6 +440,24 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
 
           const isValid = await verifySessionToken(token, sessionSecret);
           return sendJson(200, { authenticated: isValid });
+        }
+
+        // 1b. Neon Master Notes PDF endpoint
+        if (pathname === "/api/notes/master-notes.pdf" && (method === "GET" || method === "HEAD")) {
+          const response = await handleMasterNotesPdf({
+            env: { DATABASE_URL: devEnv.DATABASE_URL || process.env.DATABASE_URL },
+          });
+          const headers: Record<string, string> = { ...corsHeaders };
+          response.headers.forEach((value, key) => {
+            headers[key] = value;
+          });
+          if (method === "HEAD") {
+            res.writeHead(response.status, headers);
+            return res.end();
+          }
+          const arrayBuffer = await response.arrayBuffer();
+          res.writeHead(response.status, headers);
+          return res.end(Buffer.from(arrayBuffer));
         }
 
         // 2. Resource routes: movies, academy, devops, timeline, atlas
@@ -1212,7 +1231,11 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
 
 function devApiPlugin(): Plugin {
   const pdfHeaderMiddleware = (req: any, res: any, next: any) => {
-    if (req.url && (req.url === "/Master-Notes.pdf" || req.url.includes(".pdf"))) {
+    if (
+      req.url &&
+      !req.url.startsWith("/api/") &&
+      (req.url === "/Master-Notes.pdf" || req.url.includes(".pdf"))
+    ) {
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", 'inline; filename="Master-Notes.pdf"');
       res.setHeader("Accept-Ranges", "bytes");

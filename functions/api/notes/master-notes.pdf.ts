@@ -4,68 +4,6 @@ interface Env {
   DATABASE_URL?: string;
 }
 
-const HEX_LOOKUP = new Int8Array(256).fill(-1);
-for (let i = 0; i < 10; i++) HEX_LOOKUP[48 + i] = i; // 0-9
-for (let i = 0; i < 6; i++) {
-  HEX_LOOKUP[65 + i] = 10 + i; // A-F
-  HEX_LOOKUP[97 + i] = 10 + i; // a-f
-}
-
-function hexToBytes(hex: string): Uint8Array {
-  const len = hex.length;
-  const bytes = new Uint8Array(len >> 1);
-  for (let i = 0, j = 0; i < len; i += 2, j++) {
-    const high = HEX_LOOKUP[hex.charCodeAt(i)];
-    const low = HEX_LOOKUP[hex.charCodeAt(i + 1)];
-    bytes[j] = (high << 4) | low;
-  }
-  return bytes;
-}
-
-function decodeBytea(data: unknown): Uint8Array {
-  if (typeof data === "string") {
-    let hex = data.trim();
-    if (
-      hex.startsWith("\\x") ||
-      hex.startsWith("\\X") ||
-      hex.startsWith("0x") ||
-      hex.startsWith("0X")
-    ) {
-      hex = hex.slice(2);
-    }
-    return hexToBytes(hex);
-  }
-
-  if (data instanceof Uint8Array) {
-    // Check if it was returned as ASCII-encoded hex string starting with \x (0x5c, 0x78)
-    if (
-      data.length > 2 &&
-      data[0] === 0x5c &&
-      (data[1] === 0x78 || data[1] === 0x58)
-    ) {
-      const hexLen = data.length - 2;
-      const bytes = new Uint8Array(hexLen >> 1);
-      for (let i = 2, j = 0; i < data.length; i += 2, j++) {
-        const high = HEX_LOOKUP[data[i]];
-        const low = HEX_LOOKUP[data[i + 1]];
-        bytes[j] = (high << 4) | low;
-      }
-      return bytes;
-    }
-    return data;
-  }
-
-  if (data instanceof ArrayBuffer) {
-    return new Uint8Array(data);
-  }
-
-  if (Array.isArray(data)) {
-    return new Uint8Array(data);
-  }
-
-  throw new Error(`Unsupported BYTEA data type: ${typeof data}`);
-}
-
 export async function onRequestGet({
   env,
 }: {
@@ -79,18 +17,24 @@ export async function onRequestGet({
     const sql = neon(env.DATABASE_URL);
 
     const rows = await sql`
-      SELECT file_data
+      SELECT encode(file_data, 'base64') AS file_base64
       FROM note_files
       WHERE filename = 'Master-Notes.pdf'
       ORDER BY id ASC
       LIMIT 1
     `;
 
-    if (!rows.length || !rows[0].file_data) {
+    if (!rows.length || !rows[0].file_base64) {
       return new Response("PDF not found", { status: 404 });
     }
 
-    const pdfBytes = decodeBytea(rows[0].file_data);
+    const base64String = String(rows[0].file_base64).replace(/\s+/g, "");
+    const binaryString = atob(base64String);
+    const len = binaryString.length;
+    const pdfBytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      pdfBytes[i] = binaryString.charCodeAt(i);
+    }
 
     if (
       pdfBytes.length < 4 ||
@@ -99,7 +43,7 @@ export async function onRequestGet({
       pdfBytes[2] !== 0x44 ||
       pdfBytes[3] !== 0x46
     ) {
-      console.error("Decoded BYTEA does not begin with %PDF");
+      console.error("Decoded binary does not begin with %PDF");
       return new Response("Invalid PDF binary", { status: 500 });
     }
 
@@ -122,3 +66,5 @@ export async function onRequestGet({
     return new Response("Unable to retrieve PDF", { status: 500 });
   }
 }
+
+export const onRequestHead = onRequestGet;
