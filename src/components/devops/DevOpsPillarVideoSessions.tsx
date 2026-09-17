@@ -7,6 +7,7 @@ import {
   Video,
   Layers,
   Sparkles,
+  Infinity as InfinityIcon,
 } from "lucide-react";
 import { FaAws } from "react-icons/fa";
 import {
@@ -17,7 +18,7 @@ import {
 import DevOpsVideoSessionPlayer from "./DevOpsVideoSessionPlayer";
 
 interface DevOpsPillarVideoSessionsProps {
-  pillar: "Networking" | "AWS";
+  pillar: "Networking" | "AWS" | "DevOps";
   resources: PillarResource[];
   onBack: () => void;
 }
@@ -30,6 +31,8 @@ export default function DevOpsPillarVideoSessions({
   const [selectedSessionIndex, setSelectedSessionIndex] = useState<number | null>(null);
 
   const isNetworking = pillar === "Networking";
+  const isAws = pillar === "AWS";
+  const isDevOps = pillar === "DevOps";
 
   // Filter for actual sessions of this pillar and preserve chronological / existing sequential order
   const sessions = useMemo(() => {
@@ -51,7 +54,8 @@ export default function DevOpsPillarVideoSessions({
         stepPill: "bg-cyan-500/20 text-cyan-300 border-cyan-500/40",
         glowEffect: "from-cyan-500/10 via-transparent to-transparent",
       }
-    : {
+    : isAws
+    ? {
         accent: "orange",
         badgeBg: "bg-orange-500/15 border-orange-500/35 text-orange-300",
         badgeGlow: "shadow-[0_0_20px_rgba(249,115,22,0.3)]",
@@ -59,6 +63,15 @@ export default function DevOpsPillarVideoSessions({
         cardBorder: "border-orange-500/30 hover:border-orange-400/70 shadow-[0_0_25px_rgba(249,115,22,0.1)] hover:shadow-[0_0_35px_rgba(249,115,22,0.22)]",
         stepPill: "bg-orange-500/20 text-orange-300 border-orange-500/40",
         glowEffect: "from-orange-500/10 via-transparent to-transparent",
+      }
+    : {
+        accent: "lime",
+        badgeBg: "bg-lime-500/15 border-lime-500/35 text-lime-300",
+        badgeGlow: "shadow-[0_0_20px_rgba(163,230,53,0.3)]",
+        playButton: "bg-lime-400 text-slate-950 group-hover:bg-lime-300 shadow-[0_0_20px_rgba(163,230,53,0.5)]",
+        cardBorder: "border-lime-500/30 hover:border-lime-400/70 shadow-[0_0_25px_rgba(163,230,53,0.1)] hover:shadow-[0_0_35px_rgba(163,230,53,0.22)]",
+        stepPill: "bg-lime-500/20 text-lime-300 border-lime-500/40",
+        glowEffect: "from-lime-500/10 via-transparent to-transparent",
       };
 
   return (
@@ -81,8 +94,10 @@ export default function DevOpsPillarVideoSessions({
         >
           {isNetworking ? (
             <Globe className="h-3.5 w-3.5" />
-          ) : (
+          ) : isAws ? (
             <FaAws className="h-3.5 w-3.5" />
+          ) : (
+            <InfinityIcon className="h-3.5 w-3.5" />
           )}
           <span>{pillar} Curriculum</span>
         </div>
@@ -102,8 +117,10 @@ export default function DevOpsPillarVideoSessions({
             >
               {isNetworking ? (
                 <Globe className="h-6 w-6 text-cyan-400" />
-              ) : (
+              ) : isAws ? (
                 <FaAws className="h-6 w-6 text-orange-400" />
+              ) : (
+                <InfinityIcon className="h-6 w-6 text-lime-400" />
               )}
             </div>
 
@@ -113,13 +130,15 @@ export default function DevOpsPillarVideoSessions({
           </div>
 
           <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
-            {isNetworking ? "Networking Sessions" : "AWS Sessions"}
+            {isNetworking ? "Networking Sessions" : isAws ? "AWS Sessions" : "DevOps Sessions"}
           </h1>
 
           <p className="mt-2 sm:mt-3 text-base sm:text-lg text-slate-300 font-normal leading-relaxed">
             {isNetworking
               ? "Learn networking step by step."
-              : "Learn AWS step by step."}
+              : isAws
+              ? "Learn AWS step by step."
+              : "Learn DevOps step by step."}
           </p>
 
           <div className="mt-4 sm:mt-6 flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-400 font-mono">
@@ -144,15 +163,19 @@ export default function DevOpsPillarVideoSessions({
           >
             {isNetworking ? (
               <Globe className="h-8 w-8 sm:h-10 sm:w-10 text-cyan-400" />
-            ) : (
+            ) : isAws ? (
               <FaAws className="h-8 w-8 sm:h-10 sm:w-10 text-orange-400" />
+            ) : (
+              <InfinityIcon className="h-8 w-8 sm:h-10 sm:w-10 text-lime-400" />
             )}
           </div>
 
           <h2 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight">
             {isNetworking
               ? "No Networking sessions available yet."
-              : "No AWS sessions available yet."}
+              : isAws
+              ? "No AWS sessions available yet."
+              : "No DevOps sessions available yet."}
           </h2>
 
           <p className="mt-3 text-sm sm:text-base text-slate-400 max-w-md mx-auto leading-relaxed">
@@ -191,7 +214,7 @@ export default function DevOpsPillarVideoSessions({
 
               const rawVideoUrl = (session.video_url || "").trim();
               const isJioCloud = isJioCloudUrl(rawVideoUrl);
-              const isDirectExternal = isJioCloud || (isNetworking && rawVideoUrl.length > 0 && !isStandardEmbed(rawVideoUrl));
+              const isDirectExternal = isJioCloud || (rawVideoUrl.length > 0 && !isStandardEmbed(rawVideoUrl));
 
               const cardContent = (
                 <>
@@ -213,8 +236,10 @@ export default function DevOpsPillarVideoSessions({
                         <div className="h-full w-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-900 to-slate-950 text-slate-500">
                           {isNetworking ? (
                             <Globe className="h-10 w-10 text-cyan-500/40 mb-1" />
-                          ) : (
+                          ) : isAws ? (
                             <FaAws className="h-10 w-10 text-orange-500/40 mb-1" />
+                          ) : (
+                            <InfinityIcon className="h-10 w-10 text-lime-500/40 mb-1" />
                           )}
                           <span className="text-[11px] font-mono tracking-wider text-slate-400">
                             {session.pillar} Session
@@ -272,12 +297,16 @@ export default function DevOpsPillarVideoSessions({
                         {session.title}
                       </h3>
 
-                      {/* Resource Name */}
-                      {session.name && session.name.trim() !== session.title.trim() && (
+                      {/* Resource Name or Category */}
+                      {session.name && session.name.trim() !== session.title.trim() ? (
                         <p className="text-xs sm:text-sm text-slate-400 font-medium line-clamp-1">
                           {session.name}
                         </p>
-                      )}
+                      ) : session.category ? (
+                        <p className="text-xs sm:text-sm text-slate-400 font-medium line-clamp-1">
+                          {session.category}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
 

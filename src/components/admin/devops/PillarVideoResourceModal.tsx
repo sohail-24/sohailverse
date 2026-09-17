@@ -10,7 +10,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { PillarResource } from "../../../lib/pillarContent";
-import { getVideoEmbedUrl } from "../../../lib/pillarContent";
+import { getVideoEmbedUrl, isJioCloudUrl } from "../../../lib/pillarContent";
 
 interface PillarVideoResourceModalProps {
   isOpen: boolean;
@@ -325,7 +325,13 @@ export default function PillarVideoResourceModal({
                   {onPreviewVideo && (
                     <button
                       type="button"
-                      onClick={() => onPreviewVideo(videoUrl, title || `${pillar} Walkthrough`)}
+                      onClick={() => {
+                        if (isJioCloudUrl(videoUrl)) {
+                          window.open(videoUrl, "_blank", "noopener,noreferrer");
+                        } else {
+                          onPreviewVideo(videoUrl, title || `${pillar} Walkthrough`);
+                        }
+                      }}
                       className={`text-[11px] font-mono flex items-center gap-1 hover:underline ${
                         isNetworking ? "text-cyan-400" : "text-orange-400"
                       }`}

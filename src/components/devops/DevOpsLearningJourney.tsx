@@ -17,15 +17,17 @@ export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJ
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedStage, setSelectedStage] = useState<LearningPathStage | null>(null);
   const [noPdfNotice, setNoPdfNotice] = useState(false);
-  const [activePillarSession, setActivePillarSession] = useState<"Networking" | "AWS" | null>(null);
+  const [activePillarSession, setActivePillarSession] = useState<"Networking" | "AWS" | "DevOps" | null>(null);
 
-  // Sync state with URL query parameter (e.g. ?pillar=networking or ?pillar=aws)
+  // Sync state with URL query parameter (e.g. ?pillar=networking, ?pillar=aws, ?pillar=devops)
   useEffect(() => {
     const pillarParam = (searchParams.get("pillar") || searchParams.get("stage") || "").toLowerCase();
     if (pillarParam === "networking") {
       setActivePillarSession("Networking");
     } else if (pillarParam === "aws") {
       setActivePillarSession("AWS");
+    } else if (pillarParam === "devops") {
+      setActivePillarSession("DevOps");
     } else {
       setActivePillarSession(null);
     }
@@ -94,7 +96,15 @@ export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJ
       return;
     }
 
-    // 4. DevOps, Learn & Test Projects: Existing masterclass detail view
+    // 4. DEVOPS: Dedicated Video Session page (same structure as Networking and AWS)
+    if (stage.id === "devops") {
+      setActivePillarSession("DevOps");
+      setSearchParams({ pillar: "devops" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    // 5. Learn & Test Projects: Existing masterclass detail view
     setSelectedStage(stage);
   };
 

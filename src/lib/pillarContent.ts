@@ -116,8 +116,10 @@ export function isJioCloudUrl(url?: string | null): boolean {
     trimmed.includes("jiocloud.com") ||
     trimmed.includes("jioaicloud.com") ||
     trimmed.includes("jiovault.com") ||
+    trimmed.includes("jiodrive.com") ||
     trimmed.includes("jioaicloud") ||
-    trimmed.includes("jiocloud")
+    trimmed.includes("jiocloud") ||
+    trimmed.includes("jiodrive")
   );
 }
 
@@ -229,6 +231,23 @@ export function detectPillar(category?: string | null, title?: string | null): L
   if (cat.includes("network") || t.includes("network") || cat.includes("cidr") || cat.includes("dns")) {
     return "Networking";
   }
+  // Check DevOps heuristics before general cloud heuristics
+  if (
+    cat.includes("devops") ||
+    t.includes("devops") ||
+    cat.includes("kubernetes") ||
+    cat.includes("k8s") ||
+    cat.includes("docker") ||
+    cat.includes("ci/cd") ||
+    cat.includes("cicd") ||
+    cat.includes("cloud-native") ||
+    cat.includes("sohail-shop") ||
+    cat.includes("sohailshop") ||
+    t.includes("sohail-shop") ||
+    t.includes("sohailshop")
+  ) {
+    return "DevOps";
+  }
   if (cat.includes("aws") || cat.includes("cloud") || cat.includes("s3") || cat.includes("vpc") || t.includes("aws")) {
     return "AWS";
   }
@@ -270,7 +289,13 @@ export function parsePillarResource(raw: Partial<DevOpsProject>): PillarResource
     try {
       const parsed = JSON.parse(rawHighlights);
       if (typeof parsed.name === "string" && parsed.name.trim()) name = parsed.name.trim();
-      if (typeof parsed.video_url === "string") video_url = parsed.video_url;
+      if (typeof parsed.video_url === "string" && parsed.video_url.trim()) {
+        video_url = parsed.video_url.trim();
+      } else if (typeof parsed.videoUrl === "string" && parsed.videoUrl.trim()) {
+        video_url = parsed.videoUrl.trim();
+      } else if (typeof parsed.video === "string" && parsed.video.trim()) {
+        video_url = parsed.video.trim();
+      }
       if (typeof parsed.video_duration === "string") video_duration = parsed.video_duration;
       if (typeof parsed.pdf_url === "string" && parsed.pdf_url.trim()) pdf_url = parsed.pdf_url.trim();
       if (typeof parsed.takeaways === "string") takeaways = parsed.takeaways;
@@ -292,6 +317,8 @@ export function parsePillarResource(raw: Partial<DevOpsProject>): PillarResource
       name = "Networking Fundamentals";
     } else if (pillar === "AWS") {
       name = "Amazon EC2";
+    } else if (pillar === "DevOps") {
+      name = "DevOps Platform";
     } else {
       name = rawCategory || pillar;
     }
@@ -306,17 +333,19 @@ export function parsePillarResource(raw: Partial<DevOpsProject>): PillarResource
     } else if (raw.ppt_url && (isJioCloudUrl(raw.ppt_url) || raw.ppt_url.includes("youtube") || raw.ppt_url.includes("youtu.be") || raw.ppt_url.includes("vimeo") || /\.(mp4|webm|ogg|mov|m4v)/i.test(raw.ppt_url))) {
       video_url = raw.ppt_url.trim();
     } else if (rawHighlights && (isJioCloudUrl(rawHighlights) || rawHighlights.includes("youtube.com") || rawHighlights.includes("youtu.be"))) {
-      const match = rawHighlights.match(/https?:\/\/(?:www\.)?(?:[a-zA-Z0-9_-]+\.)*(?:jioaicloud\.com|jiocloud\.com|jiovault\.com|youtube\.com\/watch\?(?:.*&)?v=|youtu\.be\/|youtube\.com\/embed\/)[^\s"']+/i);
+      const match = rawHighlights.match(/https?:\/\/(?:www\.)?(?:[a-zA-Z0-9_-]+\.)*(?:jioaicloud\.com|jiocloud\.com|jiovault\.com|jiodrive\.com|youtube\.com\/watch\?(?:.*&)?v=|youtu\.be\/|youtube\.com\/embed\/)[^\s"']+/i);
       if (match) video_url = match[0];
     } else if (raw.ppt_url && /^https?:\/\//i.test(raw.ppt_url.trim()) && !raw.ppt_url.toLowerCase().includes(".pdf")) {
       video_url = raw.ppt_url.trim();
     }
   }
 
-  // Curated pillar fallback for AWS so in-app player always starts cleanly if no video was attached
+  // Curated pillar fallback for AWS & DevOps so in-app player always starts cleanly if no video was attached
   if (!video_url) {
     if (pillar === "AWS") {
       video_url = "https://www.youtube.com/watch?v=Ia-UEYYR44s";
+    } else if (pillar === "DevOps") {
+      video_url = "https://www.youtube.com/watch?v=X48VuDVv0do";
     }
   }
 

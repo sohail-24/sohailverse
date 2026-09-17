@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { X, Play, Globe } from "lucide-react";
+import { X, Play, Globe, Infinity as InfinityIcon } from "lucide-react";
 import { FaAws } from "react-icons/fa";
 import {
   getVideoEmbedUrl,
@@ -50,13 +50,16 @@ export default function DevOpsVideoSessionPlayer({
   if (isJioCloudUrl(session.video_url)) return null;
 
   const isNetworking = session.pillar === "Networking";
+  const isAws = session.pillar === "AWS";
   const stepLabel = `Step ${String(stepNumber).padStart(2, "0")}`;
   const rawVideoUrl = session.video_url?.trim() || "";
 
-  // AWS fallback in case AWS video link was empty
+  // Video fallback in case video link was empty
   const defaultPillarVideoUrl = isNetworking
     ? ""
-    : "https://www.youtube.com/watch?v=Ia-UEYYR44s";
+    : isAws
+    ? "https://www.youtube.com/watch?v=Ia-UEYYR44s"
+    : "https://www.youtube.com/watch?v=X48VuDVv0do";
 
   const videoUrl = rawVideoUrl || defaultPillarVideoUrl;
   const embedUrl = getVideoEmbedUrl(videoUrl);
@@ -70,12 +73,20 @@ export default function DevOpsVideoSessionPlayer({
         glow: "shadow-[0_0_40px_rgba(6,182,212,0.2)]",
         stepBadge: "bg-cyan-500 text-slate-950 font-bold",
       }
-    : {
+    : isAws
+    ? {
         accentText: "text-orange-400",
         badgeBg: "bg-orange-500/15 border-orange-500/30 text-orange-300",
         modalBorder: "border-orange-500/30",
         glow: "shadow-[0_0_40px_rgba(249,115,22,0.2)]",
         stepBadge: "bg-orange-500 text-slate-950 font-bold",
+      }
+    : {
+        accentText: "text-lime-400",
+        badgeBg: "bg-lime-500/15 border-lime-500/30 text-lime-300",
+        modalBorder: "border-lime-500/30",
+        glow: "shadow-[0_0_40px_rgba(163,230,53,0.2)]",
+        stepBadge: "bg-lime-400 text-slate-950 font-bold",
       };
 
   return (
@@ -99,8 +110,10 @@ export default function DevOpsVideoSessionPlayer({
             >
               {isNetworking ? (
                 <Globe className="h-5 w-5 text-cyan-400" />
-              ) : (
+              ) : isAws ? (
                 <FaAws className="h-5 w-5 text-orange-400" />
+              ) : (
+                <InfinityIcon className="h-5 w-5 text-lime-400" />
               )}
             </div>
 
