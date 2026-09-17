@@ -13,11 +13,11 @@
 1. **Mission Control (Home — `/`):** Interactive 3D Earth globe (`Three.js`), real-time telemetry strip, personal engineering philosophy, world gateways, and the responsive Favourite Projects showcase carousel.
 2. **Independent Projects System (`/projects`, `/projects/:id`):** Completely decoupled from DevOps. A dedicated portfolio showcase and standalone **Project Information Pages** (`ProjectInformationPage.tsx`) providing deep technical dossiers (Overview, Video Sessions, README/Documentation, Architecture Diagrams, External Links).
 3. **DevOps Laboratory (`/devops`, `/devops/:id`):** Structured around **Five Distinct Learning Pillars**:
-   - **Pillar 1: Notes** — Core runbooks, conceptual guides, and attached PDF reader/viewer support.
-   - **Pillar 2: Networking** — Networking fundamentals, OSI model, DNS, subnets, and video sessions masterclass.
-   - **Pillar 3: AWS** — Cloud infrastructure, VPCs, compute, storage, EKS, and video sessions masterclass.
-   - **Pillar 4: DevOps** — Containers, Kubernetes orchestration, Terraform IaC, and ArgoCD GitOps pipelines.
-   - **Pillar 5: Learn & Test Projects** — Staging labs, architecture diagrams, and practice repositories.
+   - **Pillar 1: Notes** — Core runbooks, conceptual guides, and production PDF streaming via `/api/notes/master-notes.pdf`.
+   - **Pillar 2: Networking** — Networking fundamentals, OSI model, DNS, subnets, and dedicated video sessions masterclass (`?pillar=networking`).
+   - **Pillar 3: AWS** — Cloud infrastructure, VPCs, compute, storage, EKS, and dedicated video sessions masterclass (`?pillar=aws`).
+   - **Pillar 4: DevOps** — Containers, Kubernetes orchestration, Terraform IaC, and dedicated video sessions masterclass (`?pillar=devops`).
+   - **Pillar 5: Learn & Test Projects** — Guided staging labs, practice blueprints, and hands-on projects utilizing the unified session/curriculum experience (`?pillar=learn-test-projects`) matching Networking and AWS.
 4. **Cinema Observatory (`/cinema`):** Curated movie catalog backed strictly by Neon PostgreSQL (`movies` table) with zero client-side fallback data, dynamic statistics, genre filtering, and video trailer/streaming modals.
 5. **Timeline & Career Milestones (`/timeline`, `/about`):** Chronological career milestones from 2023 through 2026 backed by Neon PostgreSQL (`timeline_posts` table) with zero client-side fallback data.
 6. **Admin Console & CMS (`/admin`, `/console`):** Authenticated workspace (`AuthenticatedCMS.tsx`) secured with PBKDF2 Web Crypto verification and HMAC-signed session cookies. Features dedicated tabbed managers for Projects, Cinema, and DevOps.
@@ -62,6 +62,7 @@ node scripts/generate-space-background.mjs
 When running `npm run dev`, Vite uses custom middleware defined in `vite.config.ts`:
 - If `DATABASE_URL` is configured in your environment or `.dev.vars`, the server queries Neon PostgreSQL via `@neondatabase/serverless`.
 - If `DATABASE_URL` is unset or unreachable, the dev server seamlessly serves from an in-memory `mockStore` containing verified baseline records.
+- **Dedicated PDF Middleware:** The dev server intercepts `/api/notes/master-notes.pdf` and invokes `handleMasterNotesPdf`, streaming local binary bytes from `public/Master-Notes.pdf` or `dist/Master-Notes.pdf` with complete `application/pdf` and `Content-Disposition` headers, guaranteeing parity with the production Cloudflare Pages runtime.
 
 ---
 
@@ -195,6 +196,12 @@ Mutating HTTP methods (`POST`, `PUT`, `DELETE`, `PATCH`) require an authenticate
 ├─────────────────────────┼────────┼───────────────────────┼────────────────────────────────────────────────────────┤
 │ /api/academy/:id        │ PUT    │ academy_posts         │ [Auth] Updates academy post by ID.                     │
 │ /api/academy/:id        │ DELETE │ academy_posts         │ [Auth] Deletes academy post by ID.                     │
+├─────────────────────────┼────────┼───────────────────────┼────────────────────────────────────────────────────────┤
+│ /api/notes/master-notes.pdf GET │ Cloudflare Assets /   │ Streams production DevOps Notes Master PDF             │
+│                         │ HEAD   │ Filesystem / Neon     │ (application/pdf) with inline disposition & caching.   │
+├─────────────────────────┼────────┼───────────────────────┼────────────────────────────────────────────────────────┤
+│ /api/notes/:filename    │ GET    │ Cloudflare Assets /   │ Dynamic case-insensitive note PDF resolver. Matches    │
+│                         │ HEAD   │ Filesystem / Neon     │ master-notes.pdf or delegates to static asset store.   │
 └─────────────────────────┴────────┴───────────────────────┴────────────────────────────────────────────────────────┘
 ```
 
@@ -253,18 +260,20 @@ Located in the Admin Console under the **Projects** tab:
 ### 6.1 The 5 Pillars Structure
 The DevOps laboratory (`src/pages/DevOpsPage.tsx`) is structured around 5 clear learning pillars:
 
-1. **Pillar 1: Notes:** Runbooks, foundational concepts, and attached PDF documentation. Supports an inline PDF reader and download actions.
+1. **Pillar 1: Notes:** Runbooks, foundational concepts, and production PDF documentation. Direct click opens the verified PDF streaming endpoint (`/api/notes/master-notes.pdf`).
 2. **Pillar 2: Networking:** Internet protocols, OSI layers, DNS resolution, subnets, and ports, featuring an interactive **Video Sessions Masterclass**.
 3. **Pillar 3: AWS:** Cloud computing, VPC architecture, IAM security, S3 storage, and EKS clusters, featuring an interactive **Video Sessions Masterclass**.
 4. **Pillar 4: DevOps:** Docker containerization, Kubernetes orchestration, Terraform Infrastructure as Code, and automated ArgoCD GitOps pipelines.
-5. **Pillar 5: Learn & Test Projects:** Hands-on staging blueprints, test repositories, and practical labs.
+5. **Pillar 5: Learn & Test Projects:** Guided staging blueprints, practice repositories, and practical labs. **Fully aligned with the dedicated session and curriculum experience pattern of Networking and AWS**, featuring step-by-step staging walkthroughs, terminal commands, lecture takeaways, and external project links.
 
 ### 6.2 Public Interaction & Deep Linking
-- **URL Parameter Binding:** Users can deep-link directly to specific video masterclasses via query parameters:
-  - `/devops?pillar=networking` — Automatically expands the Networking Video Sessions Masterclass.
-  - `/devops?pillar=aws` — Automatically expands the AWS Video Sessions Masterclass.
-- **Masterclass Video Player (`DevOpsPillarVideoSessions.tsx` / `DevOpsVideoSessionPlayer.tsx`):** Provides a clean video playback modal with lecture takeaways, duration, and external resources.
-- **Notes Modal with PDF Support (`DevOpsNoteModal.tsx` / `NoteReaderModal.tsx`):** Reads technical notes and provides direct viewing/downloading of attached PDF documentation.
+- **URL Parameter Binding:** Users can deep-link directly to specific video masterclasses and curriculum sessions via query parameters:
+  - `/devops?pillar=networking` — Expands the Networking Video Sessions Masterclass.
+  - `/devops?pillar=aws` — Expands the AWS Video Sessions Masterclass.
+  - `/devops?pillar=devops` — Expands the DevOps Masterclass.
+  - `/devops?pillar=learn-test-projects` — Expands the Learn & Test Projects dedicated session and curriculum experience.
+- **Masterclass Video & Curriculum Player (`DevOpsPillarVideoSessions.tsx` / `DevOpsVideoSessionPlayer.tsx`):** Provides an interactive player modal with session navigation, takeaway summaries, terminal commands, and repository links.
+- **Direct PDF Reader & Viewer (`DevOpsLearningJourney.tsx`):** Clicking the Notes card invokes `notesPdfUrl` normalized through `normalizePdfUrl()`, launching `/api/notes/master-notes.pdf` directly in a new browser tab with browser-native PDF controls and responsive notification fallback.
 - **Mobile Sticky Navigation (`DevOpsBottomNav.tsx`):** Allows mobile users to jump directly to any of the 5 pillars.
 
 ### 6.3 Admin DevOps Management (`src/components/admin/DevOpsManager.tsx`)
@@ -282,6 +291,37 @@ Located in the Admin Console under the **DevOps** tab:
   - `VideoPlayerModal.tsx`: Watch attached video sessions.
   - `NoteReaderModal.tsx`: Read technical notes and inspect attached PDF URLs.
   - `ImageLightboxModal.tsx`: View architecture diagrams at full scale.
+
+### 6.4 Production PDF Serving Pipeline & URL Normalization
+
+The production DevOps Notes PDF serving infrastructure guarantees reliable, cross-environment file delivery:
+
+#### A. End-to-End File-Serving Chain
+1. **Committed Asset:** The primary binary file is stored at `public/Master-Notes.pdf` in the repository.
+2. **Build Distribution:** During `npm run build` (`tsc -b && vite build`), Vite automatically copies all assets from `public/` into `dist/` (e.g., `dist/Master-Notes.pdf`).
+3. **Cloudflare Deployment:** Cloudflare Pages deploys `dist/` to its global CDN asset store, accessible via `env.ASSETS`.
+4. **Endpoint Resolution (`functions/api/notes/master-notes.pdf.ts`):** Requests to `/api/notes/master-notes.pdf` are resolved via a 4-tier hierarchy:
+   - **Tier 1 (Production Edge):** Cloudflare Pages native asset binding `env.ASSETS.fetch('/Master-Notes.pdf')`.
+   - **Tier 2 (Origin Fetch):** Resolves against request host origin `fetch(origin + '/Master-Notes.pdf')`.
+   - **Tier 3 (Filesystem Fallback):** Node.js `node:fs` reading `public/Master-Notes.pdf` or `dist/Master-Notes.pdf` for local preview/development containers.
+   - **Tier 4 (Neon Database Fallback):** Legacy base64 lookup in `note_files` table (`filename IN ('Master-Notes.pdf', 'master-notes.pdf')`). Documented strictly as a secondary fallback; static asset streaming is the primary path.
+5. **Streaming Response:** Returns HTTP 200 with headers:
+   - `Content-Type: application/pdf`
+   - `Content-Disposition: inline; filename="Master-Notes.pdf"`
+   - `Accept-Ranges: bytes`
+   - `Cache-Control: public, max-age=604800, stale-while-revalidate=86400`
+   - `Access-Control-Allow-Origin: *`
+
+#### B. Dynamic Note Router (`functions/api/notes/[filename].ts`)
+Handles parameterized paths like `/api/notes/:filename`. Matches requests for `master-notes.pdf` (case-insensitive) and routes them to `handleMasterNotes`. Other note files are streamed from `env.ASSETS`.
+
+#### C. Path Normalization (`src/lib/pillarContent.ts`)
+Legacy database records or manual inputs might store paths as `public/Master-Notes.pdf`, `/public/Master-Notes.pdf`, or `master-notes.pdf`. The `normalizePdfUrl()` function automatically converts all variants into `/api/notes/master-notes.pdf`, preventing browser 404 errors.
+
+#### D. Edge Headers and Redirects
+- **`public/_headers`:** Enforces PDF MIME type and browser caching for `/Master-Notes.pdf`, `/api/notes/*`, and `/*.pdf`.
+- **`public/_redirects`:** Defines 302 redirects from `/public/Master-Notes.pdf` and `/public/master-notes.pdf` to `/api/notes/master-notes.pdf`.
+- **`vite.config.ts` Local Middleware:** Local Vite development server includes custom middleware handling `/api/notes/master-notes.pdf` directly.
 
 ---
 
@@ -366,7 +406,8 @@ Copy the resulting output (e.g., `pbkdf2:600000:<salt>:<hash>`) and configure it
 |---|---|---|
 | **"Neon DATABASE_URL is not configured"** | `DATABASE_URL` environment variable is missing. | Set `DATABASE_URL` in `.dev.vars` (local) or in Cloudflare Pages Dashboard Settings > Environment Variables. |
 | **Cinema or Timeline shows ErrorState / "Unavailable"** | Network or database connection failed. Zero-fallback policy actively surfaces errors. | Verify Neon PostgreSQL status and click the "Try Again" button to re-fetch. |
-| **PDF link in Notes does not open** | The attached `pdf_url` is invalid or unreachable. | Verify the URL in `ResourceEditorModal` (Admin) or confirm the file exists in `public/`. |
+| **"Failed to load PDF document" / Notes PDF fails** | Database record stores legacy path (e.g., `public/Master-Notes.pdf`), or direct static route was requested. | Paths are normalized automatically by `normalizePdfUrl()` to `/api/notes/master-notes.pdf`. Endpoint resolves via 4 tiers (`env.ASSETS`, origin fetch, disk `public/Master-Notes.pdf`, or Neon fallback). Legacy paths are redirected by `public/_redirects`. |
+| **PDF link in Notes does not open** | The attached `pdf_url` is unconfigured. | Verify the URL in `ResourceEditorModal` (Admin) or ensure `public/Master-Notes.pdf` is present. |
 | **Video player shows "Video unavailable"** | The URL provided is not a supported YouTube, Vimeo, or direct MP4 link. | Ensure the link matches standard YouTube watch/embed formats (e.g., `https://www.youtube.com/watch?v=...`). |
 | **"Unauthorized: Valid admin session required."** | Mutating request made without `sv_admin_session` cookie. | Log in at `/admin` to obtain an active session cookie. |
 | **"Invalid credentials." on login** | Password does not match `ADMIN_PASSWORD_HASH`. | Regenerate hash using `node scripts/generate-password-hash.js "<password>"` and update environment secrets. |
@@ -384,6 +425,8 @@ Copy the resulting output (e.g., `pbkdf2:600000:<salt>:<hash>`) and configure it
 │ Admin Projects Manager + Content Modal        │ COMPLETED            │ ProjectsManager.tsx + ProjectContentManagerModal.tsx   │
 │ DevOps 5-Pillar Laboratory System             │ COMPLETED            │ DevOpsPage.tsx + DevOpsLearningJourney.tsx             │
 │ DevOps Notes & PDF Viewer Support             │ COMPLETED            │ DevOpsLearningJourney.tsx + NoteReaderModal.tsx        │
+│ DevOps Notes Production PDF Streaming Pipeline│ COMPLETED            │ functions/api/notes/master-notes.pdf.ts (4-tier engine)│
+│ Learn & Test Projects Session Experience Align│ COMPLETED            │ DevOpsPillarVideoSessions.tsx (?pillar=learn-test-proj)│
 │ Networking & AWS Video Masterclasses          │ COMPLETED            │ DevOpsPillarVideoSessions.tsx + VideoPlayerModal.tsx   │
 │ Admin DevOps 5-Pillar Manager                 │ COMPLETED            │ DevOpsManager.tsx + ResourceEditorModal.tsx            │
 │ Admin Cinema Manager with Poster Studio       │ COMPLETED            │ CinemaManager.tsx with live poster fallback validation │

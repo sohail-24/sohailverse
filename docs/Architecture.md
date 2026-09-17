@@ -13,11 +13,11 @@
 1. **Mission Control (Home — `/`):** High-impact interactive gateway featuring a 3D Earth globe visualization (`Three.js`), live telemetry strips, personal philosophy, brand avatar identity, world gateways, and the Favourite Projects showcase carousel.
 2. **Projects System (`/projects`, `/projects/:id`):** Completely decoupled from DevOps. An independent portfolio and content-management system providing high-level project showcases and deep, standalone **Project Information Pages** (`ProjectInformationPage.tsx`) covering project overviews, video sessions, README/documentation, architecture diagrams, and repository/demo links.
 3. **DevOps Laboratory (`/devops`, `/devops/:id`):** An educational cloud-native laboratory structured around **Five Distinct Learning Pillars**:
-   - **Pillar 1: Notes** — Runbooks, foundational concepts, and PDF cheatsheets/documentation with inline reader support.
-   - **Pillar 2: Networking** — Internet protocols, OSI layers, DNS, subnets, and video sessions masterclass.
-   - **Pillar 3: AWS** — Cloud architecture, VPCs, compute, storage, EKS, and video sessions masterclass.
-   - **Pillar 4: DevOps** — Containers, Kubernetes orchestration, Terraform IaC, and ArgoCD GitOps pipelines.
-   - **Pillar 5: Learn & Test Projects** — Staging systems, hands-on architectural blueprints, and practice labs.
+   - **Pillar 1: Notes** — Runbooks, foundational concepts, and production PDF streaming reader via `/api/notes/master-notes.pdf`.
+   - **Pillar 2: Networking** — Internet protocols, OSI layers, DNS, subnets, and dedicated video sessions masterclass (`?pillar=networking`).
+   - **Pillar 3: AWS** — Cloud architecture, VPCs, compute, storage, EKS, and dedicated video sessions masterclass (`?pillar=aws`).
+   - **Pillar 4: DevOps** — Containers, Kubernetes orchestration, Terraform IaC, and dedicated video sessions masterclass (`?pillar=devops`).
+   - **Pillar 5: Learn & Test Projects** — Interactive guided labs, practice blueprints, and dedicated curriculum/session experience (`?pillar=learn-test-projects`) matching Networking and AWS.
 4. **Cinema Observatory (`/cinema`):** Dedicated film appreciation observatory backed strictly by Neon PostgreSQL (`movies` table) with zero client-side fallback data, genre filtering, statistics, and embedded video trailer and streaming playback.
 5. **Timeline & Career Journey (`/timeline`, `/about`):** Verified chronological milestone progression spanning academic graduation (2023), AWS & DevOps exploration (2024), engineering internship (2025), and production platform deployments (2026).
 6. **Admin Console & CMS (`/admin`, `/console`):** Authenticated administrative control center (`AuthenticatedCMS.tsx`) secured with Web Crypto PBKDF2 verification and HMAC-signed session cookies (`sv_admin_session`). Provides dedicated tabbed managers for Projects (with deep content editing), Cinema, and DevOps (5 pillars with resource editor and media viewers).
@@ -169,12 +169,82 @@ The DevOps domain (`src/pages/DevOpsPage.tsx` and `src/components/devops/DevOpsL
   - `pdf_url`: Direct URL to downloadable/viewable PDF documentation.
   - `links`: Array of external resources (`github`, `docs`, `slides`, `video`, `demo`).
 
-### 4.2 Interactive Viewers & Modals
-- **PDF Viewer Support:** `DevOpsLearningJourney.tsx` inspects database records for `pdf_url` (or falls back to curated static notes) and provides inline PDF reading and downloading.
-- **Pillar Video Sessions Player (`DevOpsPillarVideoSessions.tsx` / `DevOpsVideoSessionPlayer.tsx`):**
-  - Activated via UI cards or deep-linked URL parameters (`?pillar=networking` or `?pillar=aws`).
-  - Provides video playlist switching, progress indicators, takeaway bullet points, and related resource links.
-- **Mobile Sticky Navigation (`DevOpsBottomNav.tsx`):** Docked mobile navigation bar enabling direct scrolling to the 5 pillars.
+### 4.2 Unified Session & Journey Experience
+The DevOps learning journey (`DevOpsLearningJourney.tsx`) implements an aligned, multi-pillar structural pattern:
+
+1. **Pillar 1: Notes** — Runbooks, cheatsheets, and architecture diagrams. Clicking the Notes card invokes `notesPdfUrl` (normalized via `normalizePdfUrl()`), opening the attached PDF directly in a new browser tab (`/api/notes/master-notes.pdf`) with graceful fallback notice if no document is linked.
+2. **Pillar 2: Networking** — Interactive protocols, DNS, and OSI layers. Opens the dedicated session view via `?pillar=networking`.
+3. **Pillar 3: AWS** — Cloud infrastructure, VPCs, IAM, and managed services. Opens the dedicated session view via `?pillar=aws`.
+4. **Pillar 4: DevOps** — Containers, Kubernetes orchestration, Terraform IaC, and CI/CD pipelines. Opens the dedicated session view via `?pillar=devops`.
+5. **Pillar 5: Learn & Test Projects** — Guided staging systems, practice blueprints, and hands-on lab deployments. **Architecturally unified with Pillars 2, 3, and 4**, opening the dedicated session view via `?pillar=learn-test-projects`.
+
+All session experiences render through `DevOpsPillarVideoSessions.tsx`, offering video playback, lecture takeaways, key CLI commands, and external project runbooks.
+
+- **Mobile Sticky Navigation (`DevOpsBottomNav.tsx`):** Docked mobile navigation bar enabling direct switching and scrolling across the 5 pillars.
+
+### 4.3 PDF Serving Architecture & Multi-Tier Resolution Engine
+
+The production PDF serving pipeline resolves DevOps notes and master reference documents without relying on fragile database BLOBs as the primary path.
+
+#### A. End-to-End File-Serving Pipeline
+```
+Repository Source: public/Master-Notes.pdf (Verified committed binary)
+       │
+       ▼ (npm run build / tsc -b && vite build)
+Production Distribution: dist/Master-Notes.pdf
+       │
+       ▼ (Cloudflare Pages deploy)
+Cloudflare Edge CDN Asset Store (env.ASSETS)
+       │
+       ▼ (Incoming browser request: /api/notes/master-notes.pdf)
+Cloudflare Pages Function: functions/api/notes/master-notes.pdf.ts (and [filename].ts)
+       │
+       ▼
+HTTP 200 Response
+├── Content-Type: application/pdf
+├── Content-Disposition: inline; filename="Master-Notes.pdf"
+├── Content-Length: <byteLength>
+├── Accept-Ranges: bytes
+├── Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+└── Access-Control-Allow-Origin: *
+```
+
+#### B. 4-Tier Resolution Hierarchy (`functions/api/notes/master-notes.pdf.ts`)
+When `/api/notes/master-notes.pdf` receives a `GET` or `HEAD` request, it attempts resolution through four successive tiers:
+
+1. **Tier 1 — Cloudflare Pages CDN (`env.ASSETS.fetch`):**
+   Queries the native Cloudflare Pages static asset binding for `/Master-Notes.pdf`. If successful, streams the binary `ArrayBuffer` directly to the client with production caching headers. This is the primary zero-latency production execution path.
+2. **Tier 2 — Direct Origin Fetch:**
+   If `env.ASSETS` is absent but the request possesses a fully qualified host origin, fetches `/Master-Notes.pdf` from the production origin.
+3. **Tier 3 — Filesystem Fallback (`node:fs`):**
+   In Node.js runtimes, Vite dev server, or local preview containers, inspects disk locations sequentially:
+   - `public/Master-Notes.pdf`
+   - `dist/Master-Notes.pdf`
+   - `public/master-notes.pdf`
+   - `dist/master-notes.pdf`
+   Returns the file buffer with complete PDF streaming headers if found.
+4. **Tier 4 — Neon PostgreSQL Fallback (`note_files` table):**
+   If static and disk resolution both fail, queries Neon PostgreSQL for base64-encoded PDF bytes (`SELECT encode(file_data, 'base64') FROM note_files WHERE filename IN ('Master-Notes.pdf', 'master-notes.pdf')`). Decodes base64 string to a binary `Uint8Array` buffer and streams it. This is strictly a disaster recovery fallback, not the primary path.
+
+#### C. Case-Insensitive Dynamic Routing (`functions/api/notes/[filename].ts`)
+Handles parameterized paths such as `/api/notes/:filename`. Checks whether the requested filename matches `master-notes.pdf` (case-insensitive) and routes execution to `handleMasterNotes`. Other assets are resolved against `env.ASSETS`.
+
+#### D. Client-Side Path Normalization (`src/lib/pillarContent.ts`)
+Database records in Neon or legacy CMS inputs frequently store paths with inconsistent formatting (e.g., `public/Master-Notes.pdf`, `/public/Master-Notes.pdf`, `master-notes.pdf`). The `normalizePdfUrl()` utility canonicalizes all variations:
+```typescript
+// Transforms:
+"public/Master-Notes.pdf"    ──► "/api/notes/master-notes.pdf"
+"/public/Master-Notes.pdf"   ──► "/api/notes/master-notes.pdf"
+"master-notes.pdf"           ──► "/api/notes/master-notes.pdf"
+"/Master-Notes.pdf"          ──► "/api/notes/master-notes.pdf"
+"public/other-guide.pdf"     ──► "/api/notes/other-guide.pdf"
+```
+This guarantees that UI components and modal links always request the verified edge endpoint, preventing `Failed to load PDF document` browser errors.
+
+#### E. Edge Headers & Redirects Configuration
+- **`public/_headers`:** Enforces `Content-Type: application/pdf`, `Content-Disposition: inline`, `Accept-Ranges: bytes`, and week-long caching across `/Master-Notes.pdf`, `/api/notes/*`, and `/*.pdf`.
+- **`public/_redirects`:** Defines 302 redirects for `/public/Master-Notes.pdf` and `/public/master-notes.pdf` pointing to `/api/notes/master-notes.pdf`.
+- **`vite.config.ts` Local Middleware:** The Vite development server mounts an explicit route handler for `/api/notes/master-notes.pdf`, ensuring local developers and automated tests experience identical binary streaming without requiring a deployed Cloudflare environment.
 
 ---
 
@@ -344,6 +414,8 @@ All endpoints run as Cloudflare Pages Functions under `functions/api/`:
 | `/api/atlas/:id` | PUT, DELETE | Yes | `atlas_posts` | Update / Delete destination |
 | `/api/academy` | GET, POST | POST: Yes | `academy_posts` | List skills / Create skill |
 | `/api/academy/:id` | PUT, DELETE | Yes | `academy_posts` | Update / Delete skill |
+| `/api/notes/master-notes.pdf` | GET, HEAD | No | Cloudflare Assets / FS / Neon | Streams production DevOps Notes Master PDF (`application/pdf`) with inline disposition |
+| `/api/notes/:filename` | GET, HEAD | No | Cloudflare Assets / FS / Neon | Dynamically routes and streams requested note PDFs (case-insensitive) |
 
 ---
 
@@ -359,6 +431,8 @@ All endpoints run as Cloudflare Pages Functions under `functions/api/`:
 │ Admin Projects Manager + Content Modal           │ COMPLETED            │ ProjectsManager.tsx + ProjectContentManagerModal.tsx   │
 │ DevOps 5-Pillar Laboratory System                │ COMPLETED            │ DevOpsPage.tsx + DevOpsLearningJourney.tsx             │
 │ DevOps Notes & Attached PDF Support              │ COMPLETED            │ DevOpsLearningJourney.tsx + NoteReaderModal.tsx        │
+│ DevOps Notes Production PDF Streaming Pipeline   │ COMPLETED            │ functions/api/notes/master-notes.pdf.ts (4-tier engine)│
+│ Learn & Test Projects Session Experience Align   │ COMPLETED            │ DevOpsPillarVideoSessions.tsx (?pillar=learn-test-proj)│
 │ Networking & AWS Video Sessions Masterclasses    │ COMPLETED            │ DevOpsPillarVideoSessions.tsx + VideoPlayerModal.tsx   │
 │ Admin DevOps 5-Pillar Manager                    │ COMPLETED            │ DevOpsManager.tsx + ResourceEditorModal.tsx            │
 │ Admin Cinema Manager with Poster Studio          │ COMPLETED            │ CinemaManager.tsx with live poster fallback validation │
