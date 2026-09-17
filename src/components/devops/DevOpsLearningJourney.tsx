@@ -17,17 +17,26 @@ export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJ
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedStage, setSelectedStage] = useState<LearningPathStage | null>(null);
   const [noPdfNotice, setNoPdfNotice] = useState(false);
-  const [activePillarSession, setActivePillarSession] = useState<"Networking" | "AWS" | "DevOps" | null>(null);
+  const [activePillarSession, setActivePillarSession] = useState<
+    "Networking" | "AWS" | "DevOps" | "Learn & Test Projects" | null
+  >(null);
 
-  // Sync state with URL query parameter (e.g. ?pillar=networking, ?pillar=aws, ?pillar=devops)
+  // Sync state with URL query parameter (e.g. ?pillar=networking, ?pillar=aws, ?pillar=devops, ?pillar=learn-test-projects)
   useEffect(() => {
-    const pillarParam = (searchParams.get("pillar") || searchParams.get("stage") || "").toLowerCase();
+    const pillarParam = (searchParams.get("pillar") || searchParams.get("stage") || "").toLowerCase().trim();
     if (pillarParam === "networking") {
       setActivePillarSession("Networking");
     } else if (pillarParam === "aws") {
       setActivePillarSession("AWS");
     } else if (pillarParam === "devops") {
       setActivePillarSession("DevOps");
+    } else if (
+      pillarParam === "learn-test-projects" ||
+      pillarParam === "learn-test" ||
+      pillarParam === "projects" ||
+      pillarParam === "learn & test projects"
+    ) {
+      setActivePillarSession("Learn & Test Projects");
     } else {
       setActivePillarSession(null);
     }
@@ -104,7 +113,15 @@ export default function DevOpsLearningJourney({ projects = [] }: DevOpsLearningJ
       return;
     }
 
-    // 5. Learn & Test Projects: Existing masterclass detail view
+    // 5. LEARN & TEST PROJECTS: Dedicated Curriculum / Projects Session page
+    if (stage.id === "learn-test-projects" || stage.id === "projects") {
+      setActivePillarSession("Learn & Test Projects");
+      setSearchParams({ pillar: "learn-test-projects" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    // Default fallback: masterclass detail view
     setSelectedStage(stage);
   };
 

@@ -319,6 +319,8 @@ export function parsePillarResource(raw: Partial<DevOpsProject>): PillarResource
       name = "Amazon EC2";
     } else if (pillar === "DevOps") {
       name = "DevOps Platform";
+    } else if (pillar === "Learn & Test Projects") {
+      name = "Hands-on Project Lab";
     } else {
       name = rawCategory || pillar;
     }

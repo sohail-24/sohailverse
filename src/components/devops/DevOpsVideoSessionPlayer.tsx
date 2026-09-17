@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { X, Play, Globe, Infinity as InfinityIcon } from "lucide-react";
+import { X, Play, Globe, Infinity as InfinityIcon, Rocket } from "lucide-react";
 import { FaAws } from "react-icons/fa";
 import {
   getVideoEmbedUrl,
@@ -51,6 +51,8 @@ export default function DevOpsVideoSessionPlayer({
 
   const isNetworking = session.pillar === "Networking";
   const isAws = session.pillar === "AWS";
+  const isDevOps = session.pillar === "DevOps";
+  const isLearnAndTest = session.pillar === "Learn & Test Projects";
   const stepLabel = `Step ${String(stepNumber).padStart(2, "0")}`;
   const rawVideoUrl = session.video_url?.trim() || "";
 
@@ -59,7 +61,9 @@ export default function DevOpsVideoSessionPlayer({
     ? ""
     : isAws
     ? "https://www.youtube.com/watch?v=Ia-UEYYR44s"
-    : "https://www.youtube.com/watch?v=X48VuDVv0do";
+    : isDevOps
+    ? "https://www.youtube.com/watch?v=X48VuDVv0do"
+    : "";
 
   const videoUrl = rawVideoUrl || defaultPillarVideoUrl;
   const embedUrl = getVideoEmbedUrl(videoUrl);
@@ -81,12 +85,20 @@ export default function DevOpsVideoSessionPlayer({
         glow: "shadow-[0_0_40px_rgba(249,115,22,0.2)]",
         stepBadge: "bg-orange-500 text-slate-950 font-bold",
       }
-    : {
+    : isDevOps
+    ? {
         accentText: "text-lime-400",
         badgeBg: "bg-lime-500/15 border-lime-500/30 text-lime-300",
         modalBorder: "border-lime-500/30",
         glow: "shadow-[0_0_40px_rgba(163,230,53,0.2)]",
         stepBadge: "bg-lime-400 text-slate-950 font-bold",
+      }
+    : {
+        accentText: "text-amber-400",
+        badgeBg: "bg-amber-500/15 border-amber-500/30 text-amber-300",
+        modalBorder: "border-amber-500/30",
+        glow: "shadow-[0_0_40px_rgba(245,158,11,0.2)]",
+        stepBadge: "bg-amber-400 text-slate-950 font-bold",
       };
 
   return (
@@ -112,8 +124,10 @@ export default function DevOpsVideoSessionPlayer({
                 <Globe className="h-5 w-5 text-cyan-400" />
               ) : isAws ? (
                 <FaAws className="h-5 w-5 text-orange-400" />
-              ) : (
+              ) : isDevOps ? (
                 <InfinityIcon className="h-5 w-5 text-lime-400" />
+              ) : (
+                <Rocket className="h-5 w-5 text-amber-400" />
               )}
             </div>
 
@@ -125,7 +139,7 @@ export default function DevOpsVideoSessionPlayer({
                   {stepLabel}
                 </span>
                 <span className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
-                  {session.pillar} Video Session
+                  {session.pillar} {isLearnAndTest ? "Project Session" : "Video Session"}
                 </span>
               </div>
 

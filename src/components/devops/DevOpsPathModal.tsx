@@ -10,8 +10,8 @@ interface DevOpsPathModalProps {
 export default function DevOpsPathModal({ stage, onClose }: DevOpsPathModalProps) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-  // Networking and AWS use the dedicated Video Session experience and must not render this static masterclass modal
-  if (!stage || stage.id === "networking" || stage.id === "aws") return null;
+  // Dedicated pillar session experiences must not render this static masterclass modal
+  if (!stage || stage.id === "networking" || stage.id === "aws" || stage.id === "devops" || stage.id === "learn-test-projects") return null;
 
   const handleCopyCommand = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
