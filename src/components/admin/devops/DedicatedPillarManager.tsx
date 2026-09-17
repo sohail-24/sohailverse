@@ -15,7 +15,7 @@ import {
   Eye,
 } from "lucide-react";
 import { FaAws } from "react-icons/fa";
-import type { PillarResource } from "../../../lib/pillarContent";
+import { isJioCloudUrl, type PillarResource } from "../../../lib/pillarContent";
 import PillarVideoResourceModal from "./PillarVideoResourceModal";
 import VideoPlayerModal from "./VideoPlayerModal";
 import DeleteConfirmModal from "../DeleteConfirmModal";
@@ -302,12 +302,16 @@ export default function DedicatedPillarManager({
                       <div className="absolute bottom-2 left-2">
                         <button
                           type="button"
-                          onClick={() =>
-                            setActiveVideo({
-                              url: item.video_url,
-                              title: item.title,
-                            })
-                          }
+                          onClick={() => {
+                            if (isJioCloudUrl(item.video_url)) {
+                              window.open(item.video_url, "_blank", "noopener,noreferrer");
+                            } else {
+                              setActiveVideo({
+                                url: item.video_url,
+                                title: item.title,
+                              });
+                            }
+                          }}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-950/90 text-white border border-white/20 text-[11px] font-mono font-semibold backdrop-blur-md hover:bg-white hover:text-slate-950 transition-colors"
                         >
                           <Play className="h-3 w-3 fill-current text-lime-400" />
@@ -353,12 +357,16 @@ export default function DedicatedPillarManager({
                     {hasVideo && (
                       <button
                         type="button"
-                        onClick={() =>
-                          setActiveVideo({
-                            url: item.video_url,
-                            title: item.title,
-                          })
-                        }
+                        onClick={() => {
+                          if (isJioCloudUrl(item.video_url)) {
+                            window.open(item.video_url, "_blank", "noopener,noreferrer");
+                          } else {
+                            setActiveVideo({
+                              url: item.video_url,
+                              title: item.title,
+                            });
+                          }
+                        }}
                         className={`inline-flex items-center gap-1 text-[11px] font-mono hover:underline ${theme.iconText}`}
                       >
                         <span>Preview Video ↗</span>

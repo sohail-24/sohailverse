@@ -284,6 +284,28 @@ export const FALLBACK_DATA: Record<string, any[]> = {
       status: "Published Note",
     },
     {
+      id: 7,
+      title: "Day-1 — Networking Fundamentals",
+      category: "Networking",
+      description: "Foundational breakdown of computer networking for DevOps engineers: OSI 7-layer model, packet lifecycles, TCP/IP vs UDP, DNS resolution, and core diagnostics.",
+      image_url: "/dev-real-2102415.jpg",
+      ppt_url: "https://www.jioaicloud.com/l/?u=DZCMz__IiBpVJkJgHfDGLuAvKlxmlF2lNC-S4hVdVx-M-0WqbbzB3U6j-94b6_xOXPz",
+      github_url: "https://github.com/sohail-24/networking-runbooks",
+      technologies: "Networking Fundamentals, OSI Model, TCP/IP, DNS",
+      highlights: JSON.stringify({
+        name: "Networking Fundamentals",
+        video_url: "https://www.jioaicloud.com/l/?u=DZCMz__IiBpVJkJgHfDGLuAvKlxmlF2lNC-S4hVdVx-M-0WqbbzB3U6j-94b6_xOXPz",
+        video_duration: "14:20",
+        pdf_url: "/Master-Notes.pdf",
+        takeaways: "Master the OSI model, packet lifecycles, and core networking troubleshooting with curl, dig, and ping.",
+        links: [
+          { title: "GitHub Runbook Repo", url: "https://github.com/sohail-24/networking-runbooks", type: "github" },
+          { title: "OSI Architecture Slides", url: "https://slides.com/sohail/osi-model", type: "slides" }
+        ]
+      }),
+      status: "Active",
+    },
+    {
       id: 2,
       title: "VPC Subnetting & CIDR Calculation Deep Dive",
       category: "Networking",

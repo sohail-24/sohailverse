@@ -9,7 +9,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { FaAws } from "react-icons/fa";
-import type { PillarResource } from "../../lib/pillarContent";
+import {
+  isJioCloudUrl,
+  isStandardEmbed,
+  type PillarResource,
+} from "../../lib/pillarContent";
 import DevOpsVideoSessionPlayer from "./DevOpsVideoSessionPlayer";
 
 interface DevOpsPillarVideoSessionsProps {
@@ -185,25 +189,12 @@ export default function DevOpsPillarVideoSessions({
               const stepLabel = `Step ${String(stepNumber).padStart(2, "0")}`;
               const hasCustomImage = session.image_url && session.image_url.trim().length > 0 && !session.image_url.includes("coming-soon");
 
-              return (
-                <div
-                  key={session.id}
-                  onClick={() => setSelectedSessionIndex(index)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setSelectedSessionIndex(index);
-                    }
-                  }}
-                  className={`
-                    group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl border
-                    bg-[#0b101b]/90 backdrop-blur-xl p-4 sm:p-5
-                    transition-all duration-300 hover:-translate-y-1.5 cursor-pointer
-                    ${theme.cardBorder}
-                  `}
-                >
+              const rawVideoUrl = (session.video_url || "").trim();
+              const isJioCloud = isJioCloudUrl(rawVideoUrl);
+              const isDirectExternal = isJioCloud || (isNetworking && rawVideoUrl.length > 0 && !isStandardEmbed(rawVideoUrl));
+
+              const cardContent = (
+                <>
                   {/* Top: 16:9 Thumbnail Area with Play Button Overlay */}
                   <div>
                     <div className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 border border-white/10 mb-4 shadow-md">
@@ -302,6 +293,50 @@ export default function DevOpsPillarVideoSessions({
                       <Play className="h-3.5 w-3.5 fill-current ml-0.5" />
                     </div>
                   </div>
+                </>
+              );
+
+              // If this is a JioCloud URL or direct external session, render direct anchor link with no intermediate modal/preview
+              if (isDirectExternal) {
+                return (
+                  <a
+                    key={session.id}
+                    href={rawVideoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`
+                      group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl border
+                      bg-[#0b101b]/90 backdrop-blur-xl p-4 sm:p-5 no-underline
+                      transition-all duration-300 hover:-translate-y-1.5 cursor-pointer
+                      ${theme.cardBorder}
+                    `}
+                  >
+                    {cardContent}
+                  </a>
+                );
+              }
+
+              // Standard embeddable video sessions (YouTube, Vimeo, MP4 in AWS) open the in-app modal
+              return (
+                <div
+                  key={session.id}
+                  onClick={() => setSelectedSessionIndex(index)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedSessionIndex(index);
+                    }
+                  }}
+                  className={`
+                    group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl border
+                    bg-[#0b101b]/90 backdrop-blur-xl p-4 sm:p-5
+                    transition-all duration-300 hover:-translate-y-1.5 cursor-pointer
+                    ${theme.cardBorder}
+                  `}
+                >
+                  {cardContent}
                 </div>
               );
             })}

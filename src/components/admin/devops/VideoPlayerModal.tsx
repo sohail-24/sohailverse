@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { X, ExternalLink, Video } from "lucide-react";
-import { getVideoEmbedUrl } from "../../../lib/pillarContent";
+import { getVideoEmbedUrl, isJioCloudUrl } from "../../../lib/pillarContent";
 
 interface VideoPlayerModalProps {
   videoUrl: string | null;
@@ -14,6 +14,13 @@ export default function VideoPlayerModal({
   onClose,
 }: VideoPlayerModalProps) {
   useEffect(() => {
+    if (videoUrl && isJioCloudUrl(videoUrl)) {
+      window.open(videoUrl, "_blank", "noopener,noreferrer");
+      onClose();
+    }
+  }, [videoUrl, onClose]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
@@ -21,7 +28,7 @@ export default function VideoPlayerModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  if (!videoUrl) return null;
+  if (!videoUrl || isJioCloudUrl(videoUrl)) return null;
 
   const embedUrl = getVideoEmbedUrl(videoUrl);
   const isDirectVideo = /\.(mp4|webm|ogg)$/i.test(videoUrl.trim());

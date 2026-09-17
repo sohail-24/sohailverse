@@ -1,7 +1,11 @@
 import { useEffect } from "react";
-import { X, ExternalLink, Play, Globe } from "lucide-react";
+import { X, Play, Globe } from "lucide-react";
 import { FaAws } from "react-icons/fa";
-import { getVideoEmbedUrl, type PillarResource } from "../../lib/pillarContent";
+import {
+  getVideoEmbedUrl,
+  isJioCloudUrl,
+  type PillarResource,
+} from "../../lib/pillarContent";
 
 interface DevOpsVideoSessionPlayerProps {
   session: PillarResource | null;
@@ -16,6 +20,14 @@ export default function DevOpsVideoSessionPlayer({
   isOpen,
   onClose,
 }: DevOpsVideoSessionPlayerProps) {
+  // Direct redirection for JioCloud links if ever opened in this modal
+  useEffect(() => {
+    if (isOpen && session?.video_url && isJioCloudUrl(session.video_url)) {
+      window.open(session.video_url, "_blank", "noopener,noreferrer");
+      onClose();
+    }
+  }, [isOpen, session, onClose]);
+
   // Close on Escape key press and lock body scroll
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -34,12 +46,21 @@ export default function DevOpsVideoSessionPlayer({
 
   if (!isOpen || !session) return null;
 
+  // If this is a JioCloud URL, do not render modal player
+  if (isJioCloudUrl(session.video_url)) return null;
+
   const isNetworking = session.pillar === "Networking";
   const stepLabel = `Step ${String(stepNumber).padStart(2, "0")}`;
-  const videoUrl = session.video_url?.trim() || "";
+  const rawVideoUrl = session.video_url?.trim() || "";
+
+  // AWS fallback in case AWS video link was empty
+  const defaultPillarVideoUrl = isNetworking
+    ? ""
+    : "https://www.youtube.com/watch?v=Ia-UEYYR44s";
+
+  const videoUrl = rawVideoUrl || defaultPillarVideoUrl;
   const embedUrl = getVideoEmbedUrl(videoUrl);
-  const isDirectVideo = /\.(mp4|webm|ogg)$/i.test(videoUrl);
-  const isDirectUrl = videoUrl.startsWith("http://") || videoUrl.startsWith("https://");
+  const isDirectVideo = /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(videoUrl);
 
   const theme = isNetworking
     ? {
@@ -110,21 +131,8 @@ export default function DevOpsVideoSessionPlayer({
             </div>
           </div>
 
-          {/* Action Buttons: Open URL & Close */}
+          {/* Action Button: In-App Modal Close */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {isDirectUrl && (
-              <a
-                href={videoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-9 min-h-[44px] px-3 rounded-xl border border-white/15 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-                title="Open video in new tab"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Open URL</span>
-              </a>
-            )}
-
             <button
               type="button"
               onClick={onClose}
@@ -136,80 +144,27 @@ export default function DevOpsVideoSessionPlayer({
           </div>
         </div>
 
-        {/* Video Player Screen (16:9 Aspect Ratio) */}
+        {/* Video Player Screen (16:9 Aspect Ratio) - Direct In-App Playback */}
         <div className="relative w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-white/10 shadow-inner">
-          {embedUrl ? (
-            isDirectVideo ? (
-              <video
-                src={embedUrl}
-                controls
-                autoPlay
-                playsInline
-                className="w-full h-full object-contain bg-black"
-                title={session.title}
-              >
-                Your browser does not support HTML5 video playback.
-              </video>
-            ) : (
-              <iframe
-                src={embedUrl}
-                title={session.title}
-                className="w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            )
+          {isDirectVideo ? (
+            <video
+              src={embedUrl || undefined}
+              controls
+              autoPlay
+              playsInline
+              className="w-full h-full object-contain bg-black"
+              title={session.title}
+            >
+              Your browser does not support HTML5 video playback.
+            </video>
           ) : (
-            <div className="relative flex h-full w-full flex-col items-center justify-center p-6 text-center bg-slate-950">
-              {session.image_url && (
-                <>
-                  <img
-                    src={session.image_url}
-                    alt={session.title}
-                    referrerPolicy="no-referrer"
-                    className="absolute inset-0 h-full w-full object-cover opacity-20 filter blur-sm"
-                  />
-                  <div className="absolute inset-0 bg-slate-950/70" />
-                </>
-              )}
-
-              <div className="relative z-10 max-w-md space-y-4">
-                <div
-                  className={`mx-auto flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl border ${theme.badgeBg}`}
-                >
-                  <Play className={`h-7 w-7 sm:h-8 sm:w-8 fill-current ml-0.5 ${theme.accentText}`} />
-                </div>
-
-                <div className="space-y-1">
-                  <h3 className="text-base sm:text-lg font-bold text-white">
-                    Video Session Ready
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-400">
-                    This video lesson is configured and ready for playback.
-                  </p>
-                </div>
-
-                {isDirectUrl ? (
-                  <a
-                    href={videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`inline-flex min-h-[44px] items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold text-slate-950 transition-colors shadow cursor-pointer ${
-                      isNetworking
-                        ? "bg-cyan-400 hover:bg-cyan-300"
-                        : "bg-orange-500 hover:bg-orange-400"
-                    }`}
-                  >
-                    <span>Watch Video Stream</span>
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                ) : (
-                  <p className="text-xs text-slate-500 font-mono">
-                    No active video URL configured for this session yet.
-                  </p>
-                )}
-              </div>
-            </div>
+            <iframe
+              src={embedUrl || undefined}
+              title={session.title}
+              className="w-full h-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
           )}
         </div>
 

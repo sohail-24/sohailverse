@@ -107,50 +107,99 @@ export const PILLAR_CONFIG: Record<
 };
 
 /**
- * Extracts YouTube or Vimeo embeddable player URL from standard watch/share URLs
+ * Detects whether a URL is a JioCloud / JioAICloud webpage or share link
+ */
+export function isJioCloudUrl(url?: string | null): boolean {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim().toLowerCase();
+  return (
+    trimmed.includes("jiocloud.com") ||
+    trimmed.includes("jioaicloud.com") ||
+    trimmed.includes("jiovault.com") ||
+    trimmed.includes("jioaicloud") ||
+    trimmed.includes("jiocloud")
+  );
+}
+
+/**
+ * Checks if a video URL is a standard embeddable format (YouTube, Vimeo, or direct HTML5 video file)
+ */
+export function isStandardEmbed(url?: string | null): boolean {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (isJioCloudUrl(trimmed)) return false;
+  if (/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(trimmed)) return true;
+  if (trimmed.includes("youtube.com") || trimmed.includes("youtu.be") || trimmed.includes("youtube-nocookie.com")) return true;
+  if (trimmed.includes("vimeo.com")) return true;
+  if (trimmed.includes("loom.com")) return true;
+  return false;
+}
+
+/**
+ * Extracts YouTube or Vimeo embeddable player URL from standard watch/share URLs.
+ * NOTE: JioCloud URLs are webpage share links and are NEVER embeddable.
  */
 export function getVideoEmbedUrl(url?: string | null): string | null {
   if (!url || typeof url !== "string") return null;
   const trimmed = url.trim();
   if (!trimmed) return null;
 
-  // Direct MP4 / WebM video files
-  if (/\.(mp4|webm|ogg)$/i.test(trimmed)) {
+  // JioCloud URLs are external webpage links and must NOT be converted to embeds
+  if (isJioCloudUrl(trimmed)) {
+    return null;
+  }
+
+  // Direct MP4 / WebM / OGG / MOV / M4V video files (with optional query parameters)
+  if (/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(trimmed)) {
     return trimmed;
   }
 
-  // YouTube watch format: youtube.com/watch?v=XYZ
-  const ytWatchMatch = trimmed.match(
-    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/
+  // YouTube - Comprehensive matcher supporting all standard YouTube URL formats:
+  // - youtube.com/watch?v=XYZ
+  // - youtube.com/watch?feature=shared&v=XYZ
+  // - youtu.be/XYZ
+  // - youtube.com/embed/XYZ
+  // - youtube-nocookie.com/embed/XYZ
+  // - m.youtube.com/watch?v=XYZ
+  // - youtube.com/shorts/XYZ
+  // - youtube.com/live/XYZ
+  // - youtube.com/v/XYZ
+  const ytMatch = trimmed.match(
+    /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|v\/|shorts\/|live\/))([a-zA-Z0-9_-]{11})/i
   );
-  if (ytWatchMatch && ytWatchMatch[1]) {
-    return `https://www.youtube-nocookie.com/embed/${ytWatchMatch[1]}`;
+  if (ytMatch && ytMatch[1]) {
+    return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&rel=0`;
   }
 
-  // YouTube short format: youtu.be/XYZ
-  const ytShortMatch = trimmed.match(
-    /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/
-  );
-  if (ytShortMatch && ytShortMatch[1]) {
-    return `https://www.youtube-nocookie.com/embed/${ytShortMatch[1]}`;
+  // YouTube embed URL already provided
+  if (trimmed.includes("youtube-nocookie.com/embed/") || trimmed.includes("youtube.com/embed/")) {
+    if (!trimmed.includes("autoplay=")) {
+      const sep = trimmed.includes("?") ? "&" : "?";
+      return `${trimmed}${sep}autoplay=1&rel=0`;
+    }
+    return trimmed;
   }
 
-  // YouTube embed format already: youtube.com/embed/XYZ
-  const ytEmbedMatch = trimmed.match(
-    /(?:https?:\/\/)?(?:www\.)?youtube(?:-nocookie)?\.com\/embed\/([a-zA-Z0-9_-]+)/
-  );
-  if (ytEmbedMatch && ytEmbedMatch[1]) {
-    return `https://www.youtube-nocookie.com/embed/${ytEmbedMatch[1]}`;
-  }
-
-  // Vimeo: vimeo.com/1234567
-  const vimeoMatch = trimmed.match(/(?:https?:\/\/)?(?:www\.)?vimeo\.com\/([0-9]+)/);
+  // Vimeo: vimeo.com/1234567 or player.vimeo.com/video/1234567
+  const vimeoMatch = trimmed.match(/(?:vimeo\.com\/(?:video\/)?)([0-9]+)/i);
   if (vimeoMatch && vimeoMatch[1]) {
-    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`;
   }
 
-  // Return url if it looks like a valid http link
-  if (/^https?:\/\//i.test(trimmed)) {
+  // Loom: loom.com/share/ID or loom.com/embed/ID
+  const loomMatch = trimmed.match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9_-]+)/i);
+  if (loomMatch && loomMatch[1]) {
+    return `https://www.loom.com/embed/${loomMatch[1]}?autoplay=1`;
+  }
+
+  // Google Drive: drive.google.com/file/d/ID/view
+  const driveMatch = trimmed.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i);
+  if (driveMatch && driveMatch[1]) {
+    return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+  }
+
+  // Return url if it looks like a valid http link and is NOT JioCloud
+  if (/^https?:\/\//i.test(trimmed) && !isJioCloudUrl(trimmed)) {
     return trimmed;
   }
 
@@ -248,13 +297,26 @@ export function parsePillarResource(raw: Partial<DevOpsProject>): PillarResource
     }
   }
 
-  // Fallback: If video_url wasn't in JSON, check if ppt_url or highlights is a video URL
+  // Fallback: If video_url wasn't in JSON, check if raw has video_url, or ppt_url or highlights is a video URL
   if (!video_url) {
-    if (raw.ppt_url && (raw.ppt_url.includes("youtube") || raw.ppt_url.includes("youtu.be") || raw.ppt_url.includes("vimeo") || raw.ppt_url.endsWith(".mp4"))) {
-      video_url = raw.ppt_url;
-    } else if (rawHighlights && (rawHighlights.includes("youtube.com") || rawHighlights.includes("youtu.be"))) {
-      const match = rawHighlights.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[^\s]+/);
+    if ((raw as any).video_url && typeof (raw as any).video_url === "string" && (raw as any).video_url.trim()) {
+      video_url = (raw as any).video_url.trim();
+    } else if ((raw as any).videoUrl && typeof (raw as any).videoUrl === "string" && (raw as any).videoUrl.trim()) {
+      video_url = (raw as any).videoUrl.trim();
+    } else if (raw.ppt_url && (isJioCloudUrl(raw.ppt_url) || raw.ppt_url.includes("youtube") || raw.ppt_url.includes("youtu.be") || raw.ppt_url.includes("vimeo") || /\.(mp4|webm|ogg|mov|m4v)/i.test(raw.ppt_url))) {
+      video_url = raw.ppt_url.trim();
+    } else if (rawHighlights && (isJioCloudUrl(rawHighlights) || rawHighlights.includes("youtube.com") || rawHighlights.includes("youtu.be"))) {
+      const match = rawHighlights.match(/https?:\/\/(?:www\.)?(?:[a-zA-Z0-9_-]+\.)*(?:jioaicloud\.com|jiocloud\.com|jiovault\.com|youtube\.com\/watch\?(?:.*&)?v=|youtu\.be\/|youtube\.com\/embed\/)[^\s"']+/i);
       if (match) video_url = match[0];
+    } else if (raw.ppt_url && /^https?:\/\//i.test(raw.ppt_url.trim()) && !raw.ppt_url.toLowerCase().includes(".pdf")) {
+      video_url = raw.ppt_url.trim();
+    }
+  }
+
+  // Curated pillar fallback for AWS so in-app player always starts cleanly if no video was attached
+  if (!video_url) {
+    if (pillar === "AWS") {
+      video_url = "https://www.youtube.com/watch?v=Ia-UEYYR44s";
     }
   }
 
