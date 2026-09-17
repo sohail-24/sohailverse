@@ -464,9 +464,19 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
           return sendJson(200, { authenticated: isValid });
         }
 
-        // 1b. Neon Master Notes PDF endpoint
-        if (pathname === "/api/notes/master-notes.pdf" && (method === "GET" || method === "HEAD")) {
+        // 1b. Master Notes PDF endpoint
+        if (
+          (pathname === "/api/notes/master-notes.pdf" ||
+            pathname === "/api/notes/Master-Notes.pdf" ||
+            pathname.toLowerCase() === "/api/notes/master-notes.pdf") &&
+          (method === "GET" || method === "HEAD")
+        ) {
+          const reqHost = req.headers.host || "127.0.0.1:3000";
           const response = await handleMasterNotesPdf({
+            request: new Request(`http://${reqHost}${req.url}`, {
+              method: req.method,
+              headers: req.headers as any,
+            }),
             env: { DATABASE_URL: devEnv.DATABASE_URL || process.env.DATABASE_URL },
           });
           const headers: Record<string, string> = { ...corsHeaders };

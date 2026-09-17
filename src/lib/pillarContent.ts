@@ -14,13 +14,38 @@ export interface ResourceLink {
 }
 
 /**
- * Normalizes PDF URL ensuring compatibility between standard Vite public-root URL
- * (/Master-Notes.pdf) and existing /public/ paths stored in CMS databases (/public/Master-Notes.pdf).
+ * Normalizes PDF URL ensuring compatibility between CMS database paths
+ * (e.g. "public/Master-Notes.pdf", "/Master-Notes.pdf") and the production
+ * PDF endpoint ("/api/notes/master-notes.pdf").
  */
 export function normalizePdfUrl(url?: string | null): string | undefined {
   if (!url) return undefined;
   const trimmed = url.trim();
   if (!trimmed) return undefined;
+
+  const lower = trimmed.toLowerCase();
+
+  // Canonicalize all variants of Master-Notes.pdf from CMS records to /api/notes/master-notes.pdf
+  if (
+    lower === "public/master-notes.pdf" ||
+    lower === "/public/master-notes.pdf" ||
+    lower === "master-notes.pdf" ||
+    lower === "/master-notes.pdf" ||
+    lower.endsWith("/master-notes.pdf") ||
+    lower === "/api/notes/master-notes.pdf"
+  ) {
+    return "/api/notes/master-notes.pdf";
+  }
+
+  // Handle generic public/ PDF paths
+  if (trimmed.startsWith("public/")) {
+    const filename = trimmed.slice(7);
+    if (filename.toLowerCase().endsWith(".pdf")) {
+      return `/api/notes/${filename.toLowerCase()}`;
+    }
+    return `/${filename}`;
+  }
+
   return trimmed;
 }
 
