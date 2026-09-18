@@ -352,14 +352,13 @@ export const FALLBACK_DATA: Record<string, any[]> = {
       description: "Production-grade e-commerce microservices platform with high availability, automated rollback, and real-time monitoring on AWS EKS.",
       image_url: "/dev-real-1779487.jpg",
       ppt_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
-      github_url: "https://github.com/sohail-24/django_ecommerce",
+      github_url: "",
       technologies: "Kubernetes, AWS EKS, Terraform, ArgoCD, Docker, PostgreSQL",
       highlights: JSON.stringify({
         video_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
         video_duration: "25:30",
         takeaways: "Multi-cluster GitOps deployment with zero-downtime rolling updates, ArgoCD sync waves, and automated cluster autoscaling.",
         links: [
-          { title: "Main Application Repo", url: "https://github.com/sohail-24/django_ecommerce", type: "github" },
           { title: "Kubeadm & Helm Manifests", url: "https://github.com/sohail-24/devops-ecommerce-kubeadm", type: "github" },
           { title: "Terraform EKS Platform", url: "https://github.com/sohail-24/terraform-eks-platform", type: "github" }
         ]

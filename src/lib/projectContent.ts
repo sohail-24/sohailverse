@@ -286,8 +286,8 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
       "/projects/temporary/sohail-shop-desktop.v2.jpg",
       "/projects/temporary/sohail-shop-mobile.v2.jpg",
     ],
-    git_url: "https://github.com/sohail-24/django_ecommerce",
-    website_url: "https://sohail-shop.sohailverse.com",
+    git_url: "",
+    website_url: "",
     implemented_features: [
       "Django 5 modular monolith architecture with Accounts, Products, Orders, and Payments modules",
       "Custom User Model and snapshot-based order lifecycle preserving historical transaction state",
@@ -348,7 +348,6 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
         id: "doc-shop-2",
         title: "Kubernetes Manifests & Helm Configuration README",
         type: "readme",
-        url: "https://github.com/sohail-24/django_ecommerce#readme",
         content: `# SohailShop Kubernetes & Production Operations Guide
 ## 1. Cluster Environments
 - **Environment 1 (Self-Managed)**: 1 Control Plane + Worker Nodes bootstrapped with kubeadm on EC2, Calico CNI, local-path storage provisioner.
@@ -394,26 +393,7 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
           "Zero-downtime rolling updates with automated canary analysis and instant rollback capability on error budget spikes.",
       },
     ],
-    links: [
-      {
-        id: "link-shop-1",
-        title: "GitHub Application Repository",
-        url: "https://github.com/sohail-24/django_ecommerce",
-        type: "github",
-      },
-      {
-        id: "link-shop-2",
-        title: "Live Production Platform",
-        url: "https://sohail-shop.sohailverse.com",
-        type: "demo",
-      },
-      {
-        id: "link-shop-3",
-        title: "Infrastructure Terraform Code",
-        url: "https://github.com/sohail-24/django_ecommerce",
-        type: "deploy",
-      },
-    ],
+    links: [],
     highlightsList: [
       "Production-grade Django 5 modular monolith with snapshot-based order lifecycle",
       "Dual Kubernetes deployments: Self-managed kubeadm on EC2 and production AWS EKS",
@@ -429,7 +409,7 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
       "/projects/temporary/sohail-studio-desktop.v2.jpg",
       "/projects/temporary/sohail-studio-mobile.v2.jpg",
     ],
-    git_url: "https://github.com/sohail-24",
+    git_url: "",
     website_url: "https://studio.sohailverse.com",
     video_url: undefined,
     pdf_url: undefined,
@@ -580,12 +560,6 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
     architecture: [],
     links: [
       {
-        id: "link-studio-gh",
-        title: "GitHub Workspace Repository",
-        url: "https://github.com/sohail-24",
-        type: "github",
-      },
-      {
         id: "link-studio-demo",
         title: "Live Studio Workspace",
         url: "https://studio.sohailverse.com",
@@ -632,7 +606,7 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
         image4: { url: "", enabled: false },
         image5: { url: "", enabled: false },
       },
-      gitRepository: { url: "https://github.com/sohail-24", enabled: true },
+      gitRepository: { url: "", enabled: false },
       website: { url: "https://studio.sohailverse.com", enabled: true },
       video: { url: "", enabled: false },
       pdf: { url: "", enabled: false },
@@ -712,53 +686,179 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
     },
   },
   wedding: {
+    tagline: "Cinematic, Mobile-First Digital Wedding Invitation",
     overview:
-      "A digital celebration experience crafted with bespoke typography, smooth fluid animations, and high-performance media delivery. Designed to share cherished memories with loved ones across the globe.",
+      "An interactive, cinematic, mobile-first digital wedding invitation designed as a complete celebration experience.\n\nBuilt as a polished React single-page application combining elegant visual storytelling, interactive moments, event information, RSVP actions, family credits, audio, and responsive mobile presentation.\n\nKey System Highlights:\n• Reusable Architecture: Designed as a reusable invitation architecture where wedding-specific facts can be replaced without changing the underlying presentation architecture.\n• Client-Side Static SPA: Pure client-side single-page application executing 100% in the user's browser with zero server-side rendering, zero Express backend, and zero database footprint.\n• Centralized Data Architecture: Event itineraries, countdown milestones, venue addresses, travel guides, and invitation copy are defined in a centralized, strongly typed TypeScript content module.\n• High-Performance Static Delivery: Production builds compile to static assets served by an unprivileged Dockerized Nginx Alpine container with gzip compression and immutable asset caching.\n• Nine-Act Journey: The experience is structured as an interactive emotional narrative spanning from the interactive curtain reveal opening ceremony to guestbook blessings and closing celebrations.",
     hero_image: "/projects/temporary/wedding-desktop.v2.jpg",
-    videos: [
-      {
-        id: "vid-wedding-1",
-        title: "Interactive Digital Experience Walkthrough",
-        name: "Session 01: Experience Walkthrough",
-        video_url: "https://www.youtube.com/watch?v=0k5G6FmE3s4",
-        thumbnail_url: "/projects/temporary/wedding-desktop.v2.jpg",
-        duration: "06:15",
-        description:
-          "Showcasing custom interactive animation choreography and adaptive asset compression.",
-      },
+    gallery_images: [
+      "/projects/temporary/wedding-desktop.v2.jpg",
+      "/projects/temporary/wedding-mobile.v2.jpg",
     ],
-    documents: [
-      {
-        id: "doc-wedding-1",
-        title: "Design System & Media Optimization Guide",
-        type: "pdf",
-        url: "/resume.pdf",
-        description:
-          "Media loading strategies, responsive picture formatting, and optical animation principles.",
-      },
-    ],
-    architecture: [
-      {
-        id: "arch-wedding-1",
-        title: "Edge CDN Media Delivery Architecture",
-        image_url: "/projects/temporary/wedding-desktop.v2.jpg",
-        caption:
-          "Global edge distribution network delivering compressed WebP/AVIF imagery instantly on mobile.",
-      },
-    ],
-    links: [
-      {
-        id: "link-wedding-1",
-        title: "Live Memory Gallery",
-        url: "https://memories.sohailverse.com",
-        type: "demo",
-      },
+    git_url: undefined,
+    website_url: undefined,
+    video_url: undefined,
+    pdf_url: undefined,
+    documentation_url: undefined,
+    core_philosophy:
+      "Designed as a reusable invitation architecture: wedding-specific facts can be replaced without changing the underlying presentation architecture.",
+    business_flow:
+      "01 — Curtain Reveal: Interactive invitation opening with theatrical curtain reveal and audio.\n02 — Hero Stage: Cinematic hero presentation with elegant typography and visual atmosphere.\n03 — Invitation Letter: Formal invitation presentation with customizable invitation content.\n04 — Couple Profile: Dedicated bride and groom presentation area using configurable content.\n05 — Date Reveal: Interactive date reveal experience with celebration animation.\n06 — Countdown: Real-time countdown toward the wedding ceremony.\n07 — Events & Venues: Wedding itinerary, venue information, imagery, addresses and map navigation.\n08 — RSVP: Simple attendance confirmation with direct contact options.\n09 — Family & Closing: Family compliments followed by an animated closing invitation experience.",
+    implemented_features: [
+      "01 — Curtain Reveal: Interactive invitation opening with theatrical curtain reveal and synchronized audio",
+      "02 — Hero Stage: Cinematic hero presentation with elegant typography and visual atmosphere",
+      "03 — Invitation Letter: Formal invitation presentation with customizable invitation content",
+      "04 — Couple Profile: Dedicated bride and groom presentation area using configurable content",
+      "05 — Date Reveal: Interactive date reveal experience with celebration animation",
+      "06 — Countdown: Real-time countdown toward the wedding ceremony",
+      "07 — Events & Venues: Multi-event itinerary, venue information, imagery, addresses, and map navigation",
+      "08 — RSVP: Simple attendance confirmation with direct contact options and local state management",
+      "09 — Family & Closing: Family compliments followed by an animated closing invitation experience",
+      "HTML5 Web Audio: Client-side ambient score integration with user-initiated playback activation",
+      "Calendar Export: Client-side calendar integration generating native .ics files and Google Calendar links",
+      "Reusable Architecture: Centralized typed data source enabling complete personalization without code alterations",
+      "Zero Backend Footprint: Pure client-side static single-page application served via Docker and Nginx Alpine",
     ],
     highlightsList: [
-      "Custom responsive photo gallery with progressive image loading",
-      "Audio-visual integration with smooth volume ducking",
-      "Flawless mobile touch gesture navigation",
+      "Nine-act interactive cinematic digital wedding invitation narrative",
+      "Client-only single-page application built with React 18, TypeScript, and Vite",
+      "Zero runtime backend dependencies and zero application database footprint",
+      "Centralized client-side data architecture driving all ceremony and guest content",
+      "HTML5 Web Audio system conforming to modern browser autoplay policies",
+      "Client-side calendar export (.ics files & Google Calendar URLs) with zero server overhead",
+      "Interactive RSVP state management with client-side validation and local persistence",
+      "Multi-stage Docker build packaging static distribution into lightweight Nginx Alpine container",
     ],
+    videos: [],
+    documents: [
+      {
+        id: "doc-wedding-arch",
+        title: "Wedding SPA Architecture & Technical Dossier",
+        type: "readme",
+        description:
+          "Complete technical architecture, runtime characteristics, and deployment model for the Wedding Invitation application.",
+        content: `# Wedding Invitation — Digital Experience Specification
+## Technical Architecture & Systems Specification
+
+### 1. Executive Summary
+The Wedding Invitation is an interactive, ceremony-grade digital invitation designed as a reusable nine-act celebration experience. Built with React 18, TypeScript, and Vite, the platform combines editorial typography, physics-based animation choreography, synchronized ambient audio, event itineraries, and interactive guest logistics.
+
+### 2. Architectural Principles
+- **Pure Client-Side Single Page Application (SPA):** The entire application executes in the user's browser. There is no server-side rendering (SSR), no Next.js framework, and no Node.js/Express application server.
+- **Zero Backend / No Database Footprint:** The application operates without an API backend or database (no PostgreSQL, no SQLite, no Drizzle, and no Prisma). All content is deterministically defined in structured TypeScript modules.
+- **Centralized Data Architecture:** Event schedules, venue maps, countdown milestones, accommodations, dress code palettes, and audio settings are centralized in strongly typed client modules.
+- **Reusable Invitation Architecture:** Designed as a reusable invitation architecture: wedding-specific facts can be replaced without changing the underlying presentation architecture.
+- **Static Edge Delivery:** Compiled static assets are served through a hardened Nginx Alpine container configured with gzip compression, HTTP/2, and immutable asset caching headers.
+
+### 3. Architecture Topology
+\`\`\`
+Browser
+   ↓
+Nginx
+   ↓
+React + Vite SPA
+   ↓
+Static Assets
+
+Content Pipeline:
+src/content/wedding.ts
+   ↓
+Typed Wedding Data
+   ↓
+React Components
+   ↓
+Interactive Invitation
+\`\`\`
+
+The invitation is a client-side static SPA. Wedding-specific content is centralized in a typed content source and consumed by the presentation components.
+
+### 4. Key Technical Subsystems
+- **Ambient Audio Controller:** Client-side HTML5 Web Audio integration with user-initiated playback activation to satisfy modern browser autoplay policies, seamless looping, and volume ducking during modal interactions.
+- **Physics & Motion Choreography:** Staggered text entrances, scroll-driven parallax depth, and Canvas Confetti physics simulations choreographed using Framer Motion.
+- **Calendar Integration:** Dynamic client-side generation of standard iCalendar (.ics) files and Google Calendar event URLs, enabling guests to add ceremonies directly to their devices without server involvement.
+- **Client-Side RSVP:** Interactive form handling guest attendance, party counts, dietary requirements, and personalized messages with local state validation.
+
+### 5. Production Deployment & Containerization
+\`\`\`dockerfile
+# Multi-Stage Production Build
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+\`\`\`
+`,
+      },
+      {
+        id: "doc-wedding-nine-acts",
+        title: "The Nine-Act Interactive Experience Specification",
+        type: "readme",
+        description:
+          "Detailed breakdown of the nine-act storytelling structure and user interaction flow.",
+        content: `# The Nine-Act Cinematic Journey
+## Interactive Storytelling & Experience Design
+
+The invitation experience is structured as a sequential nine-act interactive journey:
+
+### 01 — Curtain Reveal
+Interactive invitation opening with theatrical curtain reveal and audio. Guests initiate the celebration with tactile feedback and particle celebration effects.
+
+### 02 — Hero Stage
+Cinematic hero presentation with elegant typography and visual atmosphere, introducing the celebration in high-contrast editorial styling.
+
+### 03 — Invitation Letter
+Formal invitation presentation with customizable invitation content, welcoming guests with warm, personalized messaging.
+
+### 04 — Couple Profile
+Dedicated bride and groom presentation area using configurable content, highlighting relationship milestones and portraits.
+
+### 05 — Date Reveal
+Interactive date reveal experience with celebration animation, presenting the official wedding date and host city.
+
+### 06 — Countdown
+Real-time countdown toward the wedding ceremony, dynamically calculating remaining days, hours, minutes, and seconds.
+
+### 07 — Events & Venues
+Wedding itinerary, venue information, imagery, addresses, and interactive map navigation for all celebration ceremonies.
+
+### 08 — RSVP
+Simple attendance confirmation with direct contact options, party count selection, and local validation.
+
+### 09 — Family & Closing
+Family compliments followed by an animated closing invitation experience and celebratory blessing.
+`,
+      },
+    ],
+    architecture: [],
+    links: [],
+    projectDetail: {
+      images: {
+        image1: {
+          url: "/projects/temporary/wedding-desktop.v2.jpg",
+          enabled: true,
+        },
+        image2: {
+          url: "/projects/temporary/wedding-mobile.v2.jpg",
+          enabled: true,
+        },
+        image3: { url: "", enabled: false },
+        image4: { url: "", enabled: false },
+        image5: { url: "", enabled: false },
+      },
+      gitRepository: { url: "", enabled: false },
+      website: { url: "", enabled: false },
+      video: { url: "", enabled: false },
+      pdf: { url: "", enabled: false },
+      documentation: { url: "", content: "", enabled: true },
+      videoSessions: { enabled: false },
+      architecture: { enabled: false },
+    },
   },
   "new-chapter": {
     overview:
@@ -910,35 +1010,78 @@ export function parseProjectContentFromRecord(
         parsed.overview.includes("glassmorphic interfaces") ||
         parsed.overview.includes("ongoing cloud experiments"));
 
+    const isStaleWeddingOverview = fallbackKey === "wedding";
+    const isSohailShop = fallbackKey === "sohail-shop";
+    const isSohailStudio = fallbackKey === "sohail-studio";
+
     return {
       domain: parsed.domain === "project" || parsed.domain === "devops" ? parsed.domain : undefined,
       overview:
-        isStaleStudioOverview && fallback?.overview
+        (isStaleStudioOverview || isStaleWeddingOverview) && fallback?.overview
           ? fallback.overview
           : parsed.overview !== undefined
           ? parsed.overview
           : fallback?.overview || "",
-      tagline: parsed.tagline !== undefined ? parsed.tagline : fallback?.tagline,
+      tagline:
+        isStaleWeddingOverview && fallback?.tagline
+          ? fallback.tagline
+          : parsed.tagline !== undefined
+          ? parsed.tagline
+          : fallback?.tagline,
       hero_image: typeof parsed.hero_image === "string" && parsed.hero_image.trim()
         ? parsed.hero_image.trim()
         : (gallery_images[0] || fallback?.hero_image || ""),
       gallery_images,
-      git_url: parsed.git_url !== undefined ? (parsed.git_url && parsed.git_url.trim() ? parsed.git_url.trim() : undefined) : fallback?.git_url,
-      website_url: parsed.website_url !== undefined ? (parsed.website_url && parsed.website_url.trim() ? parsed.website_url.trim() : undefined) : fallback?.website_url,
-      video_url: parsed.video_url !== undefined ? (parsed.video_url && parsed.video_url.trim() ? parsed.video_url.trim() : undefined) : fallback?.video_url,
-      pdf_url: parsed.pdf_url !== undefined ? (parsed.pdf_url && parsed.pdf_url.trim() ? parsed.pdf_url.trim() : undefined) : fallback?.pdf_url,
+      git_url:
+        isStaleWeddingOverview || isSohailShop || isSohailStudio
+          ? undefined
+          : parsed.git_url !== undefined
+          ? parsed.git_url && parsed.git_url.trim()
+            ? parsed.git_url.trim()
+            : undefined
+          : fallback?.git_url,
+      website_url:
+        isStaleWeddingOverview || isSohailShop
+          ? undefined
+          : parsed.website_url !== undefined
+          ? parsed.website_url && parsed.website_url.trim()
+            ? parsed.website_url.trim()
+            : undefined
+          : fallback?.website_url,
+      video_url:
+        isStaleWeddingOverview
+          ? undefined
+          : parsed.video_url !== undefined
+          ? parsed.video_url && parsed.video_url.trim()
+            ? parsed.video_url.trim()
+            : undefined
+          : fallback?.video_url,
+      pdf_url:
+        isStaleWeddingOverview
+          ? undefined
+          : parsed.pdf_url !== undefined
+          ? parsed.pdf_url && parsed.pdf_url.trim()
+            ? parsed.pdf_url.trim()
+            : undefined
+          : fallback?.pdf_url,
       documentation_url:
-        parsed.documentation_url !== undefined ? (parsed.documentation_url && parsed.documentation_url.trim() ? parsed.documentation_url.trim() : undefined) : fallback?.documentation_url,
+        isStaleWeddingOverview
+          ? undefined
+          : parsed.documentation_url !== undefined
+          ? parsed.documentation_url && parsed.documentation_url.trim()
+            ? parsed.documentation_url.trim()
+            : undefined
+          : fallback?.documentation_url,
       documentation_content:
         parsed.documentation_content !== undefined ? parsed.documentation_content : fallback?.documentation_content,
       implemented_features:
-        isStaleStudioOverview && fallback?.implemented_features
+        (isStaleStudioOverview || isStaleWeddingOverview) && fallback?.implemented_features
           ? fallback.implemented_features
           : Array.isArray(parsed.implemented_features) && parsed.implemented_features.length > 0
           ? parsed.implemented_features.filter((f: any) => typeof f === "string" && f.trim().length > 0)
           : fallback?.implemented_features || parsed.highlightsList || fallback?.highlightsList || [],
       business_flow:
-        isStaleStudioOverview && fallback?.business_flow
+        (isStaleStudioOverview || isStaleWeddingOverview) && fallback?.business_flow
           ? fallback.business_flow
           : parsed.business_flow !== undefined
           ? parsed.business_flow
@@ -950,7 +1093,7 @@ export function parseProjectContentFromRecord(
           ? parsed.order_data_preservation
           : fallback?.order_data_preservation,
       core_philosophy:
-        isStaleStudioOverview && fallback?.core_philosophy
+        (isStaleStudioOverview || isStaleWeddingOverview) && fallback?.core_philosophy
           ? fallback.core_philosophy
           : parsed.core_philosophy !== undefined
           ? parsed.core_philosophy
@@ -971,19 +1114,55 @@ export function parseProjectContentFromRecord(
         isStaleStudioOverview && fallback?.persistence_architecture
           ? fallback.persistence_architecture
           : parsed.persistence_architecture || fallback?.persistence_architecture,
-      videos: Array.isArray(parsed.videos) ? parsed.videos : fallback?.videos || [],
-      documents: Array.isArray(parsed.documents) ? parsed.documents : fallback?.documents || [],
-      architecture: Array.isArray(parsed.architecture)
-        ? parsed.architecture
-        : fallback?.architecture || [],
-      links: Array.isArray(parsed.links) ? parsed.links : fallback?.links || [],
+      videos:
+        isStaleWeddingOverview
+          ? (fallback?.videos || [])
+          : Array.isArray(parsed.videos)
+          ? parsed.videos
+          : fallback?.videos || [],
+      documents:
+        isStaleWeddingOverview
+          ? (fallback?.documents || [])
+          : Array.isArray(parsed.documents)
+          ? parsed.documents
+          : fallback?.documents || [],
+      architecture:
+        isStaleWeddingOverview
+          ? (fallback?.architecture || [])
+          : Array.isArray(parsed.architecture)
+          ? parsed.architecture
+          : fallback?.architecture || [],
+      links:
+        isStaleWeddingOverview || isSohailShop
+          ? []
+          : isSohailStudio
+          ? (Array.isArray(parsed.links) ? parsed.links : fallback?.links || []).filter(
+              (l) => l.type !== "github" && !l.url.includes("github.com") && !l.title.toLowerCase().includes("git")
+            )
+          : Array.isArray(parsed.links)
+          ? parsed.links
+          : fallback?.links || [],
       highlightsList:
-        isStaleStudioOverview && fallback?.highlightsList
+        (isStaleStudioOverview || isStaleWeddingOverview) && fallback?.highlightsList
           ? fallback.highlightsList
           : Array.isArray(parsed.highlightsList) && parsed.highlightsList.length > 0
           ? parsed.highlightsList
           : fallback?.highlightsList || [],
-      projectDetail,
+      projectDetail:
+        isStaleWeddingOverview && fallback?.projectDetail
+          ? JSON.parse(JSON.stringify(fallback.projectDetail))
+          : isSohailShop && projectDetail
+          ? {
+              ...projectDetail,
+              gitRepository: { url: "", enabled: false },
+              website: { url: "", enabled: false },
+            }
+          : isSohailStudio && projectDetail
+          ? {
+              ...projectDetail,
+              gitRepository: { url: "", enabled: false },
+            }
+          : projectDetail,
     };
   }
 
@@ -1074,15 +1253,23 @@ export function buildFullProjectData(
 
   const canonicalId =
     staticProj?.id || (dbRecord ? String(dbRecord.id) : "");
-  const title = dbRecord?.title || (canonicalId === "fresh-flow" ? "AM Fruits" : (staticProj?.name || "Project"));
+  const title =
+    canonicalId === "wedding"
+      ? "Wedding Invitation"
+      : (dbRecord?.title || (canonicalId === "fresh-flow" ? "AM Fruits" : (staticProj?.name || "Project")));
   const category =
-    canonicalId === "sohail-studio"
+    canonicalId === "wedding"
+      ? "Wedding / Digital Experience / React SPA"
+      : canonicalId === "sohail-studio"
       ? "DevOps AI Control Plane"
       : canonicalId === "fresh-flow"
       ? "B2B Wholesale Commerce"
       : dbRecord?.category || staticProj?.category || "Cloud Architecture";
   const description =
-    canonicalId === "sohail-studio"
+    canonicalId === "wedding"
+      ? (staticProj?.description ||
+        "An interactive, cinematic, mobile-first digital wedding invitation designed as a complete celebration experience.")
+      : canonicalId === "sohail-studio"
       ? (staticProj?.description ||
         "A local-first DevOps AI Control Plane and engineering workspace designed to turn repository evidence into controlled engineering decisions across three isolated execution planes.")
       : canonicalId === "fresh-flow"
@@ -1090,7 +1277,9 @@ export function buildFullProjectData(
         "AM Fruits is a B2B wholesale fruit and grocery platform designed to make wholesale buying easier for business customers while giving the supplier one system to manage the business.")
       : dbRecord?.description || staticProj?.description || "";
   const rawStatus =
-    canonicalId === "fresh-flow" || dbRecord?.id === 5
+    canonicalId === "wedding"
+      ? "Ready"
+      : canonicalId === "fresh-flow" || dbRecord?.id === 5
       ? "Live"
       : dbRecord?.status || staticProj?.statusLabel;
   const status = normalizeProjectStatus(rawStatus);
@@ -1133,6 +1322,18 @@ export function buildFullProjectData(
       "Evidence-Bound Dockerize",
       "Deterministic Validation",
     ];
+  } else if (canonicalId === "wedding") {
+    techList = staticProj?.technologies || [
+      "React 18.3.1",
+      "TypeScript ~5.7.2",
+      "Vite 6.2.0",
+      "Tailwind CSS 4.0.0",
+      "Framer Motion 12.4.7",
+      "Lucide React",
+      "Canvas Confetti",
+      "Docker",
+      "Nginx Alpine",
+    ];
   } else if (dbRecord?.technologies) {
     techList = dbRecord.technologies
       .split(",")
@@ -1169,7 +1370,9 @@ export function buildFullProjectData(
   }
   const tagline =
     content.tagline ||
-    (canonicalId === "fresh-flow"
+    (canonicalId === "wedding"
+      ? "Cinematic, Mobile-First Digital Wedding Invitation"
+      : canonicalId === "fresh-flow"
       ? "B2B Wholesale Produce & Business Management Platform"
       : canonicalId === "sohail-studio"
       ? (staticProj?.tagline || "Local-First DevOps AI Control Plane & Engineering Workspace")
@@ -1211,6 +1414,39 @@ export function buildFullProjectData(
         type: "live",
       });
     }
+  } else if (canonicalId === "wedding") {
+    content.git_url = "";
+    content.website_url = "";
+    content.video_url = undefined;
+    content.pdf_url = undefined;
+    content.documentation_url = undefined;
+    if (content.projectDetail) {
+      content.projectDetail.gitRepository = { url: "", enabled: false };
+      content.projectDetail.website = { url: "", enabled: false };
+      content.projectDetail.video = { url: "", enabled: false };
+      content.projectDetail.pdf = { url: "", enabled: false };
+      content.projectDetail.videoSessions = { enabled: false };
+      content.projectDetail.architecture = { enabled: false };
+    }
+    content.links = [];
+    content.videos = [];
+    content.architecture = [];
+  } else if (canonicalId === "sohail-shop") {
+    content.git_url = "";
+    content.website_url = "";
+    if (content.projectDetail) {
+      content.projectDetail.gitRepository = { url: "", enabled: false };
+      content.projectDetail.website = { url: "", enabled: false };
+    }
+    content.links = [];
+  } else if (canonicalId === "sohail-studio") {
+    content.git_url = "";
+    if (content.projectDetail) {
+      content.projectDetail.gitRepository = { url: "", enabled: false };
+    }
+    content.links = content.links.filter(
+      (l) => l.type !== "github" && !l.url.includes("github.com") && !l.title.toLowerCase().includes("git")
+    );
   } else if (dbRecord?.github_url) {
     if (!content.git_url) content.git_url = dbRecord.github_url;
     if (content.projectDetail && !content.projectDetail.gitRepository.url) {
@@ -1242,12 +1478,14 @@ export function buildFullProjectData(
     content,
     isDatabaseBacked: Boolean(dbRecord),
     githubUrl:
-      canonicalId === "fresh-flow"
+      canonicalId === "fresh-flow" || canonicalId === "wedding" || canonicalId === "sohail-shop" || canonicalId === "sohail-studio"
         ? undefined
         : (content.git_url || dbRecord?.github_url || content.links.find((l) => l.type === "github")?.url),
     liveUrl:
       canonicalId === "fresh-flow"
         ? "https://amfruits.shop"
+        : canonicalId === "wedding" || canonicalId === "sohail-shop"
+        ? undefined
         : (content.website_url ||
           content.links.find((l) => l.type === "demo")?.url ||
           (staticProj?.link?.includes("http") ? staticProj.link : undefined)),

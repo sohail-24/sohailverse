@@ -105,6 +105,10 @@ function getTechBadgeIcon(name: string) {
   if (n.includes("cloudflare")) return <SiCloudflare className="text-orange-400" />;
   if (n.includes("razorpay")) return <CreditCard className="text-blue-400" />;
   if (n.includes("resend")) return <Mail className="text-white" />;
+  if (n.includes("framer") || n.includes("motion")) return <Sparkles className="text-amber-400" />;
+  if (n.includes("confetti")) return <Sparkles className="text-yellow-400" />;
+  if (n.includes("lucide")) return <Code2 className="text-cyan-400" />;
+  if (n.includes("npm")) return <Code2 className="text-red-400" />;
   return <Code2 className="text-cyan-400" />;
 }
 
@@ -300,9 +304,30 @@ export default function ProjectInformationPage() {
     project.title.toLowerCase().replace(/[^a-z0-9]/g, "").includes("amfruits") ||
     project.title.toLowerCase().includes("am fruit");
 
+  const isWedding =
+    project.id === "wedding" ||
+    project.id === "wedding-page" ||
+    project.title.toLowerCase().replace(/[^a-z0-9]/g, "").includes("wedding");
+
+  const isSohailShop =
+    project.id === "sohail-shop" ||
+    project.id === "1" ||
+    project.id === "4" ||
+    (typeof project.numericId !== "undefined" && (project.numericId === 1 || project.numericId === 4)) ||
+    project.title.toLowerCase().replace(/[^a-z0-9]/g, "").includes("sohailshop");
+
+  const isSohailStudio =
+    project.id === "sohail-studio" ||
+    project.id === "7" ||
+    (typeof project.numericId !== "undefined" && project.numericId === 7) ||
+    project.title.toLowerCase().replace(/[^a-z0-9]/g, "").includes("sohailstudio");
+
   // Optional project resources: Must have valid content AND enabled === true
   // For AM Fruits, the GitHub repository link is COMPLETELY removed per explicit directive.
-  const gitUrl = isAmFruits
+  // For Wedding Invitation, external URLs are not fabricated.
+  // For Sohail-Shop, external link ecosystem is completely removed.
+  // For Sohail-Studio, the GitHub repository link is completely removed.
+  const gitUrl = (isAmFruits || isWedding || isSohailShop || isSohailStudio)
     ? ""
     : (
         detail?.gitRepository?.enabled
@@ -310,33 +335,41 @@ export default function ProjectInformationPage() {
           : ""
       ).trim();
 
-  const websiteUrl = (
-    isAmFruits
-      ? "https://amfruits.shop"
-      : (
-          detail?.website?.enabled
-            ? (detail.website.url || content.website_url || project.liveUrl || "")
-            : ""
-        )
-  ).trim();
+  const websiteUrl = (isWedding || isSohailShop)
+    ? ""
+    : (
+        isAmFruits
+          ? "https://amfruits.shop"
+          : (
+              detail?.website?.enabled
+                ? (detail.website.url || content.website_url || project.liveUrl || "")
+                : ""
+            )
+      ).trim();
 
-  const videoUrl = (
-    detail?.video?.enabled
-      ? (detail.video.url || content.video_url || "")
-      : ""
-  ).trim();
+  const videoUrl = isWedding
+    ? ""
+    : (
+        detail?.video?.enabled
+          ? (detail.video.url || content.video_url || "")
+          : ""
+      ).trim();
 
-  const pdfUrl = (
-    detail?.pdf?.enabled
-      ? (detail.pdf.url || content.pdf_url || "")
-      : ""
-  ).trim();
+  const pdfUrl = isWedding
+    ? ""
+    : (
+        detail?.pdf?.enabled
+          ? (detail.pdf.url || content.pdf_url || "")
+          : ""
+      ).trim();
 
-  const docUrl = (
-    detail?.documentation?.enabled
-      ? (detail.documentation.url || content.documentation_url || "")
-      : ""
-  ).trim();
+  const docUrl = isWedding
+    ? ""
+    : (
+        detail?.documentation?.enabled
+          ? (detail.documentation.url || content.documentation_url || "")
+          : ""
+      ).trim();
 
   const docContent = (
     detail?.documentation?.enabled
@@ -345,11 +378,6 @@ export default function ProjectInformationPage() {
   ).trim();
 
   const hasAnyResource = Boolean(gitUrl || websiteUrl || videoUrl || pdfUrl || docUrl);
-
-  const isSohailShop =
-    project.id === "sohail-shop" ||
-    project.id === "1" ||
-    project.title.toLowerCase().replace(/[^a-z0-9]/g, "") === "sohailshop";
 
   // Video Sessions: Must be enabled AND have at least one valid video URL
   const isVideoSessionsVisible = Boolean(
@@ -380,6 +408,43 @@ export default function ProjectInformationPage() {
   );
   const hasPersistenceSection = Boolean(content.persistence_architecture);
 
+  // External links to render in Section 5 and check for sub-navigation
+  const visibleLinks = (() => {
+    if (isSohailShop) return [];
+    if (isAmFruits) {
+      const filtered = content.links
+        .filter(
+          (link) =>
+            link.type !== "github" &&
+            !link.title.toLowerCase().includes("git") &&
+            !link.url.toLowerCase().includes("github.com")
+        )
+        .map((link) =>
+          link.type === "demo" || link.type === "live"
+            ? { ...link, title: "Live App ↗", url: "https://amfruits.shop" }
+            : link
+        );
+      if (!filtered.some((l) => l.url === "https://amfruits.shop")) {
+        filtered.unshift({
+          id: "link-amfruits-live-ecosystem",
+          title: "Live App ↗",
+          url: "https://amfruits.shop",
+          type: "live",
+        });
+      }
+      return filtered;
+    }
+    if (isSohailStudio) {
+      return content.links.filter(
+        (link) =>
+          link.type !== "github" &&
+          !link.title.toLowerCase().includes("git") &&
+          !link.url.toLowerCase().includes("github.com")
+      );
+    }
+    return content.links;
+  })();
+
   const hasMultipleSections = Boolean(
     hasPlanesSection ||
     hasCapabilitiesSection ||
@@ -387,7 +452,7 @@ export default function ProjectInformationPage() {
     isVideoSessionsVisible ||
     isDocumentsSectionVisible ||
     isArchitectureVisible ||
-    content.links.length > 0
+    visibleLinks.length > 0
   );
 
   // Implemented features
@@ -507,13 +572,19 @@ export default function ProjectInformationPage() {
             )}
           </div>
 
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
-            {project.title}
+          <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+            {isWedding ? "Wedding Invitation" : project.title}
           </h1>
 
-          {project.tagline && (
-            <p className="text-base sm:text-lg font-light text-cyan-200/90 leading-relaxed max-w-3xl">
-              {project.tagline}
+          <p className="text-sm sm:text-base md:text-lg font-light text-cyan-200/90 leading-relaxed max-w-3xl">
+            {isWedding
+              ? "An interactive, cinematic, mobile-first digital wedding invitation designed as a complete celebration experience."
+              : project.tagline}
+          </p>
+
+          {isWedding && (
+            <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed max-w-3xl pt-1">
+              Built as a polished React single-page application combining elegant visual storytelling, interactive moments, event information, RSVP actions, family credits, audio, and responsive mobile presentation.
             </p>
           )}
         </section>
@@ -622,7 +693,7 @@ export default function ProjectInformationPage() {
               </button>
             )}
 
-            {content.links.length > 0 && (
+            {visibleLinks.length > 0 && (
               <button
                 onClick={() => scrollToSection("links")}
                 className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
@@ -721,7 +792,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Core Engineering Philosophy Callout Banner */}
-          {content.core_philosophy && (
+          {content.core_philosophy && !isWedding && (
             <div className="relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-blue-950/40 p-5 sm:p-6 backdrop-blur-md">
               <div className="flex items-start gap-4">
                 <div className="mt-1 h-10 w-10 shrink-0 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)]">
@@ -1002,7 +1073,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Project Overview */}
-          {(content.overview || project.description) && !isAmFruits && (
+          {(content.overview || project.description) && !isAmFruits && !isWedding && (
             <div className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-3">
               <h2 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-cyan-400" />
@@ -1320,6 +1391,284 @@ export default function ProjectInformationPage() {
             </div>
           )}
 
+          {/* =========================================================================
+              WEDDING INVITATION DEDICATED MOBILE-OPTIMIZED SHOWCASE
+              - Mobile Priority 4: Key Project Facts Area
+              - Mobile Priority 5: Core Experience / Nine Acts
+              - Mobile Priority 6: Technology Stack
+              - Mobile Priority 7: Architecture Summary & Reusability Message
+              - Mobile Priority 8: Documentation Quick Reference
+             ========================================================================= */}
+          {isWedding && (
+            <div className="space-y-6 sm:space-y-8">
+              {/* 1. Key Project Facts Area (Mobile Priority 4) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-cyan-400" />
+                    <h2 className="font-display text-base sm:text-lg font-bold text-white tracking-tight">
+                      Key Project Facts
+                    </h2>
+                  </div>
+                  <span className="text-[11px] font-mono text-cyan-400 font-medium">Verified System Specifications</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
+                  <div className="p-3 sm:p-3.5 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-1">
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-slate-400 font-medium block">
+                      Application
+                    </span>
+                    <span className="text-xs sm:text-sm font-semibold text-white font-mono block">
+                      React SPA
+                    </span>
+                  </div>
+
+                  <div className="p-3 sm:p-3.5 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-1">
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-slate-400 font-medium block">
+                      Architecture
+                    </span>
+                    <span className="text-xs sm:text-sm font-semibold text-cyan-300 font-mono block">
+                      Client-Side Static
+                    </span>
+                  </div>
+
+                  <div className="p-3 sm:p-3.5 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-1">
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-slate-400 font-medium block">
+                      Data
+                    </span>
+                    <span className="text-xs sm:text-sm font-semibold text-emerald-300 font-mono block">
+                      Centralized TypeScript
+                    </span>
+                  </div>
+
+                  <div className="p-3 sm:p-3.5 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-1">
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-slate-400 font-medium block">
+                      Build
+                    </span>
+                    <span className="text-xs sm:text-sm font-semibold text-purple-300 font-mono block">
+                      Vite
+                    </span>
+                  </div>
+
+                  <div className="p-3 sm:p-3.5 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-1">
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-slate-400 font-medium block">
+                      Production
+                    </span>
+                    <span className="text-xs sm:text-sm font-semibold text-sky-300 font-mono block">
+                      Docker + Nginx
+                    </span>
+                  </div>
+
+                  <div className="p-3 sm:p-3.5 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-sm space-y-1">
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-slate-400 font-medium block">
+                      Responsive
+                    </span>
+                    <span className="text-xs sm:text-sm font-semibold text-amber-300 font-mono block">
+                      Mobile-First
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Core Experience — Nine Acts (Mobile Priority 5) */}
+              <div className="space-y-3.5">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Workflow className="h-4 w-4 text-cyan-400" />
+                    <h2 className="font-display text-base sm:text-lg font-bold text-white tracking-tight">
+                      Core Experience — Nine Acts
+                    </h2>
+                  </div>
+                  <span className="text-[11px] font-mono text-cyan-400 font-medium">Sequential Narrative Design</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
+                  {[
+                    {
+                      act: "01",
+                      title: "Curtain Reveal",
+                      desc: "Interactive invitation opening with theatrical curtain reveal and audio.",
+                    },
+                    {
+                      act: "02",
+                      title: "Hero Stage",
+                      desc: "Cinematic hero presentation with elegant typography and visual atmosphere.",
+                    },
+                    {
+                      act: "03",
+                      title: "Invitation Letter",
+                      desc: "Formal invitation presentation with customizable invitation content.",
+                    },
+                    {
+                      act: "04",
+                      title: "Couple Profile",
+                      desc: "Dedicated bride and groom presentation area using configurable content.",
+                    },
+                    {
+                      act: "05",
+                      title: "Date Reveal",
+                      desc: "Interactive date reveal experience with celebration animation.",
+                    },
+                    {
+                      act: "06",
+                      title: "Countdown",
+                      desc: "Real-time countdown toward the wedding ceremony.",
+                    },
+                    {
+                      act: "07",
+                      title: "Events & Venues",
+                      desc: "Wedding itinerary, venue information, imagery, addresses and map navigation.",
+                    },
+                    {
+                      act: "08",
+                      title: "RSVP",
+                      desc: "Simple attendance confirmation with direct contact options.",
+                    },
+                    {
+                      act: "09",
+                      title: "Family & Closing",
+                      desc: "Family compliments followed by an animated closing invitation experience.",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.act}
+                      className="p-3.5 rounded-xl border border-white/5 bg-slate-900/50 hover:border-cyan-500/30 transition-all flex flex-col justify-between space-y-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="px-2 py-0.5 rounded-md bg-cyan-950/60 border border-cyan-500/30 text-[10px] font-mono text-cyan-300 font-bold">
+                          Act {item.act}
+                        </span>
+                        <span className="text-xs font-semibold text-white tracking-tight">
+                          {item.title}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300/90 font-light leading-relaxed">
+                        {item.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. Technology Stack (Mobile Priority 6) */}
+              <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-cyan-400" />
+                    <h2 className="font-display text-sm sm:text-base font-bold text-white tracking-tight">
+                      Technology Stack
+                    </h2>
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-400">Lightweight Static Stack</span>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-0.5">
+                  {[
+                    "React",
+                    "TypeScript",
+                    "Vite",
+                    "Tailwind CSS",
+                    "Motion / Framer Motion",
+                    "Lucide",
+                    "Canvas Confetti",
+                    "Docker",
+                    "Nginx",
+                    "npm",
+                  ].map((tech) => (
+                    <span
+                      key={tech}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/10 bg-slate-800/80 text-xs font-mono text-slate-200 hover:border-cyan-500/40 transition-colors"
+                    >
+                      {getTechBadgeIcon(tech)}
+                      <span>{tech}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4. Architecture Summary & Reusability Message (Mobile Priority 7) */}
+              <div className="p-4 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-4">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Server className="h-4 w-4 text-cyan-400" />
+                    <h2 className="font-display text-sm sm:text-base font-bold text-white tracking-tight">
+                      Architecture Summary
+                    </h2>
+                  </div>
+                  <span className="text-[11px] font-mono text-emerald-400">Pure Client-Side Static SPA</span>
+                </div>
+
+                {/* Delivery & Pipeline Diagrams */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  {/* Delivery Flow */}
+                  <div className="p-3.5 rounded-xl border border-white/5 bg-slate-900/60 space-y-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold block">
+                      Delivery Flow
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono text-slate-200">
+                      <span className="px-2 py-0.5 rounded bg-slate-800 border border-white/10">Browser</span>
+                      <span className="text-cyan-400">→</span>
+                      <span className="px-2 py-0.5 rounded bg-teal-950/40 border border-teal-500/30 text-teal-300">Nginx</span>
+                      <span className="text-cyan-400">→</span>
+                      <span className="px-2 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/30 text-cyan-300">React + Vite SPA</span>
+                      <span className="text-cyan-400">→</span>
+                      <span className="px-2 py-0.5 rounded bg-blue-950/40 border border-blue-500/30 text-blue-300">Static Assets</span>
+                    </div>
+                  </div>
+
+                  {/* Content Pipeline */}
+                  <div className="p-3.5 rounded-xl border border-white/5 bg-slate-900/60 space-y-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold block">
+                      Content Pipeline
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono text-slate-200">
+                      <span className="px-2 py-0.5 rounded bg-slate-800 border border-white/10">src/content/wedding.ts</span>
+                      <span className="text-cyan-400">→</span>
+                      <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">Typed Wedding Data</span>
+                      <span className="text-cyan-400">→</span>
+                      <span className="px-2 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/30 text-cyan-300">React Components</span>
+                      <span className="text-cyan-400">→</span>
+                      <span className="px-2 py-0.5 rounded bg-amber-950/40 border border-amber-500/30 text-amber-300">Interactive Invitation</span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
+                  The invitation is a client-side static SPA. Wedding-specific content is centralized in a typed content source and consumed by the presentation components.
+                </p>
+
+                {/* Reusability Callout */}
+                <div className="p-3.5 rounded-xl border border-cyan-500/30 bg-cyan-950/20 flex items-start gap-3 text-xs sm:text-sm text-cyan-200 leading-relaxed">
+                  <CheckCircle2 className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <p>
+                    <strong className="text-white font-semibold">Reusable Invitation Architecture:</strong> Designed as a reusable invitation architecture: wedding-specific facts can be replaced without changing the underlying presentation architecture.
+                  </p>
+                </div>
+              </div>
+
+              {/* 5. Documentation Quick Reference (Mobile Priority 8) */}
+              <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <h3 className="font-display text-sm font-bold text-white flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-cyan-400" />
+                    <span>Technical Architecture Dossier & Nine Acts Runbook</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 font-light">
+                    Read the complete engineering runbook, container topology, and interaction design specifications.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => scrollToSection("docs")}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-medium transition-colors shrink-0"
+                >
+                  <span>View Documentation</span>
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Project Resources (Optional) */}
           {hasAnyResource && (
             <div className="p-5 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-3">
@@ -1388,7 +1737,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Implemented Features */}
-          {!isAmFruits && implementedFeatures.length > 0 && (
+          {!isAmFruits && !isWedding && implementedFeatures.length > 0 && (
             <div className="space-y-4">
               <h3 className="font-display text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-emerald-400" />
@@ -1409,7 +1758,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Important Business Flow */}
-          {!isAmFruits && content.business_flow && content.business_flow.trim() && (
+          {!isAmFruits && !isWedding && content.business_flow && content.business_flow.trim() && (
             <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
               <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <Layers className="h-4 w-4 text-cyan-400" />
@@ -1422,7 +1771,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Payment System & Security */}
-          {!isSohailShop && !isAmFruits && content.payment_security && content.payment_security.trim() && (
+          {!isSohailShop && !isAmFruits && !isWedding && content.payment_security && content.payment_security.trim() && (
             <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
               <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
@@ -1435,7 +1784,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Order Data / Historical Records */}
-          {!isAmFruits && content.order_data_preservation && content.order_data_preservation.trim() && (
+          {!isAmFruits && !isWedding && content.order_data_preservation && content.order_data_preservation.trim() && (
             <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
               <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <History className="h-4 w-4 text-cyan-400" />
@@ -1448,35 +1797,37 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Technologies Arsenal */}
-          <div className="p-5 rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm space-y-3">
-            <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <Layers className="h-4 w-4 text-cyan-400" />
-              <span>Technology Stack</span>
-            </h3>
+          {!isWedding && (
+            <div className="p-5 rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm space-y-3">
+              <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <Layers className="h-4 w-4 text-cyan-400" />
+                <span>Technology Stack</span>
+              </h3>
 
-            <div className="flex flex-wrap gap-2 pt-1">
-              {project.technologies.map((tech, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/10 bg-slate-800/80 text-xs font-mono text-slate-200 hover:border-cyan-500/40 transition-colors"
-                >
-                  {getTechBadgeIcon(tech)}
-                  <span>{tech}</span>
-                </span>
-              ))}
-            </div>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {project.technologies.map((tech, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/10 bg-slate-800/80 text-xs font-mono text-slate-200 hover:border-cyan-500/40 transition-colors"
+                  >
+                    {getTechBadgeIcon(tech)}
+                    <span>{tech}</span>
+                  </span>
+                ))}
+              </div>
 
-            <div className="pt-3 border-t border-white/5 grid grid-cols-2 gap-4 text-xs font-mono text-slate-400">
-              <div className="flex justify-between">
-                <span>Category:</span>
-                <span className="text-slate-200 font-medium">{project.category}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Status:</span>
-                <span className="text-slate-200 font-medium">{project.status}</span>
+              <div className="pt-3 border-t border-white/5 grid grid-cols-2 gap-4 text-xs font-mono text-slate-400">
+                <div className="flex justify-between">
+                  <span>Category:</span>
+                  <span className="text-slate-200 font-medium">{project.category}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Status:</span>
+                  <span className="text-slate-200 font-medium">{project.status}</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </section>
 
         {/* =========================================================================
@@ -2083,6 +2434,8 @@ export default function ProjectInformationPage() {
             SECTION 5: PROJECT LINKS & REPOSITORIES
            ========================================================================= */}
         {(() => {
+          if (isSohailShop) return null;
+
           const linksToRender = isAmFruits
             ? content.links
                 .filter(

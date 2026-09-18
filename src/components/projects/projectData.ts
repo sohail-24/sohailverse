@@ -99,7 +99,10 @@ export function findDbRecordForProject(
   }
 
   if (strId === "wedding" || strId === "wedding-page") {
-    return dbProjects.find((p) => normalizeProjectIdentity(p.title) === "weddingpage");
+    return dbProjects.find((p) => {
+      const id = normalizeProjectIdentity(p.title);
+      return id === "weddingpage" || id.includes("wedding") || id === "weddinginvitation";
+    });
   }
 
   if (strId === "new-chapter") {
@@ -142,14 +145,28 @@ export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedP
       image: dbRecord?.image_url || proj.image,
     });
 
-    // Database fields take strict precedence over static defaults
-    const title = dbRecord?.title || (proj.id === "fresh-flow" ? "AM Fruits" : proj.name);
-    const category = dbRecord?.category || (proj.id === "fresh-flow" ? "B2B Wholesale" : (proj.category || "Cloud & AI Initiative"));
-    const description = dbRecord?.description || proj.description;
+    // Database fields take strict precedence over static defaults, except for projects with specialized static canonical identities
+    const title =
+      proj.id === "wedding"
+        ? proj.name
+        : dbRecord?.title || (proj.id === "fresh-flow" ? "AM Fruits" : proj.name);
+    const category =
+      proj.id === "wedding"
+        ? (proj.category || "Wedding / Digital Experience / React SPA")
+        : dbRecord?.category || (proj.id === "fresh-flow" ? "B2B Wholesale" : (proj.category || "Cloud & AI Initiative"));
+    const description =
+      proj.id === "wedding"
+        ? proj.description
+        : dbRecord?.description || proj.description;
     const dbTech = dbRecord?.technologies ? normalizeTechnologies(dbRecord.technologies) : null;
-    const technologies = dbTech && dbTech.length > 0 ? dbTech : (proj.technologies || []);
+    const technologies =
+      proj.id === "wedding"
+        ? (proj.technologies || [])
+        : dbTech && dbTech.length > 0 ? dbTech : (proj.technologies || []);
     const status =
-      proj.id === "fresh-flow" || dbRecord?.id === 5
+      proj.id === "wedding"
+        ? "Ready"
+        : proj.id === "fresh-flow" || dbRecord?.id === 5
         ? "Live"
         : formatProjectStatus(dbRecord?.status || proj.statusLabel);
 
@@ -161,8 +178,8 @@ export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedP
       technologies,
       imageUrl: images.imageDesktop,
       fallbackImageUrl: undefined,
-      githubUrl: dbRecord?.github_url || proj.githubUrl,
-      liveUrl: proj.liveUrl,
+      githubUrl: (proj.id === "wedding" || proj.id === "sohail-shop" || proj.id === "sohail-studio") ? undefined : (dbRecord?.github_url || proj.githubUrl),
+      liveUrl: (proj.id === "wedding" || proj.id === "sohail-shop") ? undefined : proj.liveUrl,
       internalUrl: `/projects/${proj.id}`,
       rating: dbRecord?.rating ? Number(dbRecord.rating) : undefined,
       status,

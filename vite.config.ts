@@ -225,14 +225,13 @@ const mockStore = {
       description: "I designed and built a production-grade Django e-commerce backend from scratch and then deployed it using DevOps practices across two Kubernetes environments: a self-managed kubeadm cluster on EC2 and a production-ready AWS EKS setup.",
       image_url: "/projects/temporary/sohail-shop-desktop.v2.jpg",
       ppt_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
-      github_url: "https://github.com/sohail-24/django_ecommerce",
+      github_url: "",
       technologies: "Django, Python, PostgreSQL, Docker, Nginx, Gunicorn, Redis, Kubernetes, kubeadm, Calico, Helm, GitHub Actions, ArgoCD, Terraform, AWS EKS, AWS S3, ALB Ingress, IAM / IRSA",
       highlights: JSON.stringify({
         video_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
         video_duration: "25:30",
         takeaways: "One push → automated build → infrastructure update → GitOps synchronization → Kubernetes deployment across kubeadm and AWS EKS.",
         links: [
-          { title: "Main Application Repo", url: "https://github.com/sohail-24/django_ecommerce", type: "github" },
           { title: "Kubeadm & Helm Manifests", url: "https://github.com/sohail-24/devops-ecommerce-kubeadm", type: "github" },
           { title: "Terraform EKS Platform", url: "https://github.com/sohail-24/terraform-eks-platform", type: "github" }
         ]
