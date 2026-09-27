@@ -317,9 +317,14 @@ export function parseCookies(cookieHeader: string | null): Record<string, string
 }
 
 /**
- * Extracts the admin session token from a Request.
+ * Extracts the admin session token from a Request (Cookie or Authorization Bearer header).
  */
 export function getSessionTokenFromRequest(request: Request): string | null {
+  const authHeader = request.headers.get("Authorization") || request.headers.get("authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const bearer = authHeader.slice(7).trim();
+    if (bearer) return bearer;
+  }
   const cookieHeader = request.headers.get("Cookie") || request.headers.get("cookie");
   const cookies = parseCookies(cookieHeader);
   return cookies[SESSION_COOKIE_NAME] || null;

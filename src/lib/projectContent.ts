@@ -1137,7 +1137,7 @@ export function parseProjectContentFromRecord(
           ? []
           : isSohailStudio
           ? (Array.isArray(parsed.links) ? parsed.links : fallback?.links || []).filter(
-              (l) => l.type !== "github" && !l.url.includes("github.com") && !l.title.toLowerCase().includes("git")
+              (l: any) => l.type !== "github" && !l.url?.includes("github.com") && !l.title?.toLowerCase().includes("git")
             )
           : Array.isArray(parsed.links)
           ? parsed.links
@@ -1557,8 +1557,8 @@ export async function fetchProjectDetailsById(
       { forceRefresh: options?.forceRefresh }
     );
   } catch (e) {
-    console.error("[ProjectContent] Failed to fetch authoritative /api/devops project data:", e);
-    throw e;
+    console.warn("[ProjectContent] /api/devops read failed, using fallback:", e);
+    dbProjects = [];
   }
 
   const freshData = buildFullProjectData(strId, dbProjects);

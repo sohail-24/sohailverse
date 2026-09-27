@@ -5,6 +5,7 @@ import {
   real,
   timestamp,
   boolean,
+  customType,
 } from "drizzle-orm/pg-core";
 
 import {
@@ -141,6 +142,29 @@ export const devopsProjects = pgTable("devops_projects", {
 export type DevOpsProject = InferSelectModel<typeof devopsProjects>;
 export type NewDevOpsProject = InferInsertModel<typeof devopsProjects>;
 
+// 8. PROJECT MEDIA (Persistent binary device uploads in Neon PostgreSQL)
+export const projectMedia = pgTable("project_media", {
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+  projectId: integer("project_id"),
+  filename: text("filename").notNull(),
+  mimeType: text("mime_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  fileData: customType<{ data: Uint8Array; driverData: Uint8Array | string }>({
+    dataType() {
+      return "bytea";
+    },
+  })("file_data").notNull(),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "string",
+  })
+    .notNull()
+    .defaultNow(),
+});
+
+export type ProjectMedia = InferSelectModel<typeof projectMedia>;
+export type NewProjectMedia = InferInsertModel<typeof projectMedia>;
+
 /**
  * Application-level aliases.
  *
@@ -155,3 +179,4 @@ export const destinations = atlasPosts;
 export const projects = devopsProjects;
 export const academyTopics = academyPosts;
 export const timelineEvents = timelinePosts;
+export const media = projectMedia;

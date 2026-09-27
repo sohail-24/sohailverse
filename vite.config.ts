@@ -361,6 +361,15 @@ const mockStore = {
       created_at: "2023-01-01",
     },
   ],
+  project_media: [] as Array<{
+    id: number;
+    project_id: number | null;
+    filename: string;
+    mime_type: string;
+    file_size: number;
+    file_data: string; // base64
+    created_at: string;
+  }>,
 };
 
 const apiMiddleware = async (req: any, res: any, next: any) => {
@@ -368,13 +377,44 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
     return next();
   }
 
-  const origin = req.headers.origin || "*";
+  const rawOrigin = req.headers.origin;
+  const referer = req.headers.referer;
+  let refererOrigin = "";
+  if (referer) {
+    try {
+      refererOrigin = new URL(referer).origin;
+    } catch {
+      refererOrigin = "";
+    }
+  }
+
+  let allowOrigin = "*";
+  let allowCredentials = false;
+
+  if (rawOrigin && rawOrigin !== "null") {
+    allowOrigin = rawOrigin;
+    allowCredentials = true;
+  } else if (refererOrigin && refererOrigin !== "null") {
+    allowOrigin = refererOrigin;
+    allowCredentials = true;
+  } else if (req.headers.host) {
+    const proto = req.headers["x-forwarded-proto"] || "https";
+    allowOrigin = `${proto}://${req.headers.host}`;
+    allowCredentials = true;
+  }
+
   const corsHeaders: Record<string, string> = {
-    "Access-Control-Allow-Origin": origin,
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept, Cookie, X-Requested-With",
-    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD",
+    "Access-Control-Allow-Headers":
+      "Content-Type, Authorization, Accept, Cookie, X-Requested-With, Range, Origin",
+    "Access-Control-Expose-Headers": "Content-Length, Content-Range, Content-Type, Accept-Ranges",
+    "Vary": "Origin, Accept-Encoding",
   };
+
+  if (allowCredentials && allowOrigin !== "*") {
+    corsHeaders["Access-Control-Allow-Credentials"] = "true";
+  }
 
   if (req.method?.toUpperCase() === "OPTIONS") {
     res.writeHead(204, corsHeaders);
@@ -489,6 +529,415 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
           const arrayBuffer = await response.arrayBuffer();
           res.writeHead(response.status, headers);
           return res.end(Buffer.from(arrayBuffer));
+        }
+
+        // 1c. Project Media endpoints (Persistent binary device uploads in Neon PostgreSQL)
+        const projectMediaMatch = pathname.match(/^\/api\/project-media(?:\/([^/]+))?$/);
+        if (projectMediaMatch) {
+          const rawMediaId = projectMediaMatch[1];
+          const dbUrl = devEnv.DATABASE_URL;
+          let sql: ReturnType<typeof neon> | null = null;
+          if (dbUrl) {
+            try {
+              sql = neon(dbUrl);
+            } catch {
+              sql = null;
+            }
+          }
+
+          const querySql = sql
+            ? (strings: TemplateStringsArray, ...values: any[]): Promise<any[]> =>
+                sql!(strings, ...values) as Promise<any[]>
+            : null;
+
+          // Helper to check admin session
+          const checkAdmin = async (): Promise<boolean> => {
+            const cookies = parseCookies(req.headers.cookie || null);
+            const authHeader = req.headers.authorization;
+            const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+            const token = cookies[SESSION_COOKIE_NAME] || bearerToken;
+            if (!token) return false;
+            return verifySessionToken(token, devEnv.SESSION_SECRET);
+          };
+
+          // GET/HEAD /api/project-media/:id or GET /api/project-media
+          if (method === "GET" || method === "HEAD") {
+            if (rawMediaId !== undefined) {
+              const mediaId = parseInt(rawMediaId, 10);
+              if (isNaN(mediaId) || mediaId <= 0) {
+                return sendJson(400, { error: "Invalid media ID. ID must be a positive integer." });
+              }
+
+              const wantMeta = url.searchParams.get("meta") === "true";
+              if (wantMeta) {
+                if (querySql) {
+                  try {
+                    const rows = await querySql`
+                      SELECT id, project_id, filename, mime_type, file_size, created_at
+                      FROM project_media
+                      WHERE id = ${mediaId}
+                    `;
+                    if (rows && rows.length > 0) {
+                      const r = rows[0];
+                      return sendJson(200, {
+                        success: true,
+                        data: {
+                          id: r.id,
+                          project_id: r.project_id,
+                          filename: r.filename,
+                          mime_type: r.mime_type,
+                          file_size: r.file_size,
+                          created_at: r.created_at,
+                          url: `/api/project-media/${r.id}`,
+                        },
+                      });
+                    }
+                  } catch (e) {
+                    console.warn(`[ProjectMedia] Neon query failed for meta #${mediaId}:`, e);
+                  }
+                }
+
+                // Fallback to mockStore
+                const found = mockStore.project_media.find((m) => m.id === mediaId);
+                if (found) {
+                  return sendJson(200, {
+                    success: true,
+                    data: {
+                      id: found.id,
+                      project_id: found.project_id,
+                      filename: found.filename,
+                      mime_type: found.mime_type,
+                      file_size: found.file_size,
+                      created_at: found.created_at,
+                      url: `/api/project-media/${found.id}`,
+                    },
+                  });
+                }
+
+                return sendJson(404, { error: "Media not found" });
+              }
+
+              // Deliver raw binary image stream
+              if (querySql) {
+                try {
+                  const rows = await querySql`
+                    SELECT id, filename, mime_type, file_size, encode(file_data, 'base64') AS file_base64
+                    FROM project_media
+                    WHERE id = ${mediaId}
+                  `;
+                  if (rows && rows.length > 0) {
+                    const r = rows[0];
+                    const base64Str = String(r.file_base64 || "").replace(/\s+/g, "");
+                    const imageBuf = Buffer.from(base64Str, "base64");
+                    const safeFilename = encodeURIComponent(r.filename || "image.png");
+
+                    res.writeHead(200, {
+                      "Content-Type": r.mime_type || "image/png",
+                      "Content-Disposition": `inline; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`,
+                      "Content-Length": String(imageBuf.length),
+                      "Cache-Control": "public, max-age=31536000, immutable",
+                      "Accept-Ranges": "bytes",
+                      ...corsHeaders,
+                    });
+                    if (method === "HEAD") {
+                      return res.end();
+                    }
+                    return res.end(imageBuf);
+                  }
+                } catch (e) {
+                  console.warn(`[ProjectMedia] Neon query failed for media #${mediaId}:`, e);
+                }
+              }
+
+              // Fallback to mockStore
+              const found = mockStore.project_media.find((m) => m.id === mediaId);
+              if (found) {
+                const imageBuf = Buffer.from(found.file_data, "base64");
+                const safeFilename = encodeURIComponent(found.filename || "image.png");
+                res.writeHead(200, {
+                  "Content-Type": found.mime_type || "image/png",
+                  "Content-Disposition": `inline; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`,
+                  "Content-Length": String(imageBuf.length),
+                  "Cache-Control": "public, max-age=31536000, immutable",
+                  "Accept-Ranges": "bytes",
+                  ...corsHeaders,
+                });
+                if (method === "HEAD") {
+                  return res.end();
+                }
+                return res.end(imageBuf);
+              }
+
+              res.writeHead(404, { "Content-Type": "text/plain", ...corsHeaders });
+              return res.end("Media not found");
+            }
+
+            // List project media metadata
+            const projectIdParam = url.searchParams.get("projectId") || url.searchParams.get("project_id");
+            if (querySql) {
+              try {
+                let rows: any[];
+                if (projectIdParam) {
+                  const pId = parseInt(projectIdParam, 10);
+                  rows = await querySql`
+                    SELECT id, project_id, filename, mime_type, file_size, created_at
+                    FROM project_media
+                    WHERE project_id = ${pId}
+                    ORDER BY id DESC
+                  `;
+                } else {
+                  rows = await querySql`
+                    SELECT id, project_id, filename, mime_type, file_size, created_at
+                    FROM project_media
+                    ORDER BY id DESC
+                    LIMIT 50
+                  `;
+                }
+
+                return sendJson(200, {
+                  success: true,
+                  data: rows.map((r: any) => ({
+                    id: r.id,
+                    project_id: r.project_id,
+                    filename: r.filename,
+                    mime_type: r.mime_type,
+                    file_size: r.file_size,
+                    created_at: r.created_at,
+                    url: `/api/project-media/${r.id}`,
+                  })),
+                });
+              } catch (e) {
+                console.warn("[ProjectMedia] Neon query failed for media listing:", e);
+              }
+            }
+
+            // Fallback to mockStore
+            let list = mockStore.project_media;
+            if (projectIdParam) {
+              const pId = parseInt(projectIdParam, 10);
+              list = list.filter((m) => m.project_id === pId);
+            }
+            return sendJson(200, {
+              success: true,
+              data: list.map((r) => ({
+                id: r.id,
+                project_id: r.project_id,
+                filename: r.filename,
+                mime_type: r.mime_type,
+                file_size: r.file_size,
+                created_at: r.created_at,
+                url: `/api/project-media/${r.id}`,
+              })),
+            });
+          }
+
+          // POST /api/project-media (upload)
+          if (method === "POST" && rawMediaId === undefined) {
+            const isAuthed = await checkAdmin();
+            if (!isAuthed) {
+              return sendJson(401, { authenticated: false, error: "Unauthorized: Valid admin session required." });
+            }
+
+            const contentType = req.headers["content-type"] || "";
+            let fileBuffer: Buffer | null = null;
+            let fileName = "upload.png";
+            let projectId: number | null = null;
+
+            if (contentType.includes("multipart/form-data")) {
+              const chunks: Buffer[] = [];
+              for await (const chunk of req) {
+                chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+              }
+              const fullBuffer = Buffer.concat(chunks);
+
+              const formData = await new Response(fullBuffer, {
+                headers: { "content-type": contentType },
+              }).formData();
+
+              const file = formData.get("file");
+              if (!file || !(file instanceof File)) {
+                return sendJson(400, { error: "No image file provided in 'file' field" });
+              }
+
+              if (file.size > 10 * 1024 * 1024) {
+                return sendJson(400, { error: `File exceeds 10MB limit (received ${(file.size / 1024 / 1024).toFixed(2)}MB)` });
+              }
+
+              fileName = file.name || "upload.png";
+              const arrayBuf = await file.arrayBuffer();
+              fileBuffer = Buffer.from(arrayBuf);
+
+              const rawPId = formData.get("projectId") || formData.get("project_id");
+              if (rawPId) {
+                const parsed = parseInt(String(rawPId), 10);
+                if (!isNaN(parsed) && parsed > 0) projectId = parsed;
+              }
+            } else if (contentType.includes("application/json")) {
+              const body = await readJsonBody();
+              if (!body.file_data) {
+                return sendJson(400, { error: "Missing 'file_data' base64 payload" });
+              }
+
+              const cleanBase64 = String(body.file_data).replace(/^data:image\/[a-zA-Z]+;base64,/, "");
+              fileBuffer = Buffer.from(cleanBase64, "base64");
+
+              if (fileBuffer.length > 10 * 1024 * 1024) {
+                return sendJson(400, { error: `File exceeds 10MB limit (received ${(fileBuffer.length / 1024 / 1024).toFixed(2)}MB)` });
+              }
+
+              fileName = body.filename || "upload.png";
+              if (body.project_id || body.projectId) {
+                const parsed = parseInt(String(body.project_id || body.projectId), 10);
+                if (!isNaN(parsed) && parsed > 0) projectId = parsed;
+              }
+            } else {
+              return sendJson(400, { error: "Unsupported Content-Type. Use multipart/form-data or application/json" });
+            }
+
+            if (!fileBuffer || fileBuffer.length === 0) {
+              return sendJson(400, { error: "Empty file content" });
+            }
+
+            // Detect and validate binary image magic signature
+            let detectedMime: "image/png" | "image/jpeg" | "image/webp" | null = null;
+            if (
+              fileBuffer.length >= 8 &&
+              fileBuffer[0] === 0x89 &&
+              fileBuffer[1] === 0x50 &&
+              fileBuffer[2] === 0x4e &&
+              fileBuffer[3] === 0x47 &&
+              fileBuffer[4] === 0x0d &&
+              fileBuffer[5] === 0x0a &&
+              fileBuffer[6] === 0x1a &&
+              fileBuffer[7] === 0x0a
+            ) {
+              detectedMime = "image/png";
+            } else if (
+              fileBuffer.length >= 3 &&
+              fileBuffer[0] === 0xff &&
+              fileBuffer[1] === 0xd8 &&
+              fileBuffer[2] === 0xff
+            ) {
+              detectedMime = "image/jpeg";
+            } else if (
+              fileBuffer.length >= 12 &&
+              fileBuffer[0] === 0x52 &&
+              fileBuffer[1] === 0x49 &&
+              fileBuffer[2] === 0x46 &&
+              fileBuffer[3] === 0x46 &&
+              fileBuffer[8] === 0x57 &&
+              fileBuffer[9] === 0x45 &&
+              fileBuffer[10] === 0x42 &&
+              fileBuffer[11] === 0x50
+            ) {
+              detectedMime = "image/webp";
+            }
+
+            if (!detectedMime) {
+              return sendJson(400, {
+                error: "Invalid file format. Only authentic image files (PNG, JPG/JPEG, WEBP) are accepted.",
+              });
+            }
+
+            // Sanitize filename
+            const safeName = fileName.replace(/^.*[\\\/]/, "").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 100) || "image.png";
+            const base64Data = fileBuffer.toString("base64");
+
+            if (querySql) {
+              try {
+                const rows = await querySql`
+                  INSERT INTO project_media (project_id, filename, mime_type, file_size, file_data)
+                  VALUES (
+                    ${projectId},
+                    ${safeName},
+                    ${detectedMime},
+                    ${fileBuffer.length},
+                    decode(${base64Data}, 'base64')
+                  )
+                  RETURNING id, project_id, filename, mime_type, file_size, created_at
+                `;
+
+                const r = rows[0];
+                // Also cache in mockStore
+                mockStore.project_media.unshift({
+                  id: r.id,
+                  project_id: r.project_id,
+                  filename: r.filename,
+                  mime_type: r.mime_type,
+                  file_size: r.file_size,
+                  file_data: base64Data,
+                  created_at: String(r.created_at),
+                });
+
+                return sendJson(201, {
+                  success: true,
+                  message: "Media uploaded and stored permanently in Neon PostgreSQL",
+                  data: {
+                    id: r.id,
+                    project_id: r.project_id,
+                    filename: r.filename,
+                    mime_type: r.mime_type,
+                    file_size: r.file_size,
+                    created_at: r.created_at,
+                    url: `/api/project-media/${r.id}`,
+                  },
+                });
+              } catch (neonErr: any) {
+                console.warn("[ProjectMedia] Neon insert failed, using fallback:", neonErr);
+              }
+            }
+
+            // Fallback insert in mockStore
+            const nextMediaId = (mockStore.project_media.reduce((max, m) => Math.max(max, m.id), 0) || 0) + 1;
+            const newMedia = {
+              id: nextMediaId,
+              project_id: projectId,
+              filename: safeName,
+              mime_type: detectedMime,
+              file_size: fileBuffer.length,
+              file_data: base64Data,
+              created_at: new Date().toISOString(),
+            };
+            mockStore.project_media.unshift(newMedia);
+
+            return sendJson(201, {
+              success: true,
+              message: "Media uploaded successfully",
+              data: {
+                id: newMedia.id,
+                project_id: newMedia.project_id,
+                filename: newMedia.filename,
+                mime_type: newMedia.mime_type,
+                file_size: newMedia.file_size,
+                created_at: newMedia.created_at,
+                url: `/api/project-media/${newMedia.id}`,
+              },
+            });
+          }
+
+          // DELETE /api/project-media/:id
+          if (method === "DELETE" && rawMediaId !== undefined) {
+            const isAuthed = await checkAdmin();
+            if (!isAuthed) {
+              return sendJson(401, { authenticated: false, error: "Unauthorized: Valid admin session required." });
+            }
+
+            const mediaId = parseInt(rawMediaId, 10);
+            if (isNaN(mediaId) || mediaId <= 0) {
+              return sendJson(400, { error: "Invalid media ID." });
+            }
+
+            if (querySql) {
+              try {
+                await querySql`DELETE FROM project_media WHERE id = ${mediaId}`;
+              } catch (e) {
+                console.warn(`[ProjectMedia] Neon delete failed for #${mediaId}:`, e);
+              }
+            }
+
+            mockStore.project_media = mockStore.project_media.filter((m) => m.id !== mediaId);
+            return sendJson(200, { success: true, message: "Media deleted successfully" });
+          }
         }
 
         // 2. Resource routes: movies, academy, devops, timeline, atlas
@@ -1247,7 +1696,9 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
           }
         }
 
-        next();
+        return sendJson(404, {
+          error: `API route not found: ${method} ${pathname}`,
+        });
       } catch (globalApiError: any) {
         console.error(`[API Middleware Error] ${req.method} ${req.url}:`, globalApiError);
         if (!res.headersSent) {
@@ -1303,10 +1754,12 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 3000,
     strictPort: true,
+    cors: true,
   },
   preview: {
     host: "0.0.0.0",
     port: 3000,
     strictPort: true,
+    cors: true,
   },
 });

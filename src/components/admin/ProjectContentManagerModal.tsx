@@ -18,6 +18,10 @@ import {
   Clock,
   Code2,
   Download,
+  Upload,
+  Loader2,
+  HardDrive,
+  RefreshCw,
 } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import {
@@ -80,6 +84,186 @@ export default function ProjectContentManagerModal({
   const [galleryImages, setGalleryImages] = useState<string[]>(["", "", "", "", ""]);
   const [galleryEnabled, setGalleryEnabled] = useState<boolean[]>([true, true, false, false, false]);
   const [imageSlotErrors, setImageSlotErrors] = useState<Record<number, boolean>>({});
+
+  // Device File Upload State (Persistent binary storage in Neon PostgreSQL)
+  interface MediaSlotInfo {
+    id?: number;
+    filename: string;
+    fileSize?: number;
+    uploadedAt?: string;
+  }
+  const [mediaMeta, setMediaMeta] = useState<Record<number, MediaSlotInfo | null>>({});
+  const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
+  const [uploadError, setUploadError] = useState<Record<number, string | null>>({});
+  const fileInputRefs = React.useRef<Record<number, HTMLInputElement | null>>({});
+
+  const formatFileSize = (bytes?: number): string => {
+    if (!bytes || bytes <= 0) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const fetchSlotMetadata = async (slotIdx: number, url: string) => {
+    const match = url.match(/\/api\/project-media\/(\d+)/);
+    if (!match) return;
+    const id = parseInt(match[1], 10);
+    try {
+      const res = await fetch(`/api/project-media/${id}?meta=true`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data) {
+          setMediaMeta((prev) => ({
+            ...prev,
+            [slotIdx]: {
+              id: data.data.id,
+              filename: data.data.filename,
+              fileSize: data.data.file_size,
+              uploadedAt: data.data.created_at,
+            },
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn(`Failed to fetch metadata for media #${id}`, e);
+    }
+  };
+
+  const handleDeviceUpload = async (slotIdx: number, file: File) => {
+    // Validate file type
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    const validExtensions = ["png", "jpg", "jpeg", "webp"];
+
+    if (!validTypes.includes(file.type) && !validExtensions.includes(extension || "")) {
+      setUploadError((prev) => ({
+        ...prev,
+        [slotIdx]: "Invalid format. Only authentic image files (PNG, JPG/JPEG, WEBP) are allowed.",
+      }));
+      return;
+    }
+
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_SIZE) {
+      setUploadError((prev) => ({
+        ...prev,
+        [slotIdx]: `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum allowed is 10MB.`,
+      }));
+      return;
+    }
+
+    setUploadingSlot(slotIdx);
+    setUploadError((prev) => ({ ...prev, [slotIdx]: null }));
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const projId = fullData?.numericId || project.dbId || (typeof project.id === "number" ? project.id : undefined);
+      if (projId) {
+        formData.append("projectId", String(projId));
+      }
+
+      const token = sessionStorage.getItem("sv_admin_token");
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch("/api/project-media", {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || `Upload failed (HTTP ${res.status})`);
+      }
+
+      const uploaded = result.data;
+      const mediaUrl = uploaded.url; // e.g. /api/project-media/12
+
+      // Update gallery images
+      setGalleryImages((prev) => {
+        const updated = [...prev];
+        updated[slotIdx] = mediaUrl;
+        return updated;
+      });
+
+      // If slot 0, also update heroImage
+      if (slotIdx === 0) {
+        setHeroImage(mediaUrl);
+      }
+
+      // Automatically enable this slot
+      setGalleryEnabled((prev) => {
+        const next = [...prev];
+        next[slotIdx] = true;
+        return next;
+      });
+
+      // Save metadata
+      setMediaMeta((prev) => ({
+        ...prev,
+        [slotIdx]: {
+          id: uploaded.id,
+          filename: uploaded.filename,
+          fileSize: uploaded.file_size,
+          uploadedAt: uploaded.created_at,
+        },
+      }));
+
+      // Clear slot error
+      setImageSlotErrors((prev) => ({ ...prev, [slotIdx]: false }));
+    } catch (err: any) {
+      console.error("Device upload failed:", err);
+      setUploadError((prev) => ({
+        ...prev,
+        [slotIdx]: err?.message || "Failed to upload image from device.",
+      }));
+    } finally {
+      setUploadingSlot(null);
+    }
+  };
+
+  const handleRemoveSlotImage = async (slotIdx: number, deleteFromDb = false) => {
+    const currentUrl = galleryImages[slotIdx];
+    const meta = mediaMeta[slotIdx];
+
+    if (deleteFromDb && (meta?.id || currentUrl?.includes("/api/project-media/"))) {
+      const mediaId = meta?.id || parseInt(currentUrl.split("/api/project-media/")[1], 10);
+      if (!isNaN(mediaId) && mediaId > 0) {
+        try {
+          const token = sessionStorage.getItem("sv_admin_token");
+          const headers: Record<string, string> = {};
+          if (token) headers["Authorization"] = `Bearer ${token}`;
+
+          await fetch(`/api/project-media/${mediaId}`, {
+            method: "DELETE",
+            headers,
+          });
+        } catch (e) {
+          console.warn("Media delete error:", e);
+        }
+      }
+    }
+
+    setGalleryImages((prev) => {
+      const updated = [...prev];
+      updated[slotIdx] = "";
+      return updated;
+    });
+    if (slotIdx === 0) {
+      setHeroImage("");
+    }
+    setMediaMeta((prev) => {
+      const updated = { ...prev };
+      delete updated[slotIdx];
+      return updated;
+    });
+    setImageSlotErrors((prev) => ({ ...prev, [slotIdx]: false }));
+    setUploadError((prev) => ({ ...prev, [slotIdx]: null }));
+  };
 
   // Project Resources (Optional) & Switches
   const [gitUrl, setGitUrl] = useState("");
@@ -278,6 +462,23 @@ export default function ProjectContentManagerModal({
           setVideoSessionsEnabled(details.content.videos?.length > 0);
           setArchitectureEnabled(details.content.architecture?.length > 0);
         }
+
+        // Fetch metadata for any slots referencing Neon PostgreSQL media
+        const activeImgs = pd
+          ? [
+              pd.images?.image1?.url ?? resolvedHero ?? "",
+              pd.images?.image2?.url ?? initialGallery[1] ?? "",
+              pd.images?.image3?.url ?? initialGallery[2] ?? "",
+              pd.images?.image4?.url ?? initialGallery[3] ?? "",
+              pd.images?.image5?.url ?? initialGallery[4] ?? "",
+            ]
+          : initialGallery;
+
+        activeImgs.forEach((img, idx) => {
+          if (img && img.includes("/api/project-media/")) {
+            fetchSlotMetadata(idx, img);
+          }
+        });
 
         setImplementedFeatures(
           details.content.implemented_features && details.content.implemented_features.length > 0
@@ -940,9 +1141,41 @@ export default function ProjectContentManagerModal({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-mono text-slate-400 mb-1">
-                        Hero Image URL
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-mono text-slate-400">
+                          Primary Hero Image (Image 1)
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRefs.current[0]?.click()}
+                          disabled={uploadingSlot === 0}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition-all disabled:opacity-50"
+                        >
+                          {uploadingSlot === 0 ? (
+                            <Loader2 className="h-3 w-3 animate-spin text-emerald-400" />
+                          ) : (
+                            <Upload className="h-3 w-3 text-emerald-400" />
+                          )}
+                          <span>{uploadingSlot === 0 ? "Uploading..." : "Upload from Device"}</span>
+                        </button>
+                      </div>
+
+                      <input
+                        type="file"
+                        ref={(el) => {
+                          fileInputRefs.current[0] = el;
+                        }}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) {
+                            handleDeviceUpload(0, f);
+                            e.target.value = "";
+                          }
+                        }}
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                      />
+
                       <input
                         type="text"
                         value={heroImage}
@@ -954,10 +1187,83 @@ export default function ProjectContentManagerModal({
                             updated[0] = val;
                             return updated;
                           });
+                          if (val.includes("/api/project-media/")) {
+                            fetchSlotMetadata(0, val);
+                          }
                         }}
-                        placeholder="/projects/temporary/sohail-shop-desktop.v2.jpg"
-                        className="w-full px-3.5 py-2 rounded-xl border border-white/10 bg-slate-900 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                        placeholder="/api/project-media/1 or /projects/temporary/..."
+                        className="w-full px-3.5 py-2 rounded-xl border border-white/10 bg-slate-900 text-sm text-white focus:border-emerald-400 focus:outline-none font-mono"
                       />
+
+                      {/* Hero Image preview & metadata card */}
+                      {heroImage.trim() && (
+                        <div className="mt-2 p-2.5 rounded-xl border border-white/10 bg-slate-950 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-12 h-9 rounded-lg overflow-hidden bg-slate-900 border border-white/10 shrink-0">
+                              <img
+                                src={heroImage.trim()}
+                                alt="Hero preview"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              {heroImage.includes("/api/project-media/") ? (
+                                <div className="space-y-0.5">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                      <HardDrive className="h-2.5 w-2.5" />
+                                      <span>Neon DB Media</span>
+                                    </span>
+                                    {mediaMeta[0]?.filename && (
+                                      <span className="text-xs text-white font-mono truncate max-w-[130px]">
+                                        {mediaMeta[0].filename}
+                                      </span>
+                                    )}
+                                    {mediaMeta[0]?.fileSize && (
+                                      <span className="text-[10px] text-emerald-400 font-mono">
+                                        ({formatFileSize(mediaMeta[0].fileSize)})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] font-mono text-cyan-400 block truncate">
+                                    {heroImage}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-xs font-mono text-slate-400 truncate block">
+                                  {heroImage}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => fileInputRefs.current[0]?.click()}
+                              className="text-xs font-mono text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                              <span>Replace</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSlotImage(0, false)}
+                              className="text-xs font-mono text-red-400 hover:text-red-300 flex items-center gap-1"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              <span>Clear</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {uploadError[0] && (
+                        <p className="mt-1 text-xs text-red-400 font-mono flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3 shrink-0" />
+                          <span>{uploadError[0]}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -1034,6 +1340,10 @@ export default function ProjectContentManagerModal({
                       const imgVal = galleryImages[slotIdx] || "";
                       const isEnabled = galleryEnabled[slotIdx];
                       const isHero = slotIdx === 0;
+                      const isUploading = uploadingSlot === slotIdx;
+                      const meta = mediaMeta[slotIdx];
+                      const isDbMedia = imgVal.includes("/api/project-media/");
+
                       return (
                         <div
                           key={slotIdx}
@@ -1043,6 +1353,24 @@ export default function ProjectContentManagerModal({
                               : "border-white/5 bg-slate-950/40 opacity-70"
                           } space-y-3`}
                         >
+                          {/* Hidden native device file input */}
+                          <input
+                            type="file"
+                            ref={(el) => {
+                              fileInputRefs.current[slotIdx] = el;
+                            }}
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) {
+                                handleDeviceUpload(slotIdx, f);
+                                e.target.value = "";
+                              }
+                            }}
+                            accept="image/png,image/jpeg,image/webp"
+                            className="hidden"
+                          />
+
+                          {/* Slot Header */}
                           <div className="flex items-center justify-between gap-2 flex-wrap">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="h-5 w-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] flex items-center justify-center font-bold">
@@ -1052,9 +1380,30 @@ export default function ProjectContentManagerModal({
                                 {isHero ? "Primary Hero Image (Image 1) *" : `Gallery Image ${slotIdx + 1}`}
                               </span>
                               {getLiveStatusBadge(isEnabled, Boolean(imgVal.trim()))}
+                              {isDbMedia && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                  <HardDrive className="h-2.5 w-2.5" />
+                                  <span>Neon DB Media</span>
+                                </span>
+                              )}
                             </div>
 
                             <div className="flex items-center gap-3">
+                              {/* Upload from Device button */}
+                              <button
+                                type="button"
+                                onClick={() => fileInputRefs.current[slotIdx]?.click()}
+                                disabled={isUploading}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition-all disabled:opacity-50"
+                              >
+                                {isUploading ? (
+                                  <Loader2 className="h-3 w-3 animate-spin text-emerald-400" />
+                                ) : (
+                                  <Upload className="h-3 w-3 text-emerald-400" />
+                                )}
+                                <span>{isUploading ? "Uploading..." : imgVal ? "Replace from Device" : "Upload from Device"}</span>
+                              </button>
+
                               {/* Enable / Disable switch */}
                               <div className="flex items-center gap-2">
                                 <span className="text-[11px] font-mono text-slate-400">
@@ -1075,15 +1424,7 @@ export default function ProjectContentManagerModal({
                               {imgVal && (
                                 <button
                                   type="button"
-                                  onClick={() => {
-                                    const updated = [...galleryImages];
-                                    updated[slotIdx] = "";
-                                    setGalleryImages(updated);
-                                    if (isHero) {
-                                      setHeroImage("");
-                                    }
-                                    setImageSlotErrors((prev) => ({ ...prev, [slotIdx]: false }));
-                                  }}
+                                  onClick={() => handleRemoveSlotImage(slotIdx, false)}
                                   className="text-[11px] font-mono text-red-400 hover:text-red-300 flex items-center gap-1"
                                 >
                                   <Trash2 className="h-3 w-3" />
@@ -1093,8 +1434,70 @@ export default function ProjectContentManagerModal({
                             </div>
                           </div>
 
+                          {/* Upload Progress Banner */}
+                          {isUploading && (
+                            <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center gap-3 animate-pulse">
+                              <Loader2 className="h-4 w-4 text-emerald-400 animate-spin shrink-0" />
+                              <div className="text-xs font-mono text-emerald-200">
+                                <p className="font-semibold">Uploading device image to Neon PostgreSQL...</p>
+                                <p className="text-[10px] text-emerald-400/80">Writing binary data (bytea) and registering media endpoint...</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Inline Upload Error */}
+                          {uploadError[slotIdx] && (
+                            <div className="p-2.5 rounded-xl border border-red-500/30 bg-red-500/10 flex items-center gap-2 text-xs font-mono text-red-300">
+                              <AlertCircle className="h-3.5 w-3.5 text-red-400 shrink-0" />
+                              <span>{uploadError[slotIdx]}</span>
+                            </div>
+                          )}
+
+                          {/* Main Slot Content */}
                           <div className="flex flex-col sm:flex-row gap-3 items-start">
                             <div className="flex-1 w-full space-y-2">
+                              {/* Metadata Card if from DB */}
+                              {isDbMedia && (
+                                <div className="p-2.5 rounded-xl border border-white/10 bg-slate-950 flex flex-wrap items-center justify-between gap-2">
+                                  <div className="space-y-0.5 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-mono font-medium text-white truncate max-w-[200px]">
+                                        {meta?.filename || `media-${imgVal.split("/api/project-media/")[1]}.png`}
+                                      </span>
+                                      {meta?.fileSize && (
+                                        <span className="text-[10px] font-mono text-emerald-400 px-1.5 py-0.2 rounded bg-emerald-500/10 border border-emerald-500/20">
+                                          {formatFileSize(meta.fileSize)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1">
+                                      <span>Endpoint:</span>
+                                      <span className="text-cyan-400">{imgVal}</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => fileInputRefs.current[slotIdx]?.click()}
+                                      className="px-2 py-0.5 rounded text-xs font-mono text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 flex items-center gap-1 transition-all"
+                                    >
+                                      <RefreshCw className="h-3 w-3" />
+                                      <span>Replace</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveSlotImage(slotIdx, true)}
+                                      className="px-2 py-0.5 rounded text-xs font-mono text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 flex items-center gap-1 transition-all"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                      <span>Delete Media</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Manual URL input for fallback / compatibility */}
                               <input
                                 type="text"
                                 value={imgVal}
@@ -1108,32 +1511,58 @@ export default function ProjectContentManagerModal({
                                   if (imageSlotErrors[slotIdx]) {
                                     setImageSlotErrors((prev) => ({ ...prev, [slotIdx]: false }));
                                   }
+                                  if (e.target.value.includes("/api/project-media/")) {
+                                    fetchSlotMetadata(slotIdx, e.target.value);
+                                  }
                                 }}
                                 placeholder={
                                   isHero
-                                    ? "/projects/temporary/fresh-flow-desktop.v2.jpg or https://..."
-                                    : "Image URL (leave empty if not needed)"
+                                    ? "/api/project-media/1 or /projects/temporary/..."
+                                    : "Image URL or upload from device"
                                 }
                                 className="w-full px-3.5 py-2 rounded-xl border border-white/10 bg-slate-950 text-xs sm:text-sm text-white focus:border-emerald-400 focus:outline-none font-mono"
                               />
+
+                              {!imgVal.trim() && (
+                                <div className="p-3 rounded-xl border border-dashed border-white/15 bg-slate-950/40 flex flex-col items-center justify-center gap-2 py-3 text-center">
+                                  <ImageIcon className="h-5 w-5 text-slate-500" />
+                                  <div className="space-y-0.5">
+                                    <p className="text-xs font-medium text-slate-300">No image assigned to this slot</p>
+                                    <p className="text-[10px] text-slate-500">
+                                      Upload PNG, JPG, or WEBP directly into Neon PostgreSQL database
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => fileInputRefs.current[slotIdx]?.click()}
+                                    disabled={isUploading}
+                                    className="mt-0.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-medium bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition-all"
+                                  >
+                                    <Upload className="h-3 w-3" />
+                                    <span>Upload from Device</span>
+                                  </button>
+                                </div>
+                              )}
+
                               <div className="flex gap-2 text-[10px] font-mono text-slate-500">
-                                <span>Preview:</span>
+                                <span>Path:</span>
                                 {imgVal ? (
                                   <span className="text-emerald-400 truncate max-w-xs">{imgVal}</span>
                                 ) : (
-                                  <span>No image configured</span>
+                                  <span>Empty slot</span>
                                 )}
                               </div>
                             </div>
 
+                            {/* Thumbnail Preview */}
                             {imgVal.trim() && (
-                              <div className="shrink-0 w-24 h-16 rounded-lg overflow-hidden border border-white/10 bg-slate-950 flex items-center justify-center">
+                              <div className="shrink-0 w-28 h-20 rounded-xl overflow-hidden border border-white/10 bg-slate-950 flex items-center justify-center shadow-lg relative group">
                                 {!imageSlotErrors[slotIdx] ? (
                                   <img
                                     key={imgVal.trim()}
                                     src={imgVal.trim()}
                                     alt={`Slot ${slotIdx + 1} preview`}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-200"
                                     referrerPolicy="no-referrer"
                                     onError={() => {
                                       setImageSlotErrors((prev) => ({

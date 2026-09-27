@@ -55,7 +55,6 @@ export default function AdminPage() {
       setAuthChecking(true);
       const token = sessionStorage.getItem("sv_admin_token");
       const res = await fetch("/api/auth/session", {
-        credentials: "include",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (res.ok) {
@@ -83,7 +82,6 @@ export default function AdminPage() {
       setLoginError("");
       const res = await fetch("/api/auth/login", {
         method: "POST",
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -113,7 +111,6 @@ export default function AdminPage() {
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
-        credentials: "include",
       });
     } catch (err) {
       console.error("Logout request error:", err);
