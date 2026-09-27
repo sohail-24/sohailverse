@@ -71,6 +71,7 @@ import {
   type ProjectArchitectureDiagram,
 } from "../lib/projectContent";
 import { LoadingSkeleton } from "../components/ui/StatusStates";
+import SmartOrderProjectDetails from "../components/projects/SmartOrderProjectDetails";
 
 /**
  * Returns a branded icon for technology badges
@@ -322,6 +323,14 @@ export default function ProjectInformationPage() {
     (typeof project.numericId !== "undefined" && project.numericId === 7) ||
     project.title.toLowerCase().replace(/[^a-z0-9]/g, "").includes("sohailstudio");
 
+  const isSmartOrder =
+    project.id === "smartorder" ||
+    project.id === "bitepoint" ||
+    project.id === "35" ||
+    (typeof project.numericId !== "undefined" && project.numericId === 35) ||
+    project.title.toLowerCase().replace(/[^a-z0-9]/g, "").includes("smartorder") ||
+    project.title.toLowerCase().replace(/[^a-z0-9]/g, "").includes("bitepoint");
+
   // Optional project resources: Must have valid content AND enabled === true
   // For AM Fruits, the GitHub repository link is COMPLETELY removed per explicit directive.
   // For Wedding Invitation, external URLs are not fabricated.
@@ -488,7 +497,7 @@ export default function ProjectInformationPage() {
   return (
     <div
       id="project-information-page"
-      className="relative min-h-screen bg-[#050811] text-slate-100 overflow-x-hidden pb-20"
+      className="relative min-h-screen bg-[#050811] text-slate-100 overflow-x-hidden pb-20 -mx-4 sm:mx-0 -mt-2 sm:mt-0"
     >
       {/* Background Ambient Glow */}
       <div
@@ -502,7 +511,7 @@ export default function ProjectInformationPage() {
           - Project Title, Status Badge, Category Badge, Action Links
          ========================================================================= */}
       <header className="relative z-10 border-b border-white/[0.08] bg-[#050811]/90 backdrop-blur-md sticky top-0">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between gap-4 flex-wrap">
+        <div className="mx-auto max-w-5xl px-3.5 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between gap-4 flex-wrap">
           {/* Back to Projects */}
           <Link
             to="/projects"
@@ -546,11 +555,11 @@ export default function ProjectInformationPage() {
       </header>
 
       {/* Main Container */}
-      <main className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-10 space-y-10 sm:space-y-14">
+      <main className="relative z-10 mx-auto w-full max-w-5xl px-3.5 sm:px-6 py-5 sm:py-10 space-y-8 sm:space-y-12">
         {/* =========================================================================
             2. PROJECT TITLE BAR & STATUS
            ========================================================================= */}
-        <section className="space-y-3">
+        <section className="space-y-3 w-full">
           <div className="flex items-center gap-2.5 flex-wrap">
             {/* Status Badge: Ready, Active, Upcoming */}
             <span
@@ -596,7 +605,7 @@ export default function ProjectInformationPage() {
         {hasMultipleSections && (
           <nav
             aria-label="Project section navigation"
-            className="sticky top-[57px] sm:top-[65px] z-20 -mx-4 sm:mx-0 px-4 sm:px-0 py-2.5 bg-[#050811]/95 backdrop-blur-md border-y border-white/[0.08] flex items-center gap-2 overflow-x-auto no-scrollbar"
+            className="sticky top-[57px] sm:top-[65px] z-20 -mx-3.5 sm:mx-0 px-3.5 sm:px-0 py-2.5 bg-[#050811]/95 backdrop-blur-md border-y border-white/[0.08] flex items-center gap-2 overflow-x-auto no-scrollbar"
           >
             <button
               onClick={() => scrollToSection("overview")}
@@ -715,7 +724,7 @@ export default function ProjectInformationPage() {
             - Optional project resources (Git, Website, Video, PDF, Documentation)
             - Implemented Features, Important Business Flow, Payment System & Security, Order Data / Historical Records
            ========================================================================= */}
-        <section ref={overviewRef} id="section-overview" className="space-y-8 sm:space-y-10">
+        <section ref={overviewRef} id="section-overview" className="w-full space-y-6 sm:space-y-10">
           {/* Main Hero Project Image Container - only rendered when at least 1 image is enabled */}
           {galleryList.length > 0 && activeImage && (
             <div className="space-y-4">
@@ -1074,14 +1083,45 @@ export default function ProjectInformationPage() {
 
           {/* Project Overview */}
           {(content.overview || project.description) && !isAmFruits && !isWedding && (
-            <div className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-3">
-              <h2 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-cyan-400" />
+            <div className="w-full p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-4 sm:space-y-5">
+              <h2 className="font-display text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-cyan-400 shrink-0" />
                 <span>Project Overview</span>
               </h2>
-              <div className="text-sm sm:text-base text-slate-300 leading-relaxed font-light whitespace-pre-line space-y-3">
+
+              <div className="text-[14px] sm:text-[15px] md:text-base text-slate-300 leading-[1.55] sm:leading-[1.6] font-light whitespace-pre-line space-y-2.5 sm:space-y-3">
                 {content.overview || project.description}
               </div>
+
+              {/* Project Details: Directly nested below Project Overview as part of the same information flow */}
+              {isSmartOrder ? (
+                <SmartOrderProjectDetails />
+              ) : (
+                (content.real_world_context || (project.description && content.overview && project.description !== content.overview)) && (
+                  <div className="pt-4 sm:pt-5 border-t border-white/10 space-y-2.5 sm:space-y-3">
+                    <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                      <Info className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-cyan-400 shrink-0" />
+                      <span>Project Details</span>
+                    </h3>
+                    <div className="text-[14px] sm:text-[15px] md:text-base text-slate-300 leading-[1.55] sm:leading-[1.6] font-light whitespace-pre-line space-y-2.5">
+                      {content.real_world_context ? (
+                        <>
+                          <p>{content.real_world_context}</p>
+                          {project.description &&
+                            project.description !== content.overview &&
+                            !content.real_world_context.includes(project.description) && (
+                              <p className="text-slate-400 text-xs sm:text-sm pt-1 italic">
+                                {project.description}
+                              </p>
+                            )}
+                        </>
+                      ) : (
+                        <p>{project.description}</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           )}
 
@@ -1737,7 +1777,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Implemented Features */}
-          {!isAmFruits && !isWedding && implementedFeatures.length > 0 && (
+          {!isAmFruits && !isWedding && !isSmartOrder && implementedFeatures.length > 0 && (
             <div className="space-y-4">
               <h3 className="font-display text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-emerald-400" />
@@ -1758,8 +1798,8 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Important Business Flow */}
-          {!isAmFruits && !isWedding && content.business_flow && content.business_flow.trim() && (
-            <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
+          {!isAmFruits && !isWedding && !isSmartOrder && content.business_flow && content.business_flow.trim() && (
+            <div className="w-full p-4 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
               <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <Layers className="h-4 w-4 text-cyan-400" />
                 <span>Important Business Flow</span>
@@ -1771,8 +1811,8 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Payment System & Security */}
-          {!isSohailShop && !isAmFruits && !isWedding && content.payment_security && content.payment_security.trim() && (
-            <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
+          {!isSohailShop && !isAmFruits && !isWedding && !isSmartOrder && content.payment_security && content.payment_security.trim() && (
+            <div className="w-full p-4 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
               <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 <span>Payment System & Security</span>
@@ -1784,8 +1824,8 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Order Data / Historical Records */}
-          {!isAmFruits && !isWedding && content.order_data_preservation && content.order_data_preservation.trim() && (
-            <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
+          {!isAmFruits && !isWedding && !isSmartOrder && content.order_data_preservation && content.order_data_preservation.trim() && (
+            <div className="w-full p-4 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-sm space-y-2.5">
               <h3 className="font-display text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <History className="h-4 w-4 text-cyan-400" />
                 <span>Order Data / Historical Records</span>
@@ -1797,7 +1837,7 @@ export default function ProjectInformationPage() {
           )}
 
           {/* Technologies Arsenal */}
-          {!isWedding && (
+          {!isWedding && !isSmartOrder && (
             <div className="p-5 rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm space-y-3">
               <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                 <Layers className="h-4 w-4 text-cyan-400" />

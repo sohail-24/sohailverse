@@ -109,6 +109,18 @@ export function findDbRecordForProject(
     return dbProjects.find((p) => p.title.toLowerCase().includes("new chapter"));
   }
 
+  if (
+    strId === "smartorder" ||
+    strId === "smart-order" ||
+    strId === "bitepoint" ||
+    strId === "bite-point"
+  ) {
+    return dbProjects.find((p) => {
+      const identity = normalizeProjectIdentity(p.title);
+      return identity.includes("smartorder") || identity.includes("bitepoint") || p.id === 35;
+    });
+  }
+
   // 4. Match by exact normalized title if provided
   if (searchTitle) {
     const searchIdentity = normalizeProjectIdentity(searchTitle);
@@ -197,9 +209,29 @@ export function buildUnifiedProjects(dbProjects: DevOpsProject[] = []): UnifiedP
 
   const additionalDbProjects = projectRecords.filter((p) => !matchedDbIds.has(p.id));
   for (const db of additionalDbProjects) {
+    let dbTagline: string | undefined;
+    if (db.highlights) {
+      try {
+        const parsed = JSON.parse(db.highlights);
+        if (typeof parsed?.tagline === "string" && parsed.tagline.trim()) {
+          dbTagline = parsed.tagline.trim();
+        }
+      } catch {}
+    }
+    if (
+      !dbTagline &&
+      (db.id === 35 ||
+        String(db.id) === "35" ||
+        db.title?.toLowerCase().includes("smartorder") ||
+        db.title?.toLowerCase().includes("bitepoint"))
+    ) {
+      dbTagline = "Self-Service Restaurant Ordering System";
+    }
+
     mapped.push({
       id: db.id,
       title: db.title,
+      tagline: dbTagline,
       category: db.category || "DevOps Architecture",
       description: db.description || "",
       technologies: normalizeTechnologies(db.technologies),

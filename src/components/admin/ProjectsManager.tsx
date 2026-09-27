@@ -577,6 +577,13 @@ export default function ProjectsManager({
                         {project.title}
                       </h3>
 
+                      {/* Tagline / Subtitle */}
+                      {project.tagline && (
+                        <p className="font-mono text-xs text-emerald-400 font-medium">
+                          {project.tagline}
+                        </p>
+                      )}
+
                       {/* Description */}
                       <p className="text-xs sm:text-sm text-slate-400 line-clamp-3 leading-relaxed">
                         {project.description}

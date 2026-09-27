@@ -261,6 +261,23 @@ export const FALLBACK_DATA: Record<string, any[]> = {
   ],
   devops: [
     {
+      id: 35,
+      title: "SmartOrder",
+      category: "Cloud Native / Restaurant Commerce",
+      description:
+        "A touchscreen-first restaurant commerce application that allows customers to browse a digital menu, configure products, add customized items to a cart, complete checkout, and place orders while giving restaurant staff an administration system for menu and order management.",
+      image_url: "/api/project-media/4",
+      technologies:
+        "React, Vite, TypeScript, Hono, tRPC, Drizzle ORM, PostgreSQL, Neon PostgreSQL, Responsive Web UI, REST/API integrations, Git/GitHub",
+      highlights: JSON.stringify({
+        domain: "project",
+        tagline: "Self-Service Restaurant Ordering System",
+        hero_image: "/api/project-media/4",
+        gallery_images: ["/api/project-media/4"],
+      }),
+      status: "Ready",
+    },
+    {
       id: 1,
       title: "Networking & OSI Model Master Notes",
       category: "Notes",

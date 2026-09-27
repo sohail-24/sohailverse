@@ -177,6 +177,10 @@ export interface ProjectContentDetails {
   business_flow?: string;
   payment_security?: string;
   order_data_preservation?: string;
+  dynamic_product_configuration?: string;
+  restaurant_administration?: string;
+  technical_architecture?: string;
+  real_world_context?: string;
   // Flagship Case Study Extensions
   core_philosophy?: string;
   execution_planes?: ExecutionPlane[];
@@ -896,7 +900,332 @@ Family compliments followed by an animated closing invitation experience and cel
       "Next-generation observability with automated root-cause analysis",
     ],
   },
+  "smartorder": {
+    domain: "project",
+    overview:
+      "SmartOrder is a self-service restaurant ordering system that I built around a real restaurant commerce workflow for Tex’s Chicken & Burgers.\n\nThe customer starts on the home page, where they can browse different food categories and products. When a customer selects a product, they are taken to a product detail page where they can configure the item before adding it to the cart.\n\nThe system supports dynamic product variants and customization. For example, the Chicken Sandwich can have Classic, Deluxe, and Grilled variants. Each variant can have its own image and pricing.\n\nThe application also supports independent product option groups. A customer can select a meal option such as Meal or Large Meals and separately select a choice such as Mild or Spicy. These selections are maintained together when the customer adds the configured product to the cart.\n\nThe complete customer journey is:\n\nHome → Products → Product Details → Customization → Cart → Checkout → Phone Number → Payment → Order\n\nThe restaurant side includes an administration system where products, categories, variants, images, prices, product options, and customer orders can be managed.\n\nThe main engineering focus was making product configuration dynamic rather than hard-coded. The administrator can configure what variants and options are available, and the customer-facing ordering experience uses those configurations while keeping the ordering process simple.",
+    tagline: "Self-Service Restaurant Ordering System",
+    hero_image: "/api/project-media/4",
+    gallery_images: ["/api/project-media/4"],
+    git_url: "",
+    website_url: "",
+    video_url: "",
+    pdf_url: "",
+    documentation_url: "",
+    implemented_features: [
+      "Touchscreen-first restaurant ordering interface",
+      "Digital menu and category browsing",
+      "Dynamic product variants",
+      "Variant-specific images",
+      "Variant-specific pricing",
+      "Independent product option groups",
+      "Meal and Large Meal selection",
+      "Mild and Spicy choices",
+      "Dynamic price calculation",
+      "Add & Continue Shopping",
+      "Buy Now workflow",
+      "Persistent cart configuration",
+      "Customer phone-number checkout",
+      "T-prefixed order identification",
+      "Pay at Counter payment flow",
+      "Final order bill",
+      "Restaurant Admin Product Catalog",
+      "Product and category management",
+      "Product variant management",
+      "Product image management",
+      "Product pricing management",
+      "Product option management",
+      "Admin Orders management",
+      "Responsive mobile interface",
+      "PostgreSQL-backed persistent data",
+    ],
+    highlightsList: [
+      "Built a complete restaurant commerce workflow rather than a static menu website.",
+      "Designed the customer experience around touchscreen interaction.",
+      "Implemented dynamic product variants.",
+      "Supported variant-specific images and pricing.",
+      "Implemented independent product option groups.",
+      "Preserved selected configurations through the cart.",
+      "Connected customer ordering with restaurant-side order management.",
+      "Implemented persistent PostgreSQL-backed application data.",
+      "Built responsive mobile UI in addition to the touchscreen experience.",
+      "Designed the system so restaurant administrators can control menu configuration without hard-coding every customer experience.",
+    ],
+    business_flow:
+      "STEP 1 — Home\nThe customer opens the restaurant ordering interface and sees the restaurant menu and available categories.\n\nSTEP 2 — Browse Products\nThe customer selects a category and browses available products.\n\nSTEP 3 — Product Details\nThe customer opens a product to see its image, pricing, variants, and available customization options.\n\nSTEP 4 — Configure Product\nExample:\nChicken Sandwich\n→ Classic / Deluxe / Grilled\nMeal option:\n→ Meal / Large Meals\nChoice:\n→ Mild / Spicy\nThe selections are independent and are combined into one product configuration.\n\nSTEP 5 — Add to Cart\nThe cart stores:\n- Product\n- Selected variant\n- Selected options\n- Quantity\n- Calculated price\n\nSTEP 6 — Checkout\nThe customer reviews the cart and continues to checkout.\n\nSTEP 7 — Phone Number\nThe customer provides their phone number.\n\nSTEP 8 — Payment\nThe current payment flow supports:\nPay at Counter\nAdditional payment methods can be added in the future.\n\nSTEP 9 — Order\nAfter the order is placed, the system generates a simple order identifier using the last four digits of the customer's phone number with a T prefix.\nExample:\nT 2390\nThis allows the restaurant to identify an order without displaying the customer's complete phone number.",
+    payment_security:
+      "Pay at Counter Payment Flow & Order Identification:\n\nThe current payment flow supports in-person counter settlement (Pay at Counter), with seamless extensibility for integrated payment gateways in the future.\n\nAfter checkout confirmation, the system creates a unique order identifier using the last four digits of the customer's phone number with a T prefix (e.g., T 2390). This enables efficient kitchen display and customer calling without exposing personal phone numbers.",
+    order_data_preservation:
+      "The cart and order lifecycle preserves the complete selected configuration snapshot:\n- Product and selected variant (Classic / Deluxe / Grilled) with variant-specific image and price\n- Selected option groups (Meal / Large Meals and Mild / Spicy choices)\n- Quantity and dynamically calculated price\n- Customer phone number and T-prefixed order identifier\n\nThis guarantees immutable historical records for both restaurant kitchen operations and customer receipt verification.",
+    dynamic_product_configuration:
+      "One of the main engineering goals was to avoid hard-coding the customer ordering experience.\n\nInstead of creating a separate custom page for every product, the system supports configurable product variants and option groups.\n\nFor example, an administrator can configure:\n\nChicken Sandwich\n- Classic\n- Deluxe\n- Grilled\n\nMeal Options\n- Meal\n- Large Meals\n\nChoice Group\n- Mild\n- Spicy\n\nThe customer interface then presents the available configuration dynamically.\n\nThe selected configuration is preserved through the cart and becomes part of the resulting order data.\n\nThis allows the restaurant menu to evolve through administration instead of requiring the customer-facing application to be rewritten for every menu change.",
+    restaurant_administration:
+      "The application includes an administration system designed for restaurant staff.\n\nThe Product Catalog allows administrators to manage:\n- Products\n- Categories\n- Product variants\n- Product images\n- Prices\n- Product options\n- Meal options\n- Customer-facing configuration\n\nFor example, an administrator can configure the Classic, Deluxe, and Grilled Chicken Sandwich variants and define their corresponding meal and choice options.\n\nThe Orders page receives customer orders and provides the restaurant with important order information including:\n- Order identifier\n- Customer information\n- Ordered products\n- Selected configurations\n- Quantities\n- Total amount\n- Order status\n\nThe administration system connects the restaurant's menu configuration with the customer ordering experience.",
+    technical_architecture:
+      "Browser / Touchscreen Client\n        ↓\nReact + Vite Frontend\n        ↓\nHono / tRPC API Layer\n        ↓\nDrizzle ORM\n        ↓\nNeon PostgreSQL\n        ↓\nPersistent Restaurant Data\n\nThe customer-facing application reads the configured restaurant menu and product options from the application data layer.\n\nThe administration interface modifies the restaurant configuration and manages resulting orders.\n\nThe architecture separates the customer ordering experience from administrative management while keeping both connected to the same persistent application data.\n\nLogical Flow:\n\nCustomer\n→ Home\n→ Categories\n→ Product Details\n→ Variant Selection\n→ Option Selection\n→ Cart\n→ Checkout\n→ Phone Number\n→ Payment\n→ Order\n\nRestaurant Staff\n→ Admin Login\n→ Product Catalog\n→ Products / Categories / Variants / Images / Pricing / Options\n→ Orders\n→ Order Management",
+    real_world_context:
+      "SmartOrder is the portfolio presentation of a real restaurant commerce application developed around the Tex’s Chicken & Burgers use case.\n\nThe portfolio name SmartOrder is used to present the engineering system independently as a reusable self-service restaurant ordering concept.\n\nThe screenshots and interface shown in this project represent the actual work developed for the restaurant ordering experience.",
+    documents: [
+      {
+        id: "doc-smartorder-runbook",
+        title: "SmartOrder System Dossier & Runbook",
+        type: "doc",
+        description: "Complete technical architecture, customer journey, and restaurant admin runbook",
+        content: `# BitePoint — Self-Service Restaurant Ordering System
+
+## 1. Overview
+SmartOrder is a self-service restaurant ordering system that I built around a real restaurant commerce workflow for Tex’s Chicken & Burgers.
+
+The customer starts on the home page, where they can browse different food categories and products. When a customer selects a product, they are taken to a product detail page where they can configure the item before adding it to the cart.
+
+The system supports dynamic product variants and customization. For example, the Chicken Sandwich can have Classic, Deluxe, and Grilled variants. Each variant can have its own image and pricing.
+
+The application also supports independent product option groups. A customer can select a meal option such as Meal or Large Meals and separately select a choice such as Mild or Spicy. These selections are maintained together when the customer adds the configured product to the cart.
+
+The complete customer journey is:
+Home → Products → Product Details → Customization → Cart → Checkout → Phone Number → Payment → Order
+
+The restaurant side includes an administration system where products, categories, variants, images, prices, product options, and customer orders can be managed.
+
+The main engineering focus was making product configuration dynamic rather than hard-coded. The administrator can configure what variants and options are available, and the customer-facing ordering experience uses those configurations while keeping the ordering process simple.
+
+---
+
+## 2. Key Features
+1. Touchscreen-first restaurant ordering interface
+2. Digital menu and category browsing
+3. Dynamic product variants
+4. Variant-specific images
+5. Variant-specific pricing
+6. Independent product option groups
+7. Meal and Large Meal selection
+8. Mild and Spicy choices
+9. Dynamic price calculation
+10. Add & Continue Shopping
+11. Buy Now workflow
+12. Persistent cart configuration
+13. Customer phone-number checkout
+14. T-prefixed order identification
+15. Pay at Counter payment flow
+16. Final order bill
+17. Restaurant Admin Product Catalog
+18. Product and category management
+19. Product variant management
+20. Product image management
+21. Product pricing management
+22. Product option management
+23. Admin Orders management
+24. Responsive mobile interface
+25. PostgreSQL-backed persistent data
+
+---
+
+## 3. Technology Stack
+- React
+- Vite
+- TypeScript
+- Hono
+- tRPC
+- Drizzle ORM
+- PostgreSQL
+- Neon PostgreSQL
+- Responsive Web UI
+- REST/API integrations
+- Git/GitHub
+
+---
+
+## 4. Customer Ordering Flow
+STEP 1 — Home
+The customer opens the restaurant ordering interface and sees the restaurant menu and available categories.
+
+STEP 2 — Browse Products
+The customer selects a category and browses available products.
+
+STEP 3 — Product Details
+The customer opens a product to see its image, pricing, variants, and available customization options.
+
+STEP 4 — Configure Product
+Example:
+Chicken Sandwich
+→ Classic / Deluxe / Grilled
+Meal option:
+→ Meal / Large Meals
+Choice:
+→ Mild / Spicy
+The selections are independent and are combined into one product configuration.
+
+STEP 5 — Add to Cart
+The cart stores:
+- Product
+- Selected variant
+- Selected options
+- Quantity
+- Calculated price
+
+STEP 6 — Checkout
+The customer reviews the cart and continues to checkout.
+
+STEP 7 — Phone Number
+The customer provides their phone number.
+
+STEP 8 — Payment
+The current payment flow supports:
+Pay at Counter
+Additional payment methods can be added in the future.
+
+STEP 9 — Order
+After the order is placed, the system generates a simple order identifier using the last four digits of the customer's phone number with a T prefix.
+Example:
+T 2390
+This allows the restaurant to identify an order without displaying the customer's complete phone number.
+
+---
+
+## 5. Dynamic Product Configuration
+One of the main engineering goals was to avoid hard-coding the customer ordering experience.
+
+Instead of creating a separate custom page for every product, the system supports configurable product variants and option groups.
+
+For example, an administrator can configure:
+Chicken Sandwich
+- Classic
+- Deluxe
+- Grilled
+
+Meal Options
+- Meal
+- Large Meals
+
+Choice Group
+- Mild
+- Spicy
+
+The customer interface then presents the available configuration dynamically.
+
+The selected configuration is preserved through the cart and becomes part of the resulting order data.
+
+This allows the restaurant menu to evolve through administration instead of requiring the customer-facing application to be rewritten for every menu change.
+
+---
+
+## 6. Restaurant Administration
+The application includes an administration system designed for restaurant staff.
+
+The Product Catalog allows administrators to manage:
+- Products
+- Categories
+- Product variants
+- Product images
+- Prices
+- Product options
+- Meal options
+- Customer-facing configuration
+
+For example, an administrator can configure the Classic, Deluxe, and Grilled Chicken Sandwich variants and define their corresponding meal and choice options.
+
+The Orders page receives customer orders and provides the restaurant with important order information including:
+- Order identifier
+- Customer information
+- Ordered products
+- Selected configurations
+- Quantities
+- Total amount
+- Order status
+
+The administration system connects the restaurant's menu configuration with the customer ordering experience.
+
+---
+
+## 7. Technical Architecture
+Browser / Touchscreen Client
+        ↓
+React + Vite Frontend
+        ↓
+Hono / tRPC API Layer
+        ↓
+Drizzle ORM
+        ↓
+Neon PostgreSQL
+        ↓
+Persistent Restaurant Data
+
+The customer-facing application reads the configured restaurant menu and product options from the application data layer.
+
+The administration interface modifies the restaurant configuration and manages resulting orders.
+
+The architecture separates the customer ordering experience from administrative management while keeping both connected to the same persistent application data.
+
+Logical Flow:
+
+Customer
+→ Home
+→ Categories
+→ Product Details
+→ Variant Selection
+→ Option Selection
+→ Cart
+→ Checkout
+→ Phone Number
+→ Payment
+→ Order
+
+Restaurant Staff
+→ Admin Login
+→ Product Catalog
+→ Products / Categories / Variants / Images / Pricing / Options
+→ Orders
+→ Order Management
+
+---
+
+## 8. Engineering Highlights
+- Built a complete restaurant commerce workflow rather than a static menu website.
+- Designed the customer experience around touchscreen interaction.
+- Implemented dynamic product variants.
+- Supported variant-specific images and pricing.
+- Implemented independent product option groups.
+- Preserved selected configurations through the cart.
+- Connected customer ordering with restaurant-side order management.
+- Implemented persistent PostgreSQL-backed application data.
+- Built responsive mobile UI in addition to the touchscreen experience.
+- Designed the system so restaurant administrators can control menu configuration without hard-coding every customer experience.
+
+---
+
+## 9. Real-World Project Context
+BitePoint is the portfolio presentation of a real restaurant commerce application developed around the Tex’s Chicken & Burgers use case.
+
+The portfolio name BitePoint is used to present the engineering system independently as a reusable self-service restaurant ordering concept.
+
+The screenshots and interface shown in this project represent the actual work developed for the restaurant ordering experience.
+`,
+      },
+    ],
+    videos: [],
+    architecture: [],
+    links: [],
+    projectDetail: {
+      images: {
+        image1: { url: "/api/project-media/4", enabled: true },
+        image2: { url: "", enabled: false },
+        image3: { url: "", enabled: false },
+        image4: { url: "", enabled: false },
+        image5: { url: "", enabled: false },
+      },
+      gitRepository: { url: "", enabled: false },
+      website: { url: "", enabled: false },
+      video: { url: "", enabled: false },
+      pdf: { url: "", enabled: false },
+      documentation: { url: "", enabled: true },
+      videoSessions: { enabled: false },
+      architecture: { enabled: false },
+    },
+  },
 };
+
+DEFAULT_PROJECT_CONTENTS["35"] = DEFAULT_PROJECT_CONTENTS["smartorder"];
+DEFAULT_PROJECT_CONTENTS["bitepoint"] = DEFAULT_PROJECT_CONTENTS["smartorder"];
 
 /**
  * Parses JSON content stored inside the database `highlights` column
@@ -1092,6 +1421,22 @@ export function parseProjectContentFromRecord(
         parsed.order_data_preservation !== undefined
           ? parsed.order_data_preservation
           : fallback?.order_data_preservation,
+      dynamic_product_configuration:
+        parsed.dynamic_product_configuration !== undefined
+          ? parsed.dynamic_product_configuration
+          : fallback?.dynamic_product_configuration,
+      restaurant_administration:
+        parsed.restaurant_administration !== undefined
+          ? parsed.restaurant_administration
+          : fallback?.restaurant_administration,
+      technical_architecture:
+        parsed.technical_architecture !== undefined
+          ? parsed.technical_architecture
+          : fallback?.technical_architecture,
+      real_world_context:
+        parsed.real_world_context !== undefined
+          ? parsed.real_world_context
+          : fallback?.real_world_context,
       core_philosophy:
         (isStaleStudioOverview || isStaleWeddingOverview) && fallback?.core_philosophy
           ? fallback.core_philosophy
@@ -1201,6 +1546,10 @@ export function parseProjectContentFromRecord(
     business_flow: fallback?.business_flow,
     payment_security: fallback?.payment_security,
     order_data_preservation: fallback?.order_data_preservation,
+    dynamic_product_configuration: fallback?.dynamic_product_configuration,
+    restaurant_administration: fallback?.restaurant_administration,
+    technical_architecture: fallback?.technical_architecture,
+    real_world_context: fallback?.real_world_context,
     core_philosophy: fallback?.core_philosophy,
     execution_planes: fallback?.execution_planes,
     system_capabilities: fallback?.system_capabilities,
@@ -1246,9 +1595,21 @@ export function buildFullProjectData(
   }
 
   if (!staticProj && !dbRecord) {
-    const error = new Error(`Project "${idOrSlug}" not found in portfolio catalog.`);
-    (error as any).status = 404;
-    throw error;
+    if (strId === "smartorder" || strId === "smart-order" || strId === "bitepoint" || strId === "bite-point" || strId === "35") {
+      dbRecord = {
+        id: 35,
+        title: "SmartOrder",
+        category: "Cloud Native / Restaurant Commerce",
+        description: "A touchscreen-first restaurant commerce application that allows customers to browse a digital menu, configure products, add customized items to a cart, complete checkout, and place orders while giving restaurant staff an administration system for menu and order management.",
+        image_url: "/api/project-media/4",
+        technologies: "React, Vite, TypeScript, Hono, tRPC, Drizzle ORM, PostgreSQL, Neon PostgreSQL, Responsive Web UI, REST/API integrations, Git/GitHub",
+        status: "Ready",
+      };
+    } else {
+      const error = new Error(`Project "${idOrSlug}" not found in portfolio catalog.`);
+      (error as any).status = 404;
+      throw error;
+    }
   }
 
   const canonicalId =
@@ -1264,6 +1625,8 @@ export function buildFullProjectData(
       ? "DevOps AI Control Plane"
       : canonicalId === "fresh-flow"
       ? "B2B Wholesale Commerce"
+      : canonicalId === "35" || canonicalId === "smartorder" || canonicalId === "bitepoint"
+      ? (dbRecord?.category || "Cloud Native / Restaurant Commerce")
       : dbRecord?.category || staticProj?.category || "Cloud Architecture";
   const description =
     canonicalId === "wedding"
@@ -1275,12 +1638,17 @@ export function buildFullProjectData(
       : canonicalId === "fresh-flow"
       ? (staticProj?.description ||
         "AM Fruits is a B2B wholesale fruit and grocery platform designed to make wholesale buying easier for business customers while giving the supplier one system to manage the business.")
+      : canonicalId === "35" || canonicalId === "smartorder" || canonicalId === "bitepoint"
+      ? (dbRecord?.description ||
+        "A touchscreen-first restaurant commerce application that allows customers to browse a digital menu, configure products, add customized items to a cart, complete checkout, and place orders while giving restaurant staff an administration system for menu and order management.")
       : dbRecord?.description || staticProj?.description || "";
   const rawStatus =
     canonicalId === "wedding"
       ? "Ready"
       : canonicalId === "fresh-flow" || dbRecord?.id === 5
       ? "Live"
+      : canonicalId === "35" || canonicalId === "smartorder" || canonicalId === "bitepoint"
+      ? "Ready"
       : dbRecord?.status || staticProj?.statusLabel;
   const status = normalizeProjectStatus(rawStatus);
 
@@ -1376,6 +1744,8 @@ export function buildFullProjectData(
       ? "B2B Wholesale Produce & Business Management Platform"
       : canonicalId === "sohail-studio"
       ? (staticProj?.tagline || "Local-First DevOps AI Control Plane & Engineering Workspace")
+      : canonicalId === "35" || canonicalId === "smartorder" || canonicalId === "bitepoint"
+      ? "Self-Service Restaurant Ordering System"
       : staticProj?.tagline || "High-Performance Cloud System");
 
   // Images
