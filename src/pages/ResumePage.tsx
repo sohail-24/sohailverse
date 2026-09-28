@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Printer,
@@ -17,6 +17,79 @@ import {
 export default function ResumePage() {
   const [copied, setCopied] = useState(false);
   const [zoomLevel, setZoomLevel] = useState<number>(100);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mobileFitScale, setMobileFitScale] = useState<number>(1);
+  const pinchStartDistanceRef = useRef<number | null>(null);
+  const pinchStartZoomRef = useRef<number>(100);
+
+  // A4 dimensions in px at standard 96 DPI: 210mm = ~793.7px, 297mm = ~1122.5px
+  const A4_WIDTH_PX = 794;
+  const A4_HEIGHT_PX = 1123;
+
+  useEffect(() => {
+    function updateMobileScale() {
+      if (containerRef.current) {
+        // Container available width inside the main viewport
+        const containerWidth = containerRef.current.clientWidth;
+        if (containerWidth < A4_WIDTH_PX) {
+          // Available space for the document leaving minimal safe gutter (6-8px per side)
+          const availableGutter = Math.max(340, containerWidth - 12);
+          const fitRatio = availableGutter / A4_WIDTH_PX;
+          // Target scale: approximately 52–55% on phones (e.g. 375px–430px) for optimal readability
+          // while ensuring the full A4 page width fits inside the viewport with zero horizontal overflow
+          const targetScale = Math.min(0.55, Math.max(0.52, fitRatio));
+          // If the device screen is slightly narrower than 52% scale * 794 (413px), scale down safely to fit without clipping
+          const safeScale = Math.min(targetScale, (containerWidth - 8) / A4_WIDTH_PX);
+          setMobileFitScale(Number(safeScale.toFixed(3)));
+        } else {
+          setMobileFitScale(1);
+        }
+      }
+    }
+
+    updateMobileScale();
+    window.addEventListener("resize", updateMobileScale);
+    return () => window.removeEventListener("resize", updateMobileScale);
+  }, []);
+
+  // Native touch pinch-to-zoom support
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      pinchStartDistanceRef.current = distance;
+      pinchStartZoomRef.current = zoomLevel;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && pinchStartDistanceRef.current !== null) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      const ratio = currentDistance / pinchStartDistanceRef.current;
+      const calculatedZoom = Math.round(pinchStartZoomRef.current * ratio);
+      const clampedZoom = Math.min(220, Math.max(60, calculatedZoom));
+      setZoomLevel(clampedZoom);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length < 2) {
+      pinchStartDistanceRef.current = null;
+    }
+  };
+
+  // Effective scale combines auto mobile fit scaling with user zoom control
+  const effectiveScale = mobileFitScale * (zoomLevel / 100);
+  const scaledWrapperHeight = Math.round(A4_HEIGHT_PX * effectiveScale);
 
   const handlePrint = () => {
     window.print();
@@ -24,20 +97,20 @@ export default function ResumePage() {
 
   const handleCopyText = () => {
     const plainText = `MOHAMMED SOHAIL
-Cloud & DevOps Engineer | Kubernetes • AWS • Automation
+Cloud, DevOps & Full-Stack Developer | AWS • Kubernetes • Automation
 Hyderabad, India | 9573692390 | mdsohail88008@gmail.com
-LinkedIn: linkedin.com/in/md-sohail2001 | GitHub: github.com/sohail-24 | Portfolio: https://sohaildevops.site
+LinkedIn: linkedin.com/in/md-sohail2001 | GitHub: github.com/sohail-24
+https://sohaildevops.site
 
 PROFESSIONAL SUMMARY
-Hands-on DevOps Engineer with a solid foundation in Electronics & Instrumentation Engineering, cloud infrastructure automation, container orchestration, and full-stack system architecture. Demonstrated practical experience provisioning and managing dual Kubernetes environments (self-managed kubeadm on EC2 and AWS EKS), authoring modular Terraform Infrastructure-as-Code, orchestrating automated GitOps delivery pipelines with GitHub Actions and ArgoCD, and containerizing production-grade applications. Proven track record in diagnosing and resolving complex production incidents spanning Kubernetes CSI storage provisioners, reverse proxies, and IAM governance.
+Hands-on Cloud, DevOps & Full-Stack Developer with a solid foundation in Electronics & Instrumentation Engineering, cloud infrastructure automation, container orchestration, and full-stack software architecture. Demonstrated practical experience provisioning and managing dual Kubernetes environments (self-managed kubeadm on EC2 and AWS EKS), authoring modular Terraform Infrastructure-as-Code, orchestrating automated GitOps delivery pipelines with GitHub Actions and ArgoCD, and developing production full-stack TypeScript/React and Python applications. Proven track record in diagnosing and resolving complex production incidents spanning Kubernetes CSI storage provisioners, reverse proxies, and IAM governance.
 
 TECHNICAL SKILLS
-• Cloud Platforms: Amazon Web Services (AWS) — VPC, EC2, S3, RDS, EKS, ALB, CloudFront, Route 53, IAM (Roles & IRSA), CloudWatch
-• Containers & Orchestration: Kubernetes, Docker, Helm, ArgoCD (GitOps), kubeadm, Calico CNI, StatefulSets, Ingress (ALB & NGINX), CSI Storage Drivers
-• Infrastructure as Code & CI/CD: Terraform, GitHub Actions, Jenkins, Ansible, Declarative Helm Charts, Multi-Repo Delivery Workflows
-• Systems & Networking: Linux Administration (Ubuntu/Debian), Bash Shell Scripting, TCP/IP, OSI 7-Layer Model, CIDR Subnetting, NAT Gateways, DNS (Route 53, dig), Systemd, NGINX Reverse Proxy, Wireshark, curl
-• Observability & Monitoring: Prometheus, Grafana, CloudWatch Logs & Metrics
-• Databases & Tooling: PostgreSQL, Neon PostgreSQL, Redis, Drizzle ORM, Git, Vite, TypeScript, Python (Django), Node.js (Hono/Express), tRPC
+• Frontend: React 19 / 18, TypeScript, JavaScript, Vite, Tailwind CSS, HTML5, CSS3, Framer Motion, Responsive UI
+• Backend & APIs: Node.js, Hono, Express, Python, Django 5, tRPC, REST APIs, Zod, Gunicorn
+• Databases & Data: PostgreSQL, Neon PostgreSQL (Serverless), Redis, Drizzle ORM, StatefulSets Data Persistence
+• DevOps & Cloud: AWS (EKS, VPC, EC2, S3, RDS, ALB, CloudFront, Route 53, IAM/IRSA, CloudWatch), Kubernetes, Docker, Terraform, Helm, ArgoCD, GitHub Actions, Jenkins, Ansible, kubeadm, Calico CNI, NGINX
+• Systems & Observability: Linux Administration (Ubuntu), Bash Scripting, TCP/IP, OSI Model, Subnetting, NAT, Prometheus, Grafana, CloudWatch, Git
 
 PROFESSIONAL EXPERIENCE
 Visys Cloud Technologies | DevOps Engineering Intern
@@ -49,16 +122,16 @@ December 2025 – June 2026
 • Integrated multi-stage Docker builds and Helm release packaging to enforce reproducible, immutable build artifacts across staging and production.
 
 EDUCATION
-Muffakham Jah College of Engineering and Technology | 2019 – 2023
-Bachelor of Engineering (B.E.) — Electronics & Instrumentation Engineering
+Muffakham Jah College of Engineering and Technology                         2019 – 2023
+Electronics & Instrumentation Engineering
 
 FEATURED PROJECTS
-1. AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform
-Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS
-• Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.
-• Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.
-• Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.
-• Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.
+1. SohailShop: Dual-Cluster Kubernetes E-Commerce Platform
+Technologies: Kubernetes (kubeadm & AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX, GitHub Actions
+• Engineered a production-grade modular e-commerce backend and deployed it across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.
+• Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.
+• Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.
+• Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.
 
 2. SmartOrder: Cloud-Native Self-Service Restaurant Commerce System
 Technologies: TypeScript, React, Vite, Hono, tRPC, Drizzle ORM, PostgreSQL (Neon Serverless), Tailwind CSS, Git/GitHub
@@ -67,13 +140,12 @@ Technologies: TypeScript, React, Vite, Hono, tRPC, Drizzle ORM, PostgreSQL (Neon
 • Implemented end-to-end type safety between backend and frontend via tRPC and Hono API routing, preserving product configuration states across cart and checkout.
 • Implemented an order lifecycle tracking system that generates human-readable short order tokens (e.g., T 2390) for counter settlement while preserving customer data privacy.
 
-3. SohailShop: Dual-Cluster Kubernetes E-Commerce Platform
-Technologies: Kubernetes (kubeadm & AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX, GitHub Actions
-• Engineered a production-grade modular e-commerce backend and deployed it across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.
-• Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.
-• Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.
-• Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.
-• Diagnosed and resolved 6 real-world production incidents, including CSI driver PVC Pending states, NGINX reverse-proxy media routing limitations, and S3 IAM mismatches.
+3. AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform
+Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS
+• Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.
+• Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.
+• Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.
+• Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.
 
 DEVOPS & CLOUD INFRASTRUCTURE HANDS-ON WORK
 • AWS Multi-AZ High Availability Architecture: Architected fault-tolerant multi-AZ infrastructure eliminating single points of failure across web, application, and database tiers; configured ALB path-based routing, target health checks, Auto Scaling groups, and multi-AZ database replication with automated standby failover.
@@ -113,11 +185,25 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
           .no-print {
             display: none !important;
           }
+          .resume-canvas-area {
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+            width: auto !important;
+          }
           .resume-container {
             padding: 0 !important;
             margin: 0 !important;
             background: transparent !important;
             gap: 0 !important;
+            width: auto !important;
+            max-width: none !important;
+          }
+          .a4-page-scaler {
+            width: 210mm !important;
+            height: 297mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
           .a4-page {
             box-shadow: none !important;
@@ -126,6 +212,7 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
             width: 210mm !important;
             height: 297mm !important;
             max-height: 297mm !important;
+            transform: none !important;
             page-break-after: always !important;
             break-after: page !important;
             overflow: hidden !important;
@@ -138,45 +225,46 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
       `}</style>
 
       {/* Floating Interactive Toolbar (Hidden during print) */}
-      <header className="no-print sticky top-0 z-50 border-b border-white/10 bg-slate-900/90 backdrop-blur-md px-4 py-3 sm:px-8">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 flex-wrap">
+      <header className="no-print sticky top-0 z-50 border-b border-white/10 bg-slate-900/90 backdrop-blur-md px-3 py-2.5 sm:px-8 sm:py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2.5 sm:gap-4 flex-wrap">
           {/* Back link & title */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Link
               to="/projects"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-mono text-slate-300 transition-all hover:bg-white/10 hover:text-white"
+              className="inline-flex items-center gap-1 sm:gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-mono text-slate-300 transition-all hover:bg-white/10 hover:text-white flex-shrink-0"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Back to Portfolio</span>
+              <span className="hidden xs:inline">Back to Portfolio</span>
+              <span className="xs:hidden">Back</span>
             </Link>
             <div className="hidden sm:block h-4 w-px bg-white/15" />
-            <div className="flex items-center gap-2">
-              <span className="flex h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
-              <h1 className="text-xs sm:text-sm font-semibold text-white tracking-wide">
-                Production-Ready 2-Page DevOps Resume
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <span className="flex h-2 w-2 rounded-full bg-cyan-400 animate-pulse flex-shrink-0" />
+              <h1 className="text-xs sm:text-sm font-semibold text-white tracking-wide truncate">
+                DevOps Resume
               </h1>
-              <span className="rounded bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 text-[10px] font-mono text-cyan-300">
+              <span className="hidden sm:inline-flex rounded bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 text-[10px] font-mono text-cyan-300">
                 A4 · ATS-Optimized
               </span>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap">
             {/* Zoom Controls */}
-            <div className="hidden md:flex items-center gap-1 bg-white/5 border border-white/10 rounded-lg p-1 text-xs font-mono">
+            <div className="flex items-center gap-0.5 sm:gap-1 bg-white/5 border border-white/10 rounded-lg p-0.5 sm:p-1 text-xs font-mono">
               <button
-                onClick={() => setZoomLevel((prev) => Math.max(80, prev - 10))}
+                onClick={() => setZoomLevel((prev) => Math.max(60, prev - 10))}
                 className="p-1 hover:bg-white/10 rounded text-slate-300 hover:text-white transition-colors"
                 title="Zoom Out"
               >
                 <ZoomOut className="h-3.5 w-3.5" />
               </button>
-              <span className="px-1.5 text-[11px] text-slate-400 min-w-[40px] text-center">
-                {zoomLevel}%
+              <span className="px-1 text-[10px] sm:text-[11px] text-slate-400 min-w-[36px] sm:min-w-[40px] text-center">
+                {Math.round(effectiveScale * 100)}%
               </span>
               <button
-                onClick={() => setZoomLevel((prev) => Math.min(130, prev + 10))}
+                onClick={() => setZoomLevel((prev) => Math.min(150, prev + 10))}
                 className="p-1 hover:bg-white/10 rounded text-slate-300 hover:text-white transition-colors"
                 title="Zoom In"
               >
@@ -187,17 +275,17 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
             {/* Copy Plain Text */}
             <button
               onClick={handleCopyText}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-mono text-slate-200 transition-all hover:bg-white/10 hover:text-white"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-mono text-slate-200 transition-all hover:bg-white/10 hover:text-white"
             >
               {copied ? (
                 <>
                   <Check className="h-3.5 w-3.5 text-emerald-400" />
-                  <span className="text-emerald-300">Copied Plain Text!</span>
+                  <span className="text-emerald-300">Copied!</span>
                 </>
               ) : (
                 <>
                   <Copy className="h-3.5 w-3.5 text-slate-400" />
-                  <span>Copy Plain Text</span>
+                  <span>Copy Text</span>
                 </>
               )}
             </button>
@@ -206,49 +294,71 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
             <a
               href="/resume.pdf"
               download="Mohammed_Sohail_DevOps_Resume.pdf"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-mono text-slate-200 transition-all hover:bg-white/10 hover:text-white"
+              className="inline-flex items-center gap-1 sm:gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 sm:px-3 py-1.5 text-xs font-mono text-slate-200 transition-all hover:bg-white/10 hover:text-white"
+              title="Download PDF"
             >
               <Download className="h-3.5 w-3.5 text-sky-400" />
-              <span>Download PDF</span>
+              <span className="hidden xs:inline">Download PDF</span>
+              <span className="xs:hidden">PDF</span>
             </a>
 
             {/* Print / Save PDF Button */}
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-1.5 text-xs font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all hover:brightness-110 hover:shadow-cyan-500/30 active:scale-95"
+              className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-3 sm:px-4 py-1.5 text-xs font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all hover:brightness-110 hover:shadow-cyan-500/30 active:scale-95"
+              title="Print / Save as PDF"
             >
               <Printer className="h-3.5 w-3.5" />
-              <span>Print / Save as PDF</span>
+              <span className="hidden xs:inline">Print / Save PDF</span>
+              <span className="xs:hidden">Print</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Main Resume Canvas Workspace */}
-      <main className="flex-1 py-8 px-4 flex flex-col items-center justify-start overflow-auto">
-        <div
-          className="resume-container flex flex-col items-center gap-8 w-full max-w-[210mm] transition-all duration-200"
-          style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "top center" }}
-        >
+      <main
+        ref={containerRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="resume-canvas-area flex-1 py-4 sm:py-8 px-2 sm:px-4 flex flex-col items-center justify-start overflow-x-hidden overflow-y-auto w-full touch-pan-y"
+      >
+        <div className="resume-container flex flex-col items-center gap-6 sm:gap-8 w-full max-w-[210mm] mx-auto">
           {/* =========================================================================
               PAGE 1 (EXACT A4: 210mm x 297mm)
              ========================================================================= */}
-          <article className="a4-page relative w-[210mm] min-h-[297mm] max-h-[297mm] h-[297mm] bg-white text-slate-900 shadow-2xl p-[11mm] flex flex-col justify-between box-border overflow-hidden select-text border border-slate-200">
+          <div
+            className="a4-page-scaler relative mx-auto flex flex-col items-center justify-start transition-all duration-200"
+            style={{
+              width: `${Math.round(A4_WIDTH_PX * effectiveScale)}px`,
+              height: `${scaledWrapperHeight}px`,
+              maxWidth: "100%",
+            }}
+          >
+            <article
+              className="a4-page relative w-[210mm] min-h-[297mm] max-h-[297mm] h-[297mm] bg-white text-slate-900 shadow-2xl p-[11mm] flex flex-col justify-between box-border overflow-hidden select-text border border-slate-200 flex-shrink-0"
+              style={{
+                transform: `scale(${effectiveScale})`,
+                transformOrigin: "top center",
+              }}
+            >
             {/* Top Container */}
             <div className="space-y-3.5">
               {/* HEADER */}
-              <header className="border-b border-slate-300 pb-2.5">
-                <div className="flex items-baseline justify-between">
-                  <h1 className="text-[23pt] font-extrabold tracking-tight text-slate-900 leading-none">
-                    MOHAMMED SOHAIL
-                  </h1>
-                  <span className="text-[9pt] font-bold tracking-wider uppercase text-sky-700 font-mono">
-                    Cloud &amp; DevOps Engineer | Kubernetes • AWS • Automation
-                  </span>
+              <header className="border-b border-slate-300 pb-2 text-center">
+                {/* 1. Centered prominent name */}
+                <h1 className="text-[23pt] font-extrabold tracking-tight text-slate-900 leading-tight">
+                  MOHAMMED SOHAIL
+                </h1>
+
+                {/* 2. Headline - strictly on ONE line on desktop/A4 */}
+                <div className="mt-0.5 text-[8.8pt] font-bold tracking-normal uppercase text-sky-700 font-mono whitespace-nowrap overflow-hidden text-ellipsis">
+                  Cloud, DevOps &amp; Full-Stack Developer | AWS • Kubernetes • Automation
                 </div>
 
-                {/* Contact Information Row */}
-                <div className="mt-1.5 flex items-center justify-between text-[8.5pt] text-slate-600 font-medium flex-wrap gap-x-2">
+                {/* 3. Contact Information - exactly ONE line on desktop/A4, natural wrap only on narrow phone viewports */}
+                <div className="mt-1 flex items-center justify-center text-[7.8pt] text-slate-600 font-medium sm:whitespace-nowrap flex-wrap gap-x-2 gap-y-0.5">
                   <span>Hyderabad, India</span>
                   <span className="text-slate-300">·</span>
                   <span className="text-slate-700 font-bold font-mono">9573692390</span>
@@ -277,12 +387,15 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
                   >
                     github.com/sohail-24
                   </a>
-                  <span className="text-slate-300">·</span>
+                </div>
+
+                {/* 4. Portfolio URL - Centered on its own distinct line */}
+                <div className="mt-0.5">
                   <a
                     href="https://sohaildevops.site"
                     target="_blank"
                     rel="noreferrer"
-                    className="font-mono text-slate-700 font-semibold hover:text-sky-700 transition-colors"
+                    className="font-mono text-[8.2pt] text-sky-700 font-semibold hover:text-sky-800 transition-colors tracking-wide underline decoration-sky-300 underline-offset-2 hover:decoration-sky-600"
                   >
                     https://sohaildevops.site
                   </a>
@@ -298,7 +411,7 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
                   </h2>
                 </div>
                 <p className="text-[8.5pt] text-slate-700 leading-[1.38] text-justify">
-                  Hands-on DevOps Engineer with a solid foundation in Electronics &amp; Instrumentation Engineering, cloud infrastructure automation, container orchestration, and full-stack system architecture. Demonstrated practical experience provisioning and managing dual Kubernetes environments (self-managed kubeadm on EC2 and AWS EKS), authoring modular Terraform Infrastructure-as-Code, orchestrating automated GitOps delivery pipelines with GitHub Actions and ArgoCD, and containerizing production-grade applications. Proven track record in diagnosing and resolving complex production incidents spanning Kubernetes CSI storage provisioners, reverse proxies, and IAM governance.
+                  Hands-on Cloud, DevOps &amp; Full-Stack Developer with a solid foundation in Electronics &amp; Instrumentation Engineering, cloud infrastructure automation, container orchestration, and full-stack software architecture. Demonstrated practical experience provisioning and managing dual Kubernetes environments (self-managed kubeadm on EC2 and AWS EKS), authoring modular Terraform Infrastructure-as-Code, orchestrating automated GitOps delivery pipelines with GitHub Actions and ArgoCD, and developing production full-stack TypeScript/React and Python applications. Proven track record in diagnosing and resolving complex production incidents spanning Kubernetes CSI storage provisioners, reverse proxies, and IAM governance.
                 </p>
               </section>
 
@@ -312,33 +425,33 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
                 </div>
                 <div className="grid grid-cols-1 gap-y-1 text-[8.5pt] leading-[1.35]">
                   <div>
-                    <span className="font-bold text-slate-900">Cloud Platforms: </span>
+                    <span className="font-bold text-slate-900">Frontend: </span>
                     <span className="text-slate-700">
-                      Amazon Web Services (AWS) — VPC, EC2, S3, RDS, EKS, ALB, CloudFront, Route 53, IAM (Roles &amp; IRSA), CloudWatch
+                      React 19 / 18, TypeScript, JavaScript, Vite, Tailwind CSS, HTML5, CSS3, Framer Motion, Responsive UI
                     </span>
                   </div>
                   <div>
-                    <span className="font-bold text-slate-900">Containers &amp; Orchestration: </span>
+                    <span className="font-bold text-slate-900">Backend &amp; APIs: </span>
                     <span className="text-slate-700">
-                      Kubernetes, Docker, Helm, ArgoCD (GitOps), kubeadm, Calico CNI, StatefulSets, Ingress (ALB &amp; NGINX), CSI Drivers
+                      Node.js, Hono, Express, Python, Django 5, tRPC, REST APIs, Zod, Gunicorn
                     </span>
                   </div>
                   <div>
-                    <span className="font-bold text-slate-900">IaC &amp; CI/CD: </span>
+                    <span className="font-bold text-slate-900">Databases &amp; Data: </span>
                     <span className="text-slate-700">
-                      Terraform, GitHub Actions, Jenkins, Ansible, Declarative Helm Charts, Multi-Repo Delivery Workflows
+                      PostgreSQL, Neon PostgreSQL (Serverless), Redis, Drizzle ORM, StatefulSets Data Persistence
                     </span>
                   </div>
                   <div>
-                    <span className="font-bold text-slate-900">Systems &amp; Networking: </span>
+                    <span className="font-bold text-slate-900">DevOps &amp; Cloud: </span>
                     <span className="text-slate-700">
-                      Linux Administration (Ubuntu), Bash Scripting, TCP/IP, OSI Model, Subnetting, NAT Gateways, DNS (Route 53, dig), Systemd, NGINX
+                      AWS (EKS, VPC, EC2, S3, RDS, ALB, CloudFront, Route 53, IAM/IRSA, CloudWatch), Kubernetes, Docker, Terraform, Helm, ArgoCD, GitHub Actions, Jenkins, Ansible, kubeadm, Calico CNI, NGINX
                     </span>
                   </div>
                   <div>
-                    <span className="font-bold text-slate-900">Observability &amp; Databases: </span>
+                    <span className="font-bold text-slate-900">Systems &amp; Observability: </span>
                     <span className="text-slate-700">
-                      Prometheus, Grafana, CloudWatch, PostgreSQL, Neon Serverless, Redis, Drizzle ORM, Git, TypeScript, Python (Django)
+                      Linux Administration (Ubuntu), Bash Scripting, TCP/IP, OSI Model, Subnetting, NAT, Prometheus, Grafana, CloudWatch, Git
                     </span>
                   </div>
                 </div>
@@ -392,22 +505,22 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
                     Education
                   </h2>
                 </div>
-                <div className="flex items-baseline justify-between">
-                  <div>
+                <div className="space-y-0.5">
+                  <div className="flex items-baseline justify-between">
                     <span className="text-[9pt] font-bold text-slate-900">
                       Muffakham Jah College of Engineering and Technology
                     </span>
-                    <span className="text-[8.5pt] text-slate-700">
-                      {" "}— Bachelor of Engineering (B.E.), Electronics &amp; Instrumentation Engineering
+                    <span className="text-[8pt] font-semibold text-slate-600 font-mono">
+                      2019 – 2023
                     </span>
                   </div>
-                  <span className="text-[8pt] font-semibold text-slate-600 font-mono">
-                    2019 – 2023
-                  </span>
+                  <div className="text-[8.5pt] text-slate-700">
+                    Electronics &amp; Instrumentation Engineering
+                  </div>
                 </div>
               </section>
 
-              {/* FEATURED PROJECTS (1. AM FRUITS & 2. SMARTORDER) */}
+              {/* FEATURED PROJECTS (1. SOHAILSHOP ON PAGE 1) */}
               <section className="space-y-2">
                 <div className="flex items-center gap-1.5 border-b border-slate-200 pb-0.5 mb-1">
                   <div className="h-3 w-1 bg-sky-600 rounded-sm" />
@@ -416,37 +529,85 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
                   </h2>
                 </div>
 
-                {/* Project 1: AM Fruits */}
+                {/* Project 1: SohailShop */}
                 <div className="space-y-0.5">
                   <div className="flex items-baseline justify-between">
                     <span className="text-[9pt] font-bold text-slate-900">
-                      AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform
+                      SohailShop: Dual-Cluster Kubernetes E-Commerce Platform
                     </span>
-                    <span className="text-[7.5pt] font-mono text-emerald-700 font-medium">
-                      Live Production: amfruits.shop
+                    <span className="text-[7.5pt] font-mono text-slate-500">
+                      github.com/sohail-24/devops-ecommerce-platform
                     </span>
                   </div>
                   <div className="text-[7.8pt] font-medium text-sky-800 italic">
-                    Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS
+                    Technologies: Kubernetes (kubeadm &amp; AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX
                   </div>
                   <ul className="list-disc list-outside ml-3.5 space-y-0.5 text-[8.1pt] text-slate-700 leading-[1.32]">
                     <li>
-                      Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.
+                      Engineered a production-grade modular e-commerce backend and deployed it across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.
                     </li>
                     <li>
-                      Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.
+                      Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.
                     </li>
                     <li>
-                      Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.
+                      Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.
                     </li>
                     <li>
-                      Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.
+                      Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.
                     </li>
                   </ul>
                 </div>
+              </section>
+            </div>
+
+            {/* Page 1 Footer */}
+            <footer className="border-t border-slate-200 pt-1 flex items-center justify-between text-[7.5pt] text-slate-500 font-mono">
+              <span>MOHAMMED SOHAIL — Cloud, DevOps &amp; Full-Stack Developer</span>
+              <span>Page 1 of 2</span>
+            </footer>
+          </article>
+        </div>
+
+        {/* =========================================================================
+            PAGE 2 (EXACT A4: 210mm x 297mm)
+           ========================================================================= */}
+        <div
+          className="a4-page-scaler relative mx-auto flex flex-col items-center justify-start transition-all duration-200"
+          style={{
+            width: `${Math.round(A4_WIDTH_PX * effectiveScale)}px`,
+            height: `${scaledWrapperHeight}px`,
+            maxWidth: "100%",
+          }}
+        >
+          <article
+            className="a4-page relative w-[210mm] min-h-[297mm] max-h-[297mm] h-[297mm] bg-white text-slate-900 shadow-2xl p-[11mm] flex flex-col justify-between box-border overflow-hidden select-text border border-slate-200 flex-shrink-0"
+            style={{
+              transform: `scale(${effectiveScale})`,
+              transformOrigin: "top center",
+            }}
+          >
+            {/* Top Container */}
+            <div className="space-y-3.5">
+              {/* PAGE 2 RUNNING HEADER */}
+              <header className="border-b border-slate-300 pb-1.5 flex items-baseline justify-between">
+                <div>
+                  <span className="text-[12pt] font-bold text-slate-900">MOHAMMED SOHAIL</span>
+                  <span className="text-[8.5pt] text-slate-500 ml-2">| Cloud, DevOps &amp; Full-Stack Developer — Technical Portfolio Dossier</span>
+                </div>
+                <span className="text-[8pt] font-mono text-slate-500">mdsohail88008@gmail.com</span>
+              </header>
+
+              {/* FEATURED PROJECTS (CONTINUED): SMARTORDER & AM FRUITS */}
+              <section className="space-y-2">
+                <div className="flex items-center gap-1.5 border-b border-slate-200 pb-0.5 mb-1">
+                  <div className="h-3 w-1 bg-sky-600 rounded-sm" />
+                  <h2 className="text-[9pt] font-bold tracking-wider uppercase text-slate-900">
+                    Featured Projects (Continued)
+                  </h2>
+                </div>
 
                 {/* Project 2: SmartOrder */}
-                <div className="space-y-0.5 pt-0.5">
+                <div className="space-y-0.5">
                   <div className="flex items-baseline justify-between">
                     <span className="text-[9pt] font-bold text-slate-900">
                       SmartOrder: Cloud-Native Self-Service Restaurant Commerce System
@@ -473,65 +634,32 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
                     </li>
                   </ul>
                 </div>
-              </section>
-            </div>
 
-            {/* Page 1 Footer */}
-            <footer className="border-t border-slate-200 pt-1 flex items-center justify-between text-[7.5pt] text-slate-500 font-mono">
-              <span>MOHAMMED SOHAIL — Cloud &amp; DevOps Engineer</span>
-              <span>Page 1 of 2</span>
-            </footer>
-          </article>
-
-          {/* =========================================================================
-              PAGE 2 (EXACT A4: 210mm x 297mm)
-             ========================================================================= */}
-          <article className="a4-page relative w-[210mm] min-h-[297mm] max-h-[297mm] h-[297mm] bg-white text-slate-900 shadow-2xl p-[11mm] flex flex-col justify-between box-border overflow-hidden select-text border border-slate-200">
-            {/* Top Container */}
-            <div className="space-y-3.5">
-              {/* PAGE 2 RUNNING HEADER */}
-              <header className="border-b border-slate-300 pb-1.5 flex items-baseline justify-between">
-                <div>
-                  <span className="text-[12pt] font-bold text-slate-900">MOHAMMED SOHAIL</span>
-                  <span className="text-[8.5pt] text-slate-500 ml-2">| Cloud &amp; DevOps Engineer — Technical Portfolio Dossier</span>
-                </div>
-                <span className="text-[8pt] font-mono text-slate-500">mdsohail88008@gmail.com</span>
-              </header>
-
-              {/* FEATURED PROJECTS (CONTINUED): SOHAILSHOP */}
-              <section className="space-y-2">
-                <div className="flex items-center gap-1.5 border-b border-slate-200 pb-0.5 mb-1">
-                  <div className="h-3 w-1 bg-sky-600 rounded-sm" />
-                  <h2 className="text-[9pt] font-bold tracking-wider uppercase text-slate-900">
-                    Featured Projects (Continued)
-                  </h2>
-                </div>
-
-                {/* Project 3: SohailShop */}
-                <div className="space-y-0.5">
+                {/* Project 3: AM Fruits */}
+                <div className="space-y-0.5 pt-0.5">
                   <div className="flex items-baseline justify-between">
                     <span className="text-[9pt] font-bold text-slate-900">
-                      SohailShop: Dual-Cluster Kubernetes E-Commerce Platform
+                      AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform
                     </span>
-                    <span className="text-[7.5pt] font-mono text-slate-500">
-                      github.com/sohail-24/devops-ecommerce-platform
+                    <span className="text-[7.5pt] font-mono text-emerald-700 font-medium">
+                      Live Production: amfruits.shop
                     </span>
                   </div>
                   <div className="text-[7.8pt] font-medium text-sky-800 italic">
-                    Technologies: Kubernetes (kubeadm &amp; AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX
+                    Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS
                   </div>
                   <ul className="list-disc list-outside ml-3.5 space-y-0.5 text-[8.1pt] text-slate-700 leading-[1.32]">
                     <li>
-                      Engineered a production-grade modular e-commerce backend deployed across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.
+                      Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.
                     </li>
                     <li>
-                      Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.
+                      Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.
                     </li>
                     <li>
-                      Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.
+                      Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.
                     </li>
                     <li>
-                      Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.
+                      Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.
                     </li>
                   </ul>
                 </div>
@@ -627,12 +755,13 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
 
             {/* Page 2 Footer */}
             <footer className="border-t border-slate-200 pt-1 flex items-center justify-between text-[7.5pt] text-slate-500 font-mono">
-              <span>MOHAMMED SOHAIL — Cloud &amp; DevOps Engineer</span>
+              <span>MOHAMMED SOHAIL — Cloud, DevOps &amp; Full-Stack Developer</span>
               <span>Page 2 of 2</span>
             </footer>
           </article>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
+  </div>
   );
 }

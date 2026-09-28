@@ -85,48 +85,58 @@ async function generateResumePdf() {
   }
 
   // =========================================================================
-  // PAGE 1: HEADER, SUMMARY, SKILLS, EXPERIENCE, EDUCATION, AM FRUITS, SMARTORDER
+  // PAGE 1: HEADER, SUMMARY, SKILLS, EXPERIENCE, EDUCATION, SOHAILSHOP
   // =========================================================================
   const page1 = pdfDoc.addPage([pageWidth, pageHeight]);
-  let y1 = pageHeight - 38;
+  let y1 = pageHeight - 34;
 
-  // 1. HEADER
-  page1.drawText("MOHAMMED SOHAIL", {
-    x: leftMargin,
+  // 1. HEADER (CENTERED: Name, Headline, Contact, Portfolio URL)
+  const nameText = "MOHAMMED SOHAIL";
+  const nameWidth = fontBold.widthOfTextAtSize(nameText, 21.0);
+  const nameX = leftMargin + (contentWidth - nameWidth) / 2;
+  page1.drawText(nameText, {
+    x: nameX,
     y: y1,
-    size: 20,
+    size: 21.0,
     font: fontBold,
     color: colorTitle,
   });
 
-  const headerTitle = "Cloud & DevOps Engineer | Kubernetes \u2022 AWS \u2022 Automation";
-  const headerTitleWidth = fontBold.widthOfTextAtSize(headerTitle, 9.0);
+  y1 -= 13.5;
+
+  const headerTitle = "Cloud, DevOps & Full-Stack Developer | AWS \u2022 Kubernetes \u2022 Automation";
+  const headerTitleWidth = fontBold.widthOfTextAtSize(headerTitle, 8.8);
+  const headerTitleX = leftMargin + (contentWidth - headerTitleWidth) / 2;
   page1.drawText(headerTitle, {
-    x: pageWidth - rightMargin - headerTitleWidth,
-    y: y1 + 3,
-    size: 9.0,
+    x: headerTitleX,
+    y: y1,
+    size: 8.8,
     font: fontBold,
     color: colorAccentDark,
   });
 
-  y1 -= 17;
+  y1 -= 11.5;
 
-  // Contact line
+  // Contact line 1: Centered Location | Phone | Email | LinkedIn | GitHub
   const contactParts = [
     { text: "Hyderabad, India", bold: false },
-    { text: " | ", bold: false, muted: true },
+    { text: " \u00B7 ", bold: false, muted: true },
     { text: "9573692390", bold: true },
-    { text: " | ", bold: false, muted: true },
+    { text: " \u00B7 ", bold: false, muted: true },
     { text: "mdsohail88008@gmail.com", bold: false },
-    { text: " | ", bold: false, muted: true },
+    { text: " \u00B7 ", bold: false, muted: true },
     { text: "linkedin.com/in/md-sohail2001", bold: false },
-    { text: " | ", bold: false, muted: true },
+    { text: " \u00B7 ", bold: false, muted: true },
     { text: "github.com/sohail-24", bold: false },
-    { text: " | ", bold: false, muted: true },
-    { text: "https://sohaildevops.site", bold: true },
   ];
 
-  let curX = leftMargin;
+  let totalContactWidth = 0;
+  for (const part of contactParts) {
+    const f = part.bold ? fontBold : fontRegular;
+    totalContactWidth += f.widthOfTextAtSize(part.text, 7.8);
+  }
+
+  let curX = leftMargin + (contentWidth - totalContactWidth) / 2;
   for (const part of contactParts) {
     const f = part.bold ? fontBold : fontRegular;
     const c = part.muted ? colorMuted : part.bold ? colorTitle : colorBody;
@@ -140,7 +150,21 @@ async function generateResumePdf() {
     curX += f.widthOfTextAtSize(part.text, 7.8);
   }
 
-  y1 -= 8;
+  y1 -= 10.5;
+
+  // Centered Portfolio URL line
+  const portfolioUrlText = "https://sohaildevops.site";
+  const portfolioUrlWidth = fontBold.widthOfTextAtSize(portfolioUrlText, 8.2);
+  const portfolioUrlX = leftMargin + (contentWidth - portfolioUrlWidth) / 2;
+  page1.drawText(portfolioUrlText, {
+    x: portfolioUrlX,
+    y: y1,
+    size: 8.2,
+    font: fontBold,
+    color: colorAccentDark,
+  });
+
+  y1 -= 7;
   page1.drawLine({
     start: { x: leftMargin, y: y1 },
     end: { x: pageWidth - rightMargin, y: y1 },
@@ -148,49 +172,49 @@ async function generateResumePdf() {
     color: colorRuleDark,
   });
 
-  y1 -= 15;
+  y1 -= 13;
 
   // 2. PROFESSIONAL SUMMARY
   y1 = drawSectionHeader(page1, "Professional Summary", y1);
   const summaryText =
-    "Hands-on DevOps Engineer with a solid foundation in Electronics & Instrumentation Engineering, cloud infrastructure automation, container orchestration, and full-stack system architecture. Demonstrated practical experience provisioning and managing dual Kubernetes environments (self-managed kubeadm on EC2 and AWS EKS), authoring modular Terraform Infrastructure-as-Code, orchestrating automated GitOps delivery pipelines with GitHub Actions and ArgoCD, and containerizing production-grade applications. Proven track record in diagnosing and resolving complex production incidents spanning Kubernetes CSI storage provisioners, reverse proxies, and IAM governance.";
+    "Hands-on Cloud, DevOps & Full-Stack Developer with a solid foundation in Electronics & Instrumentation Engineering, cloud infrastructure automation, container orchestration, and full-stack software architecture. Demonstrated practical experience provisioning and managing dual Kubernetes environments (self-managed kubeadm on EC2 and AWS EKS), authoring modular Terraform Infrastructure-as-Code, orchestrating automated GitOps delivery pipelines with GitHub Actions and ArgoCD, and developing production full-stack TypeScript/React and Python applications. Proven track record in diagnosing and resolving complex production incidents spanning Kubernetes CSI storage provisioners, reverse proxies, and IAM governance.";
 
-  const summaryLines = wrapText(summaryText, contentWidth, fontRegular, 8.6);
+  const summaryLines = wrapText(summaryText, contentWidth, fontRegular, 8.4);
   for (const line of summaryLines) {
     page1.drawText(line, {
       x: leftMargin,
       y: y1,
-      size: 8.6,
+      size: 8.4,
       font: fontRegular,
       color: colorBody,
     });
-    y1 -= 11.8;
+    y1 -= 11.4;
   }
 
-  y1 -= 5;
+  y1 -= 4;
 
-  // 3. TECHNICAL SKILLS
+  // 3. TECHNICAL SKILLS (Verified from SohailVerse portfolio projects & source code)
   y1 = drawSectionHeader(page1, "Technical Skills", y1);
   const skills = [
     {
-      category: "Cloud Platforms: ",
-      items: "Amazon Web Services (AWS) — VPC, EC2, S3, RDS, EKS, ALB, CloudFront, Route 53, IAM (Roles & IRSA), CloudWatch",
+      category: "Frontend: ",
+      items: "React 19 / 18, TypeScript, JavaScript, Vite, Tailwind CSS, HTML5, CSS3, Framer Motion, Responsive UI",
     },
     {
-      category: "Containers & Orchestration: ",
-      items: "Kubernetes, Docker, Helm, ArgoCD (GitOps), kubeadm, Calico CNI, StatefulSets, Ingress (ALB & NGINX), CSI Drivers",
+      category: "Backend & APIs: ",
+      items: "Node.js, Hono, Express, Python, Django 5, tRPC, REST APIs, Zod, Gunicorn",
     },
     {
-      category: "IaC & CI/CD: ",
-      items: "Terraform, GitHub Actions, Jenkins, Ansible, Declarative Helm Charts, Multi-Repo Delivery Workflows",
+      category: "Databases & Data: ",
+      items: "PostgreSQL, Neon PostgreSQL (Serverless), Redis, Drizzle ORM, StatefulSets Data Persistence",
     },
     {
-      category: "Systems & Networking: ",
-      items: "Linux Administration (Ubuntu), Bash Scripting, TCP/IP, OSI Model, CIDR Subnetting, NAT Gateways, DNS (Route 53, dig), Systemd, NGINX",
+      category: "DevOps & Cloud: ",
+      items: "AWS (EKS, VPC, EC2, S3, RDS, ALB, CloudFront, Route 53, IAM/IRSA, CloudWatch), Kubernetes, Docker, Terraform, Helm, ArgoCD, GitHub Actions, Jenkins, Ansible, kubeadm, Calico CNI, NGINX",
     },
     {
-      category: "Observability & Databases: ",
-      items: "Prometheus, Grafana, CloudWatch, PostgreSQL, Neon Serverless, Redis, Drizzle ORM, Git, TypeScript, Python (Django)",
+      category: "Systems & Observability: ",
+      items: "Linux Administration (Ubuntu), Bash Scripting, TCP/IP, OSI Model, Subnetting, NAT, Prometheus, Grafana, CloudWatch, Git",
     },
   ];
 
@@ -198,35 +222,35 @@ async function generateResumePdf() {
     page1.drawText(skill.category, {
       x: leftMargin,
       y: y1,
-      size: 8.4,
+      size: 8.2,
       font: fontBold,
       color: colorTitle,
     });
-    const catWidth = fontBold.widthOfTextAtSize(skill.category, 8.4);
-    const itemLines = wrapText(skill.items, contentWidth - catWidth, fontRegular, 8.4);
+    const catWidth = fontBold.widthOfTextAtSize(skill.category, 8.2);
+    const itemLines = wrapText(skill.items, contentWidth - catWidth, fontRegular, 8.2);
 
     page1.drawText(itemLines[0], {
       x: leftMargin + catWidth,
       y: y1,
-      size: 8.4,
+      size: 8.2,
       font: fontRegular,
       color: colorBody,
     });
-    y1 -= 11.2;
+    y1 -= 10.8;
 
     for (let i = 1; i < itemLines.length; i++) {
       page1.drawText(itemLines[i], {
         x: leftMargin + 14,
         y: y1,
-        size: 8.4,
+        size: 8.2,
         font: fontRegular,
         color: colorBody,
       });
-      y1 -= 11.2;
+      y1 -= 10.8;
     }
   }
 
-  y1 -= 5;
+  y1 -= 4;
 
   // 4. PROFESSIONAL EXPERIENCE
   y1 = drawSectionHeader(page1, "Professional Experience", y1);
@@ -234,16 +258,16 @@ async function generateResumePdf() {
   page1.drawText("Visys Cloud Technologies", {
     x: leftMargin,
     y: y1,
-    size: 9.8,
+    size: 9.6,
     font: fontBold,
     color: colorTitle,
   });
 
-  const companyWidth = fontBold.widthOfTextAtSize("Visys Cloud Technologies", 9.8);
+  const companyWidth = fontBold.widthOfTextAtSize("Visys Cloud Technologies", 9.6);
   page1.drawText(" — DevOps Engineering Intern", {
     x: leftMargin + companyWidth,
     y: y1,
-    size: 9.0,
+    size: 8.8,
     font: fontRegular,
     color: colorDark,
   });
@@ -258,7 +282,7 @@ async function generateResumePdf() {
     color: colorMuted,
   });
 
-  y1 -= 12.5;
+  y1 -= 12.0;
 
   const experienceBullets = [
     "Automated end-to-end continuous integration and deployment pipelines using GitHub Actions, Jenkins, Docker, and Helm to accelerate release velocity.",
@@ -269,104 +293,6 @@ async function generateResumePdf() {
   ];
 
   for (const bullet of experienceBullets) {
-    page1.drawText("•", {
-      x: leftMargin + 4,
-      y: y1,
-      size: 8.5,
-      font: fontBold,
-      color: colorAccent,
-    });
-    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.4);
-    for (const bLine of bulletLines) {
-      page1.drawText(bLine, {
-        x: leftMargin + 14,
-        y: y1,
-        size: 8.4,
-        font: fontRegular,
-        color: colorBody,
-      });
-      y1 -= 11.0;
-    }
-  }
-
-  y1 -= 4;
-
-  // 5. EDUCATION (Concise 2-line entry without extra description)
-  y1 = drawSectionHeader(page1, "Education", y1);
-
-  page1.drawText("Muffakham Jah College of Engineering and Technology", {
-    x: leftMargin,
-    y: y1,
-    size: 9.2,
-    font: fontBold,
-    color: colorTitle,
-  });
-
-  const eduDate = "2019 – 2023";
-  const eduDateWidth = fontBold.widthOfTextAtSize(eduDate, 8.2);
-  page1.drawText(eduDate, {
-    x: pageWidth - rightMargin - eduDateWidth,
-    y: y1,
-    size: 8.2,
-    font: fontBold,
-    color: colorMuted,
-  });
-
-  y1 -= 11.5;
-  page1.drawText("Bachelor of Engineering (B.E.) — Electronics & Instrumentation Engineering", {
-    x: leftMargin,
-    y: y1,
-    size: 8.4,
-    font: fontItalic,
-    color: colorDark,
-  });
-
-  y1 -= 13;
-
-  // 6. FEATURED PROJECTS: 1. AM FRUITS (FRESH FLOW) & 2. SMARTORDER
-  y1 = drawSectionHeader(page1, "Featured Projects", y1);
-
-  // Project 1: AM Fruits (Fresh Flow)
-  page1.drawText("AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform", {
-    x: leftMargin,
-    y: y1,
-    size: 9.2,
-    font: fontBold,
-    color: colorTitle,
-  });
-
-  const amSite = "Live Production: amfruits.shop";
-  const amSiteWidth = fontBold.widthOfTextAtSize(amSite, 7.6);
-  page1.drawText(amSite, {
-    x: pageWidth - rightMargin - amSiteWidth,
-    y: y1,
-    size: 7.6,
-    font: fontBold,
-    color: rgb(0.04, 0.48, 0.30),
-  });
-
-  y1 -= 10.5;
-  page1.drawText(
-    "Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS",
-    {
-      x: leftMargin,
-      y: y1,
-      size: 7.8,
-      font: fontItalic,
-      color: colorAccentDark,
-    }
-  );
-
-  y1 -= 11.5;
-
-  const amBullets = [
-    "Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.",
-    "Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.",
-    "Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.",
-    "Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.",
-  ];
-
-  for (const bullet of amBullets) {
     page1.drawText("•", {
       x: leftMargin + 4,
       y: y1,
@@ -389,8 +315,42 @@ async function generateResumePdf() {
 
   y1 -= 4;
 
-  // Project 2: SmartOrder
-  page1.drawText("SmartOrder: Cloud-Native Self-Service Restaurant Commerce System", {
+  // 5. EDUCATION (Exact layout: College name & 2019 - 2023 on line 1, degree on line 2)
+  y1 = drawSectionHeader(page1, "Education", y1);
+
+  page1.drawText("Muffakham Jah College of Engineering and Technology", {
+    x: leftMargin,
+    y: y1,
+    size: 9.0,
+    font: fontBold,
+    color: colorTitle,
+  });
+
+  const eduDate = "2019 – 2023";
+  const eduDateWidth = fontBold.widthOfTextAtSize(eduDate, 8.2);
+  page1.drawText(eduDate, {
+    x: pageWidth - rightMargin - eduDateWidth,
+    y: y1,
+    size: 8.2,
+    font: fontBold,
+    color: colorMuted,
+  });
+
+  y1 -= 11.2;
+  page1.drawText("Electronics & Instrumentation Engineering", {
+    x: leftMargin,
+    y: y1,
+    size: 8.4,
+    font: fontRegular,
+    color: colorDark,
+  });
+
+  y1 -= 13;
+
+  // 6. FEATURED PROJECT 1: SOHAILSHOP (Featured on Page 1)
+  y1 = drawSectionHeader(page1, "Featured Projects", y1);
+
+  page1.drawText("SohailShop: Dual-Cluster Kubernetes E-Commerce Platform", {
     x: leftMargin,
     y: y1,
     size: 9.2,
@@ -398,10 +358,10 @@ async function generateResumePdf() {
     color: colorTitle,
   });
 
-  const proj2Ref = "Portfolio Project ID: 35";
-  const proj2RefWidth = fontRegular.widthOfTextAtSize(proj2Ref, 7.6);
-  page1.drawText(proj2Ref, {
-    x: pageWidth - rightMargin - proj2RefWidth,
+  const p1ProjRepo = "github.com/sohail-24/devops-ecommerce-platform";
+  const p1ProjRepoWidth = fontRegular.widthOfTextAtSize(p1ProjRepo, 7.6);
+  page1.drawText(p1ProjRepo, {
+    x: pageWidth - rightMargin - p1ProjRepoWidth,
     y: y1,
     size: 7.6,
     font: fontRegular,
@@ -410,7 +370,7 @@ async function generateResumePdf() {
 
   y1 -= 10.5;
   page1.drawText(
-    "Technologies: TypeScript, React, Vite, Hono, tRPC, Drizzle ORM, PostgreSQL (Neon Serverless), Tailwind CSS, Git/GitHub",
+    "Technologies: Kubernetes (kubeadm & AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX",
     {
       x: leftMargin,
       y: y1,
@@ -422,14 +382,14 @@ async function generateResumePdf() {
 
   y1 -= 11.5;
 
-  const smartOrderBullets = [
-    "Designed a full-stack, touchscreen-optimized restaurant ordering system connecting a customer self-service kiosk workflow with an administrative backoffice.",
-    "Built a normalized relational database schema in PostgreSQL using Drizzle ORM to dynamically model multi-variant product configurations (variants, sizes, option groups, and pricing modifiers) without hard-coded frontend permutations.",
-    "Implemented end-to-end type safety between backend and frontend via tRPC and Hono API routing, preserving product configuration states across cart and checkout.",
-    "Implemented an order lifecycle tracking system that generates human-readable short order tokens (e.g., T 2390) for counter settlement while preserving customer data privacy.",
+  const sohailShopBulletsP1 = [
+    "Engineered a production-grade modular e-commerce backend and deployed it across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.",
+    "Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.",
+    "Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.",
+    "Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.",
   ];
 
-  for (const bullet of smartOrderBullets) {
+  for (const bullet of sohailShopBulletsP1) {
     page1.drawText("•", {
       x: leftMargin + 4,
       y: y1,
@@ -464,7 +424,7 @@ async function generateResumePdf() {
     color: colorBorder,
   });
 
-  page1.drawText("MOHAMMED SOHAIL — Cloud & DevOps Engineer", {
+  page1.drawText("MOHAMMED SOHAIL — Cloud, DevOps & Full-Stack Developer", {
     x: leftMargin,
     y: 16,
     size: 7.6,
@@ -483,10 +443,10 @@ async function generateResumePdf() {
   });
 
   // =========================================================================
-  // PAGE 2: RUNNING HEADER, 3. SOHAILSHOP, DEVOPS HANDS-ON, RCA
+  // PAGE 2: RUNNING HEADER, 2. SMARTORDER, 3. AM FRUITS, DEVOPS HANDS-ON, RCA
   // =========================================================================
   const page2 = pdfDoc.addPage([pageWidth, pageHeight]);
-  let y2 = pageHeight - 38;
+  let y2 = pageHeight - 34;
 
   // Running Header
   page2.drawText("MOHAMMED SOHAIL", {
@@ -498,7 +458,7 @@ async function generateResumePdf() {
   });
 
   const subHeaderWidth = fontBold.widthOfTextAtSize("MOHAMMED SOHAIL", 11.5);
-  page2.drawText(" | Cloud & DevOps Engineer — Technical Portfolio Dossier", {
+  page2.drawText(" | Cloud, DevOps & Full-Stack Developer — Technical Portfolio Dossier", {
     x: leftMargin + subHeaderWidth,
     y: y2,
     size: 8.8,
@@ -524,51 +484,52 @@ async function generateResumePdf() {
     color: colorRuleDark,
   });
 
-  y2 -= 16;
+  y2 -= 14;
 
-  // 1. PROJECT 3: SOHAILSHOP (Featured Projects Continued)
+  // 1. FEATURED PROJECTS CONTINUED: SMARTORDER & AM FRUITS
   y2 = drawSectionHeader(page2, "Featured Projects (Continued)", y2);
 
-  page2.drawText("SohailShop: Dual-Cluster Kubernetes E-Commerce Platform", {
+  // Project 2: SmartOrder
+  page2.drawText("SmartOrder: Cloud-Native Self-Service Restaurant Commerce System", {
     x: leftMargin,
     y: y2,
-    size: 9.2,
+    size: 9.0,
     font: fontBold,
     color: colorTitle,
   });
 
-  const proj1Repo = "github.com/sohail-24/devops-ecommerce-platform";
-  const proj1RepoWidth = fontRegular.widthOfTextAtSize(proj1Repo, 7.6);
-  page2.drawText(proj1Repo, {
-    x: pageWidth - rightMargin - proj1RepoWidth,
+  const smartOrderRef = "Portfolio Project ID: 35";
+  const smartOrderRefWidth = fontRegular.widthOfTextAtSize(smartOrderRef, 7.5);
+  page2.drawText(smartOrderRef, {
+    x: pageWidth - rightMargin - smartOrderRefWidth,
     y: y2,
-    size: 7.6,
+    size: 7.5,
     font: fontRegular,
     color: colorMuted,
   });
 
-  y2 -= 10.5;
+  y2 -= 10.0;
   page2.drawText(
-    "Technologies: Kubernetes (kubeadm & AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX",
+    "Technologies: TypeScript, React, Vite, Hono, tRPC, Drizzle ORM, PostgreSQL (Neon Serverless), Tailwind CSS, Git/GitHub",
     {
       x: leftMargin,
       y: y2,
-      size: 7.8,
+      size: 7.6,
       font: fontItalic,
       color: colorAccentDark,
     }
   );
 
-  y2 -= 11.5;
+  y2 -= 11.0;
 
-  const sohailShopBullets = [
-    "Engineered a production-grade modular e-commerce backend deployed across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.",
-    "Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.",
-    "Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.",
-    "Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.",
+  const smartOrderBulletsP2 = [
+    "Designed a full-stack, touchscreen-optimized restaurant ordering system connecting a customer self-service kiosk workflow with an administrative backoffice.",
+    "Built a normalized relational database schema in PostgreSQL using Drizzle ORM to dynamically model multi-variant product configurations (variants, sizes, option groups, and pricing modifiers) without hard-coded frontend permutations.",
+    "Implemented end-to-end type safety between backend and frontend via tRPC and Hono API routing, preserving product configuration states across cart and checkout.",
+    "Implemented an order lifecycle tracking system that generates human-readable short order tokens (e.g., T 2390) for counter settlement while preserving customer data privacy.",
   ];
 
-  for (const bullet of sohailShopBullets) {
+  for (const bullet of smartOrderBulletsP2) {
     page2.drawText("•", {
       x: leftMargin + 4,
       y: y2,
@@ -576,20 +537,83 @@ async function generateResumePdf() {
       font: fontBold,
       color: colorAccent,
     });
-    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.4);
+    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.0);
     for (const bLine of bulletLines) {
       page2.drawText(bLine, {
         x: leftMargin + 14,
         y: y2,
-        size: 8.4,
+        size: 8.0,
         font: fontRegular,
         color: colorBody,
       });
-      y2 -= 11.2;
+      y2 -= 10.2;
     }
   }
 
-  y2 -= 18;
+  y2 -= 3;
+
+  // Project 3: AM Fruits (Fresh Flow)
+  page2.drawText("AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform", {
+    x: leftMargin,
+    y: y2,
+    size: 9.0,
+    font: fontBold,
+    color: colorTitle,
+  });
+
+  const amFruitsRef = "Live Production: amfruits.shop";
+  const amFruitsRefWidth = fontBold.widthOfTextAtSize(amFruitsRef, 7.5);
+  page2.drawText(amFruitsRef, {
+    x: pageWidth - rightMargin - amFruitsRefWidth,
+    y: y2,
+    size: 7.5,
+    font: fontBold,
+    color: rgb(0.04, 0.48, 0.30),
+  });
+
+  y2 -= 10.0;
+  page2.drawText(
+    "Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS",
+    {
+      x: leftMargin,
+      y: y2,
+      size: 7.6,
+      font: fontItalic,
+      color: colorAccentDark,
+    }
+  );
+
+  y2 -= 11.0;
+
+  const amFruitsBulletsP2 = [
+    "Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.",
+    "Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.",
+    "Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.",
+    "Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.",
+  ];
+
+  for (const bullet of amFruitsBulletsP2) {
+    page2.drawText("•", {
+      x: leftMargin + 4,
+      y: y2,
+      size: 8.5,
+      font: fontBold,
+      color: colorAccent,
+    });
+    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.0);
+    for (const bLine of bulletLines) {
+      page2.drawText(bLine, {
+        x: leftMargin + 14,
+        y: y2,
+        size: 8.0,
+        font: fontRegular,
+        color: colorBody,
+      });
+      y2 -= 10.2;
+    }
+  }
+
+  y2 -= 6;
 
   // 2. DEVOPS & CLOUD INFRASTRUCTURE HANDS-ON WORK
   y2 = drawSectionHeader(page2, "DevOps & Cloud Infrastructure Hands-On Work", y2);
@@ -613,12 +637,12 @@ async function generateResumePdf() {
     },
     {
       title: "Linux Administration, Diagnostic Runbooks & Scripting: ",
-      desc: "Developed system diagnostics runbooks for analyzing OSI Layer 2–7 transport failures, MTU packet truncation, and DNS resolution latency using dig +trace and curl. Authored Bash shell scripts automating log rotations, process inspection, and systemd unit health checks across Linux server instances.",
+      desc: "Developed system diagnostics runbooks analyzing OSI Layer 2–7 transport failures, MTU packet truncation, and DNS resolution latency using dig +trace and curl. Authored Bash shell scripts automating log rotations, process inspection, and systemd unit health checks across Linux server instances.",
     },
   ];
 
   for (const item of devopsHandsOn) {
-    const titleWidth = fontBold.widthOfTextAtSize(item.title, 8.6);
+    const titleWidth = fontBold.widthOfTextAtSize(item.title, 8.2);
     const firstLineMax = contentWidth - titleWidth;
     const descWords = item.desc.split(" ");
 
@@ -626,7 +650,7 @@ async function generateResumePdf() {
     let wordIdx = 0;
     while (wordIdx < descWords.length) {
       const test = firstLine ? `${firstLine} ${descWords[wordIdx]}` : descWords[wordIdx];
-      if (fontRegular.widthOfTextAtSize(test, 8.4) > firstLineMax) {
+      if (fontRegular.widthOfTextAtSize(test, 7.9) > firstLineMax) {
         break;
       }
       firstLine = test;
@@ -636,7 +660,7 @@ async function generateResumePdf() {
     page2.drawText(item.title, {
       x: leftMargin,
       y: y2,
-      size: 8.6,
+      size: 8.2,
       font: fontBold,
       color: colorTitle,
     });
@@ -644,30 +668,30 @@ async function generateResumePdf() {
     page2.drawText(firstLine, {
       x: leftMargin + titleWidth,
       y: y2,
-      size: 8.4,
+      size: 7.9,
       font: fontRegular,
       color: colorBody,
     });
-    y2 -= 11.6;
+    y2 -= 10.6;
 
     const remainingText = descWords.slice(wordIdx).join(" ");
     if (remainingText) {
-      const remLines = wrapText(remainingText, contentWidth, fontRegular, 8.4);
+      const remLines = wrapText(remainingText, contentWidth, fontRegular, 7.9);
       for (const rLine of remLines) {
         page2.drawText(rLine, {
           x: leftMargin,
           y: y2,
-          size: 8.4,
+          size: 7.9,
           font: fontRegular,
           color: colorBody,
         });
-        y2 -= 11.6;
+        y2 -= 10.6;
       }
     }
-    y2 -= 8.5;
+    y2 -= 3.5;
   }
 
-  y2 -= 14;
+  y2 -= 4;
 
   // 3. PRODUCTION INCIDENT RESOLUTION / RCA
   y2 = drawSectionHeader(page2, "Production Incident Resolution & Root Cause Analysis (RCA)", y2);
@@ -692,7 +716,7 @@ async function generateResumePdf() {
   ];
 
   for (const item of incidents) {
-    const titleWidth = fontBold.widthOfTextAtSize(item.title, 8.6);
+    const titleWidth = fontBold.widthOfTextAtSize(item.title, 8.2);
     const firstLineMax = contentWidth - titleWidth;
     const descWords = item.desc.split(" ");
 
@@ -700,7 +724,7 @@ async function generateResumePdf() {
     let wordIdx = 0;
     while (wordIdx < descWords.length) {
       const test = firstLine ? `${firstLine} ${descWords[wordIdx]}` : descWords[wordIdx];
-      if (fontRegular.widthOfTextAtSize(test, 8.4) > firstLineMax) {
+      if (fontRegular.widthOfTextAtSize(test, 7.9) > firstLineMax) {
         break;
       }
       firstLine = test;
@@ -710,7 +734,7 @@ async function generateResumePdf() {
     page2.drawText(item.title, {
       x: leftMargin,
       y: y2,
-      size: 8.6,
+      size: 8.2,
       font: fontBold,
       color: colorTitle,
     });
@@ -718,27 +742,27 @@ async function generateResumePdf() {
     page2.drawText(firstLine, {
       x: leftMargin + titleWidth,
       y: y2,
-      size: 8.4,
+      size: 7.9,
       font: fontRegular,
       color: colorBody,
     });
-    y2 -= 11.6;
+    y2 -= 10.6;
 
     const remainingText = descWords.slice(wordIdx).join(" ");
     if (remainingText) {
-      const remLines = wrapText(remainingText, contentWidth, fontRegular, 8.4);
+      const remLines = wrapText(remainingText, contentWidth, fontRegular, 7.9);
       for (const rLine of remLines) {
         page2.drawText(rLine, {
           x: leftMargin,
           y: y2,
-          size: 8.4,
+          size: 7.9,
           font: fontRegular,
           color: colorBody,
         });
-        y2 -= 11.6;
+        y2 -= 10.6;
       }
     }
-    y2 -= 8.5;
+    y2 -= 3.5;
   }
 
   // Page 2 Footer Check & Draw
@@ -755,7 +779,7 @@ async function generateResumePdf() {
     color: colorBorder,
   });
 
-  page2.drawText("MOHAMMED SOHAIL — Cloud & DevOps Engineer", {
+  page2.drawText("MOHAMMED SOHAIL — Cloud, DevOps & Full-Stack Developer", {
     x: leftMargin,
     y: 16,
     size: 7.6,
