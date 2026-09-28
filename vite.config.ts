@@ -1718,8 +1718,11 @@ function devApiPlugin(): Plugin {
       !req.url.startsWith("/api/") &&
       (req.url === "/Master-Notes.pdf" || req.url.includes(".pdf"))
     ) {
+      const filename = req.url.includes("resume")
+        ? "Mohammed_Sohail_DevOps_Resume.pdf"
+        : "Master-Notes.pdf";
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", 'inline; filename="Master-Notes.pdf"');
+      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
       res.setHeader("Accept-Ranges", "bytes");
       res.setHeader("Cache-Control", "public, max-age=86400");
     }

@@ -110,15 +110,13 @@ export default function SohailVerseHero() {
                 <FaLinkedin className="h-4 w-4" />
                 <span>LinkedIn</span>
               </a>
-              <a
-                href="/resume.pdf"
-                target="_blank"
-                rel="noreferrer"
+              <Link
+                to="/resume"
                 className="inline-flex items-center gap-1.5 text-slate-300 transition hover:text-cyan-400"
               >
                 <FileText className="h-4 w-4" />
                 <span>Resume / CV</span>
-              </a>
+              </Link>
             </div>
           </div>
 

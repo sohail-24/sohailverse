@@ -9,8 +9,13 @@ import MissionControlPage from "../pages/MissionControlPage";
 import TimelinePage from "../pages/TimelinePage";
 import ProjectDetailPage from "../pages/ProjectDetailPage";
 import ProjectInformationPage from "../pages/ProjectInformationPage";
+import ResumePage from "../pages/ResumePage";
 
 export const routes: RouteObject[] = [
+  {
+    path: "/resume",
+    element: <ResumePage />,
+  },
   {
     path: "/",
     element: <RootLayout />,

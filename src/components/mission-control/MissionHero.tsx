@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import GlassPanel from "../ui/GlassPanel";
 import Badge from "../ui/Badge";
 import RouteLinkButton from "./RouteLinkButton";
@@ -182,22 +183,19 @@ export default function MissionHero({
                 </p>
 
                 <div className="mt-1 flex flex-col gap-1.5 sm:mt-2">
-                  <a
-                    href="/resume.pdf"
-                    target="_blank"
-                    rel="noreferrer"
+                  <Link
+                    to="/resume"
                     className="inline-flex min-h-[32px] items-center text-xs text-white hover:text-cyan-400 sm:text-sm"
                   >
                     View Resume →
-                  </a>
+                  </Link>
 
-                  <a
-                    href="/resume.pdf"
-                    download
-                    className="inline-flex min-h-[32px] items-center text-xs text-white hover:text-cyan-400 sm:text-sm"
+                  <Link
+                    to="/resume"
+                    className="inline-flex min-h-[32px] items-center text-xs text-slate-300 hover:text-cyan-400 sm:text-sm"
                   >
-                    Download CV ↓
-                  </a>
+                    Official Resume Dossier ↗
+                  </Link>
                 </div>
               </div>
 

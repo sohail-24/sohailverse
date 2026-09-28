@@ -31,15 +31,13 @@ export default function PhilosophyAndDock() {
             <span>Initiate Contact</span>
           </a>
 
-          <a
-            href="/resume.pdf"
-            target="_blank"
-            rel="noreferrer"
+          <Link
+            to="/resume"
             className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/10 hover:border-cyan-400/40 active:scale-[0.98]"
           >
             <FileText className="h-4 w-4 text-cyan-400" />
-            <span>Download Dossier / CV</span>
-          </a>
+            <span>View Resume Dossier</span>
+          </Link>
 
           <Link
             to="/devops"
