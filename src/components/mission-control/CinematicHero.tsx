@@ -134,9 +134,7 @@ export default function CinematicHero() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. INTRODUCTION                                                           */}
-      {/*    - MOBILE: 3 compact elegant lines                                      */}
-      {/*    - DESKTOP: Exactly 2 clean visual lines                                */}
+      {/* 2. INTRODUCTION (EXACTLY 5 VISUAL LINES)                                  */}
       {/* ========================================================================= */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -145,26 +143,22 @@ export default function CinematicHero() {
         transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
         className="w-full px-3 sm:px-4 text-center pt-0 sm:pt-1"
       >
-        {/* Mobile: 3 compact lines */}
-        <div className="block sm:hidden max-w-xl mx-auto space-y-0.5">
-          <p className="text-[12px] font-medium text-slate-200 leading-snug">
-            From DevOps to building products that simplify life.
+        <div className="max-w-2xl mx-auto space-y-1 sm:space-y-1.5">
+          {/* Line 1 */}
+          <p className="text-[clamp(9px,2.5vw,11.5px)] sm:text-base font-medium text-slate-200 leading-tight sm:leading-relaxed">
+            <span className="inline-block whitespace-nowrap">I build systems, automate workflows, and turn ideas into useful products.</span>
           </p>
-          <p className="text-[12px] text-slate-300 leading-snug">
-            I create, automate and ship useful digital experiences.
-          </p>
-          <p className="text-[11px] text-slate-400 leading-snug">
-            Building systems that make work smoother and life simpler.
-          </p>
-        </div>
 
-        {/* Desktop: Exactly 2 visual lines */}
-        <div className="hidden sm:block max-w-2xl mx-auto space-y-1">
-          <p className="text-sm sm:text-base font-medium text-slate-200 leading-relaxed">
-            From DevOps to building products that simplify life. I create, automate and ship useful digital experiences.
+          {/* Line 2 & Line 3 */}
+          <p className="text-[clamp(9.5px,2.8vw,12.5px)] sm:text-[15px] text-slate-300 leading-tight sm:leading-relaxed">
+            <span className="block whitespace-nowrap">From cloud infrastructure to full-stack applications, I create technology</span>
+            <span className="block">that works in the real world.</span>
           </p>
-          <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
-            Building systems that make work smoother and life simpler.
+
+          {/* Line 4 & Line 5 */}
+          <p className="text-[clamp(9.5px,2.8vw,12px)] sm:text-[14px] text-slate-400 leading-tight sm:leading-relaxed">
+            <span className="block whitespace-nowrap">Building smarter systems that make work simpler and</span>
+            <span className="block">experiences better.</span>
           </p>
         </div>
       </motion.div>
