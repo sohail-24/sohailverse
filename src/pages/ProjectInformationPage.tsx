@@ -728,11 +728,11 @@ export default function ProjectInformationPage() {
           {/* Main Hero Project Image Container - only rendered when at least 1 image is enabled */}
           {galleryList.length > 0 && activeImage && (
             <div className="space-y-4">
-              <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/60 shadow-2xl group">
+              <div className="relative mx-auto w-full max-w-md aspect-[3/4] overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/60 shadow-2xl group">
                 <img
                   src={activeImage}
                   alt={`${project.title} Preview`}
-                  className="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+                  className="block h-full w-full object-contain object-center"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src =
                       "/projects/temporary/fresh-flow-desktop.v2.jpg";
@@ -783,7 +783,7 @@ export default function ProjectInformationPage() {
                         <img
                           src={imgUrl}
                           alt={`Gallery view ${idx + 1}`}
-                          className="w-full h-full object-cover"
+                          className="block h-full w-full object-contain"
                           onError={(e) => {
                             (e.currentTarget as HTMLImageElement).src =
                               "/projects/temporary/fresh-flow-desktop.v2.jpg";
