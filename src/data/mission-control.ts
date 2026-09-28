@@ -166,6 +166,35 @@ export const initialProjects: UniverseProject[] = [
     highlightMetric: "Loading 2026",
     image: "/projects/temporary/new-chapter-placeholder.v2.jpg",
   },
+  {
+    id: "smartorder",
+    databaseId: 35,
+    name: "SmartOrder",
+    category: "Cloud Native / Restaurant Commerce",
+    tagline: "Self-Service Restaurant Ordering System",
+    description:
+      "A touchscreen-first restaurant commerce application that allows customers to browse a digital menu, configure products, add customized items to a cart, complete checkout, and place orders while giving restaurant staff an administration system for menu and order management.",
+    status: "live",
+    statusLabel: "Ready",
+    featured: false,
+    technologies: [
+      "React",
+      "Vite",
+      "TypeScript",
+      "Hono",
+      "tRPC",
+      "Drizzle ORM",
+      "PostgreSQL",
+      "Neon PostgreSQL",
+      "Responsive Web UI",
+      "REST/API integrations",
+      "Git/GitHub",
+    ],
+    link: "/projects/smartorder",
+    complexity: 4,
+    highlightMetric: "Production Ready",
+    image: "/api/project-media/4",
+  },
 ];
 
 export const heroContent: HeroContent = {

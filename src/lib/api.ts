@@ -423,6 +423,9 @@ export const FALLBACK_DATA: Record<string, any[]> = {
       status: "Hands-on Lab",
     },
   ],
+  get projects() {
+    return this.devops;
+  },
   atlas: [
     {
       id: 1,

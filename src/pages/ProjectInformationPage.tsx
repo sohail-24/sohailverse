@@ -516,9 +516,9 @@ export default function ProjectInformationPage() {
           <Link
             to="/projects"
             id="back-to-projects-link"
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-mono text-slate-400 hover:text-cyan-300 transition-colors group"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-cyan-300 transition-colors group"
           >
-            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
             <span>Back to Projects</span>
           </Link>
 
@@ -555,22 +555,23 @@ export default function ProjectInformationPage() {
       </header>
 
       {/* Main Container */}
-      <main className="relative z-10 mx-auto w-full max-w-5xl px-3.5 sm:px-6 py-5 sm:py-10 space-y-8 sm:space-y-12">
+      <main className="relative z-10 mx-auto w-full max-w-5xl px-3.5 sm:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8">
         {/* =========================================================================
             2. PROJECT TITLE BAR & STATUS
            ========================================================================= */}
-        <section className="space-y-3 w-full">
-          <div className="flex items-center gap-2.5 flex-wrap">
+        <section className="space-y-2.5 w-full">
+          {/* Line 2: Status & Category on the same line */}
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
             {/* Status Badge: Ready, Active, Upcoming */}
             <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-mono font-medium ${statusStyles.badge}`}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] sm:text-xs font-mono font-medium ${statusStyles.badge}`}
             >
-              <span className={`h-2 w-2 rounded-full ${statusStyles.dot}`} />
+              <span className={`h-1.5 w-1.5 rounded-full ${statusStyles.dot}`} />
               <span>{project.status}</span>
             </span>
 
-            {/* Category Badge */}
-            <span className="inline-flex items-center px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] text-xs font-mono text-slate-300">
+            {/* Category / Domain Badge */}
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-[11px] sm:text-xs font-mono text-slate-300">
               {project.category}
             </span>
 
@@ -581,10 +582,12 @@ export default function ProjectInformationPage() {
             )}
           </div>
 
+          {/* Line 3: Project Title */}
           <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
             {isWedding ? "Wedding Invitation" : project.title}
           </h1>
 
+          {/* Line 4: Tagline */}
           <p className="text-sm sm:text-base md:text-lg font-light text-cyan-200/90 leading-relaxed max-w-3xl">
             {isWedding
               ? "An interactive, cinematic, mobile-first digital wedding invitation designed as a complete celebration experience."
@@ -599,125 +602,6 @@ export default function ProjectInformationPage() {
         </section>
 
         {/* =========================================================================
-            3. STICKY SUB-NAVIGATION PILLS
-            - Overview | Video Sessions | Documentation | Architecture | Project Links
-           ========================================================================= */}
-        {hasMultipleSections && (
-          <nav
-            aria-label="Project section navigation"
-            className="sticky top-[57px] sm:top-[65px] z-20 -mx-3.5 sm:mx-0 px-3.5 sm:px-0 py-2.5 bg-[#050811]/95 backdrop-blur-md border-y border-white/[0.08] flex items-center gap-2 overflow-x-auto no-scrollbar"
-          >
-            <button
-              onClick={() => scrollToSection("overview")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                activeSection === "overview"
-                  ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                  : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-              }`}
-            >
-              Overview
-            </button>
-
-            {hasPlanesSection && (
-              <button
-                onClick={() => scrollToSection("planes")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                  activeSection === "planes"
-                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-                }`}
-              >
-                <span>Execution Planes</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-cyan-400/20 text-[11px] font-mono text-cyan-200">
-                  3
-                </span>
-              </button>
-            )}
-
-            {hasCapabilitiesSection && (
-              <button
-                onClick={() => scrollToSection("capabilities")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                  activeSection === "capabilities"
-                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-                }`}
-              >
-                Deep Inspector & Intelligence
-              </button>
-            )}
-
-            {hasPersistenceSection && (
-              <button
-                onClick={() => scrollToSection("persistence")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                  activeSection === "persistence"
-                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-                }`}
-              >
-                Persistence Architecture
-              </button>
-            )}
-
-            {isVideoSessionsVisible && (
-              <button
-                onClick={() => scrollToSection("videos")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                  activeSection === "videos"
-                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-                }`}
-              >
-                <span>Video Sessions</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-cyan-400/20 text-[11px] font-mono text-cyan-200">
-                  {content.videos.length}
-                </span>
-              </button>
-            )}
-
-            {isDocumentsSectionVisible && (
-              <button
-                onClick={() => scrollToSection("docs")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                  activeSection === "docs"
-                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-                }`}
-              >
-                Documentation / PDF
-              </button>
-            )}
-
-            {isArchitectureVisible && (
-              <button
-                onClick={() => scrollToSection("architecture")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                  activeSection === "architecture"
-                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-                }`}
-              >
-                Architecture Diagrams
-              </button>
-            )}
-
-            {visibleLinks.length > 0 && (
-              <button
-                onClick={() => scrollToSection("links")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                  activeSection === "links"
-                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 shadow-sm"
-                    : "text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
-                }`}
-              >
-                Project Links
-              </button>
-            )}
-          </nav>
-        )}
-
-        {/* =========================================================================
             SECTION 1: HERO IMAGE, GALLERY, OVERVIEW, RESOURCES & CORE PRESENTATION
             - Clean, expandable presentation page structure for AM Fruits and all projects
             - Supports up to 5 project images with thumbnail selector
@@ -728,7 +612,7 @@ export default function ProjectInformationPage() {
           {/* Main Hero Project Image Container - only rendered when at least 1 image is enabled */}
           {galleryList.length > 0 && activeImage && (
             <div className="space-y-4">
-              <div className="relative mx-auto w-full max-w-md aspect-[3/4] overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/60 shadow-2xl group">
+              <div className="relative mx-auto w-full max-w-xl aspect-[16/10] overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/60 shadow-2xl group">
                 <img
                   src={activeImage}
                   alt={`${project.title} Preview`}

@@ -108,12 +108,12 @@ export default function ProjectShowcaseItem({
       >
         <div className="relative aspect-[3/5] w-full block overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-cyan-400/40 group-hover:shadow-[0_12px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.15)]">
           {/* Project Image Display */}
-          <div className="block h-full w-full rounded-2xl">
+          <div className="block h-full w-full rounded-2xl overflow-hidden bg-slate-950/40 flex items-center justify-center">
             <img
               src={resolveVersionedProjectImageUrl(project.imageUrl)}
               alt={`${project.title} preview`}
               loading="lazy"
-              className="h-full w-full object-cover object-center brightness-[1.06] contrast-[1.05] saturate-[1.08] transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-110"
+              className="h-full w-full object-contain object-center brightness-[1.06] contrast-[1.05] saturate-[1.08] transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-110"
             />
           </div>
 

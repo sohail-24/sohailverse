@@ -940,10 +940,10 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
           }
         }
 
-        // 2. Resource routes: movies, academy, devops, timeline, atlas
-        const resourceMatch = pathname.match(/^\/api\/(movies|academy|devops|timeline|atlas)(?:\/([^/]+))?$/);
+        // 2. Resource routes: movies, academy, devops, projects, timeline, atlas
+        const resourceMatch = pathname.match(/^\/api\/(movies|academy|devops|projects|timeline|atlas)(?:\/([^/]+))?$/);
         if (resourceMatch) {
-          const resource = resourceMatch[1] as "movies" | "academy" | "devops" | "timeline" | "atlas";
+          const resource = resourceMatch[1] as "movies" | "academy" | "devops" | "projects" | "timeline" | "atlas";
           const rawId = resourceMatch[2];
           let resourceId: number | null = null;
           if (rawId !== undefined) {
@@ -1122,7 +1122,7 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                 }
               }
 
-              if (resource === "devops") {
+              if (resource === "devops" || resource === "projects") {
                 if (method === "GET") {
                   if (resourceId !== null) {
                     const rows = await querySql`SELECT id, title, category, description, image_url, ppt_url, github_url, technologies, highlights, status FROM devops_projects WHERE id = ${resourceId}`;
@@ -1525,7 +1525,7 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
               }
             }
 
-            if (resource === "devops") {
+            if (resource === "devops" || resource === "projects") {
               if (method === "GET") {
                 if (resourceId !== null) {
                   const found = mockStore.devops.find((d) => d.id === resourceId);

@@ -46,6 +46,7 @@ export function normalizeTechnologies(techInput?: string[] | string | null): str
 
 export const CANONICAL_PROJECT_ORDER: readonly string[] = [
   "fresh-flow",
+  "smartorder",
   "sohail-shop",
   "sohail-studio",
   "wedding",
