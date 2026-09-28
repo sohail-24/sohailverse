@@ -895,7 +895,7 @@ export default function ProjectContentManagerModal({
         });
       } else {
         // Project was static; persist as new DB record
-        const res = await fetch("/api/devops", {
+        const res = await fetch("/api/projects", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

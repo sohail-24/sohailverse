@@ -102,7 +102,7 @@ export default function ProjectsManager({
     fetchProjects();
   }, [devops]);
 
-  // Helper to determine if a project is backed by a real database record in /api/devops
+  // Helper to determine if a project is backed by a real database record in /api/projects
   const getDatabaseRecordForProject = (project: UnifiedProject): DevOpsPost | undefined => {
     if (project.dbId !== undefined) {
       return devops.find((d) => d.id === project.dbId);
@@ -186,8 +186,8 @@ export default function ProjectsManager({
     try {
       setIsSubmitting(true);
       setFeedback(null);
-      // Persist to real /api/devops database endpoint
-      const res = await fetch("/api/devops", {
+      // Persist to real /api/projects database endpoint
+      const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -267,7 +267,7 @@ export default function ProjectsManager({
     try {
       setIsSubmitting(true);
       setFeedback(null);
-      const res = await fetch(`/api/devops/${editingProject.id}`, {
+      const res = await fetch(`/api/projects/${editingProject.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -326,7 +326,7 @@ export default function ProjectsManager({
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/devops/${deletingProject.id}`, {
+      const res = await fetch(`/api/projects/${deletingProject.id}`, {
         method: "DELETE",
       });
 

@@ -1871,7 +1871,7 @@ export function getCachedProjectDetailsById(idOrSlug: string | number): FullProj
   if (cached) return cached;
 
   try {
-    const dbProjects = getCachedApi<DevOpsProject>("/api/devops");
+    const dbProjects = getCachedApi<DevOpsProject>("/api/projects");
     if (!dbProjects) return null;
     const data = buildFullProjectData(strId, dbProjects);
     projectDetailsCache.set(strId, data);
@@ -1886,7 +1886,7 @@ export function getCachedProjectDetailsById(idOrSlug: string | number): FullProj
  */
 export function prefetchProjectDetails(idOrSlug: string | number): void {
   const strId = String(idOrSlug).trim().toLowerCase();
-  fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject).then((db) => {
+  fetchApi<DevOpsProject>("/api/projects", isValidDevOpsProject).then((db) => {
     try {
       const data = buildFullProjectData(strId, db);
       projectDetailsCache.set(strId, data);
@@ -1901,7 +1901,7 @@ export function invalidateProjectDetailsCache(idOrSlug?: string | number): void 
   // Clear the full details cache to eliminate any slug vs numeric ID discrepancy
   projectDetailsCache.clear();
   invalidateUnifiedProjectsCache();
-  invalidateApiCache("/api/devops");
+  invalidateApiCache("/api/projects");
 }
 
 export async function fetchProjectDetailsById(
@@ -1922,12 +1922,12 @@ export async function fetchProjectDetailsById(
   let dbProjects: DevOpsProject[] = [];
   try {
     dbProjects = await fetchApi<DevOpsProject>(
-      "/api/devops",
+      "/api/projects",
       isValidDevOpsProject,
       { forceRefresh: options?.forceRefresh }
     );
   } catch (e) {
-    console.warn("[ProjectContent] /api/devops read failed, using fallback:", e);
+    console.warn("[ProjectContent] /api/projects read failed, using fallback:", e);
     dbProjects = [];
   }
 
@@ -1937,7 +1937,7 @@ export async function fetchProjectDetailsById(
 }
 
 /**
- * Updates project details & content in the Neon PostgreSQL database via `/api/devops/:id`
+ * Updates project details & content in the Neon PostgreSQL database via `/api/projects/:id`
  */
 export async function saveProjectContentToDatabase(
   dbId: number,
@@ -1954,7 +1954,7 @@ export async function saveProjectContentToDatabase(
 ): Promise<any> {
   const highlightsJson = JSON.stringify(payload.content);
 
-  const res = await fetch(`/api/devops/${dbId}`, {
+  const res = await fetch(`/api/projects/${dbId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

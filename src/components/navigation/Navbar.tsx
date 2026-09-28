@@ -10,7 +10,9 @@ import { prefetchApi, isValidDevOpsProject, isValidTimelinePost, isValidMovie } 
 export function prefetchRouteData(path: string) {
   if (path === "/timeline" || path === "/about") {
     prefetchApi("/api/timeline", isValidTimelinePost);
-  } else if (path === "/projects" || path === "/devops") {
+  } else if (path === "/projects") {
+    prefetchApi("/api/projects", isValidDevOpsProject);
+  } else if (path === "/devops") {
     prefetchApi("/api/devops", isValidDevOpsProject);
   } else if (path === "/cinema") {
     prefetchApi("/api/movies", isValidMovie);

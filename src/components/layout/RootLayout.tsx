@@ -8,11 +8,17 @@ export default function RootLayout() {
   const location = useLocation();
 
   useEffect(() => {
-    // Idle background prefetch so page transitions feel instantaneous across the entire site
+    // Idle background prefetch for the active route only.
     const warmCache = () => {
-      prefetchApi("/api/devops", isValidDevOpsProject);
-      prefetchApi("/api/timeline", isValidTimelinePost);
-      prefetchApi("/api/movies", isValidMovie);
+      if (location.pathname === "/projects") {
+        prefetchApi("/api/projects", isValidDevOpsProject);
+      } else if (location.pathname === "/devops") {
+        prefetchApi("/api/devops", isValidDevOpsProject);
+      } else if (location.pathname === "/cinema") {
+        prefetchApi("/api/movies", isValidMovie);
+      } else if (location.pathname === "/about" || location.pathname === "/timeline") {
+        prefetchApi("/api/timeline", isValidTimelinePost);
+      }
     };
 
     if (typeof window !== "undefined") {
@@ -24,7 +30,7 @@ export default function RootLayout() {
         return () => clearTimeout(timer);
       }
     }
-  }, []);
+  }, [location.pathname]);
   const isAdmin =
     location.pathname === "/admin" ||
     location.pathname === "/console" ||
@@ -68,4 +74,3 @@ export default function RootLayout() {
     </div>
   );
 }
-

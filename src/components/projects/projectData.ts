@@ -1,6 +1,6 @@
 /**
  * SOHAILVERSE v2.0 — Unified Project Data Adapter
- * Bridges Neon PostgreSQL /api/devops records with portfolio project definitions.
+ * Bridges Neon PostgreSQL /api/projects records with portfolio project definitions.
  * Respects snake_case API contracts (image_url, github_url, ppt_url).
  */
 
@@ -265,7 +265,7 @@ let cachedUnifiedProjects: UnifiedProject[] | null = null;
  */
 export function invalidateUnifiedProjectsCache(): void {
   cachedUnifiedProjects = null;
-  invalidateApiCache("/api/devops");
+  invalidateApiCache("/api/projects");
 }
 
 /**
@@ -273,7 +273,7 @@ export function invalidateUnifiedProjectsCache(): void {
  */
 export function getCachedUnifiedProjects(): UnifiedProject[] | null {
   if (cachedUnifiedProjects) return cachedUnifiedProjects;
-  const dbProjects = getCachedApi<DevOpsProject>("/api/devops");
+  const dbProjects = getCachedApi<DevOpsProject>("/api/projects");
   if (dbProjects) {
     cachedUnifiedProjects = buildUnifiedProjects(dbProjects);
     return cachedUnifiedProjects;
@@ -296,12 +296,12 @@ export async function loadUnifiedProjects(options?: { forceRefresh?: boolean }):
 
   try {
     dbProjects = await fetchApi<DevOpsProject>(
-      "/api/devops",
+      "/api/projects",
       isValidDevOpsProject,
       { forceRefresh: options?.forceRefresh }
     );
   } catch (err) {
-    console.warn("[Projects] Could not reach /api/devops, falling back to local project definitions:", err);
+    console.warn("[Projects] Could not reach /api/projects, falling back to local project definitions:", err);
     dbProjects = [];
   }
 
