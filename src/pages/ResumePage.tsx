@@ -126,12 +126,12 @@ Muffakham Jah College of Engineering and Technology                         2019
 Electronics & Instrumentation Engineering
 
 FEATURED PROJECTS
-1. SohailShop: Dual-Cluster Kubernetes E-Commerce Platform
-Technologies: Kubernetes (kubeadm & AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX, GitHub Actions
-• Engineered a production-grade modular e-commerce backend and deployed it across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.
-• Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.
-• Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.
-• Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.
+1. AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform
+Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS
+• Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.
+• Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.
+• Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.
+• Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.
 
 2. SmartOrder: Cloud-Native Self-Service Restaurant Commerce System
 Technologies: TypeScript, React, Vite, Hono, tRPC, Drizzle ORM, PostgreSQL (Neon Serverless), Tailwind CSS, Git/GitHub
@@ -140,12 +140,12 @@ Technologies: TypeScript, React, Vite, Hono, tRPC, Drizzle ORM, PostgreSQL (Neon
 • Implemented end-to-end type safety between backend and frontend via tRPC and Hono API routing, preserving product configuration states across cart and checkout.
 • Implemented an order lifecycle tracking system that generates human-readable short order tokens (e.g., T 2390) for counter settlement while preserving customer data privacy.
 
-3. AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform
-Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS
-• Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.
-• Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.
-• Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.
-• Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.
+3. SohailShop: Dual-Cluster Kubernetes E-Commerce Platform
+Technologies: Kubernetes (kubeadm & AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX, GitHub Actions
+• Engineered a production-grade modular e-commerce backend and deployed it across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.
+• Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.
+• Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.
+• Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.
 
 DEVOPS & CLOUD INFRASTRUCTURE HANDS-ON WORK
 • AWS Multi-AZ High Availability Architecture: Architected fault-tolerant multi-AZ infrastructure eliminating single points of failure across web, application, and database tiers; configured ALB path-based routing, target health checks, Auto Scaling groups, and multi-AZ database replication with automated standby failover.
@@ -520,7 +520,7 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
                 </div>
               </section>
 
-              {/* FEATURED PROJECTS (1. SOHAILSHOP ON PAGE 1) */}
+              {/* FEATURED PROJECTS (1. AM FRUITS ON PAGE 1) */}
               <section className="space-y-2">
                 <div className="flex items-center gap-1.5 border-b border-slate-200 pb-0.5 mb-1">
                   <div className="h-3 w-1 bg-sky-600 rounded-sm" />
@@ -529,31 +529,31 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
                   </h2>
                 </div>
 
-                {/* Project 1: SohailShop */}
+                {/* Project 1: AM Fruits */}
                 <div className="space-y-0.5">
                   <div className="flex items-baseline justify-between">
                     <span className="text-[9pt] font-bold text-slate-900">
-                      SohailShop: Dual-Cluster Kubernetes E-Commerce Platform
+                      AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform
                     </span>
-                    <span className="text-[7.5pt] font-mono text-slate-500">
-                      github.com/sohail-24/devops-ecommerce-platform
+                    <span className="text-[7.5pt] font-mono text-emerald-700 font-medium">
+                      Live Production: amfruits.shop
                     </span>
                   </div>
                   <div className="text-[7.8pt] font-medium text-sky-800 italic">
-                    Technologies: Kubernetes (kubeadm &amp; AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX
+                    Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS
                   </div>
                   <ul className="list-disc list-outside ml-3.5 space-y-0.5 text-[8.1pt] text-slate-700 leading-[1.32]">
                     <li>
-                      Engineered a production-grade modular e-commerce backend and deployed it across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.
+                      Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.
                     </li>
                     <li>
-                      Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.
+                      Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.
                     </li>
                     <li>
-                      Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.
+                      Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.
                     </li>
                     <li>
-                      Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.
+                      Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.
                     </li>
                   </ul>
                 </div>
@@ -597,7 +597,7 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
                 <span className="text-[8pt] font-mono text-slate-500">mdsohail88008@gmail.com</span>
               </header>
 
-              {/* FEATURED PROJECTS (CONTINUED): SMARTORDER & AM FRUITS */}
+              {/* FEATURED PROJECTS (CONTINUED): SMARTORDER & SOHAILSHOP */}
               <section className="space-y-2">
                 <div className="flex items-center gap-1.5 border-b border-slate-200 pb-0.5 mb-1">
                   <div className="h-3 w-1 bg-sky-600 rounded-sm" />
@@ -635,31 +635,31 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
                   </ul>
                 </div>
 
-                {/* Project 3: AM Fruits */}
+                {/* Project 3: SohailShop */}
                 <div className="space-y-0.5 pt-0.5">
                   <div className="flex items-baseline justify-between">
                     <span className="text-[9pt] font-bold text-slate-900">
-                      AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform
+                      SohailShop: Dual-Cluster Kubernetes E-Commerce Platform
                     </span>
-                    <span className="text-[7.5pt] font-mono text-emerald-700 font-medium">
-                      Live Production: amfruits.shop
+                    <span className="text-[7.5pt] font-mono text-slate-500">
+                      github.com/sohail-24/devops-ecommerce-platform
                     </span>
                   </div>
                   <div className="text-[7.8pt] font-medium text-sky-800 italic">
-                    Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS
+                    Technologies: Kubernetes (kubeadm &amp; AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX
                   </div>
                   <ul className="list-disc list-outside ml-3.5 space-y-0.5 text-[8.1pt] text-slate-700 leading-[1.32]">
                     <li>
-                      Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.
+                      Engineered a production-grade modular e-commerce backend and deployed it across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.
                     </li>
                     <li>
-                      Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.
+                      Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.
                     </li>
                     <li>
-                      Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.
+                      Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.
                     </li>
                     <li>
-                      Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.
+                      Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.
                     </li>
                   </ul>
                 </div>

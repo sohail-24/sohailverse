@@ -347,10 +347,10 @@ async function generateResumePdf() {
 
   y1 -= 13;
 
-  // 6. FEATURED PROJECT 1: SOHAILSHOP (Featured on Page 1)
+  // 6. FEATURED PROJECT 1: AM FRUITS (Featured on Page 1)
   y1 = drawSectionHeader(page1, "Featured Projects", y1);
 
-  page1.drawText("SohailShop: Dual-Cluster Kubernetes E-Commerce Platform", {
+  page1.drawText("AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform", {
     x: leftMargin,
     y: y1,
     size: 9.2,
@@ -358,19 +358,19 @@ async function generateResumePdf() {
     color: colorTitle,
   });
 
-  const p1ProjRepo = "github.com/sohail-24/devops-ecommerce-platform";
-  const p1ProjRepoWidth = fontRegular.widthOfTextAtSize(p1ProjRepo, 7.6);
-  page1.drawText(p1ProjRepo, {
-    x: pageWidth - rightMargin - p1ProjRepoWidth,
+  const p1ProjRef = "Live Production: amfruits.shop";
+  const p1ProjRefWidth = fontBold.widthOfTextAtSize(p1ProjRef, 7.6);
+  page1.drawText(p1ProjRef, {
+    x: pageWidth - rightMargin - p1ProjRefWidth,
     y: y1,
     size: 7.6,
-    font: fontRegular,
-    color: colorMuted,
+    font: fontBold,
+    color: rgb(0.04, 0.48, 0.30),
   });
 
   y1 -= 10.5;
   page1.drawText(
-    "Technologies: Kubernetes (kubeadm & AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX",
+    "Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS",
     {
       x: leftMargin,
       y: y1,
@@ -382,14 +382,14 @@ async function generateResumePdf() {
 
   y1 -= 11.5;
 
-  const sohailShopBulletsP1 = [
-    "Engineered a production-grade modular e-commerce backend and deployed it across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.",
-    "Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.",
-    "Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.",
-    "Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.",
+  const amFruitsBulletsP1 = [
+    "Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.",
+    "Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.",
+    "Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.",
+    "Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.",
   ];
 
-  for (const bullet of sohailShopBulletsP1) {
+  for (const bullet of amFruitsBulletsP1) {
     page1.drawText("•", {
       x: leftMargin + 4,
       y: y1,
@@ -552,8 +552,8 @@ async function generateResumePdf() {
 
   y2 -= 3;
 
-  // Project 3: AM Fruits (Fresh Flow)
-  page2.drawText("AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform", {
+  // Project 3: SohailShop
+  page2.drawText("SohailShop: Dual-Cluster Kubernetes E-Commerce Platform", {
     x: leftMargin,
     y: y2,
     size: 9.0,
@@ -561,19 +561,19 @@ async function generateResumePdf() {
     color: colorTitle,
   });
 
-  const amFruitsRef = "Live Production: amfruits.shop";
-  const amFruitsRefWidth = fontBold.widthOfTextAtSize(amFruitsRef, 7.5);
-  page2.drawText(amFruitsRef, {
-    x: pageWidth - rightMargin - amFruitsRefWidth,
+  const sohailShopRef = "github.com/sohail-24/devops-ecommerce-platform";
+  const sohailShopRefWidth = fontRegular.widthOfTextAtSize(sohailShopRef, 7.5);
+  page2.drawText(sohailShopRef, {
+    x: pageWidth - rightMargin - sohailShopRefWidth,
     y: y2,
     size: 7.5,
-    font: fontBold,
-    color: rgb(0.04, 0.48, 0.30),
+    font: fontRegular,
+    color: colorMuted,
   });
 
   y2 -= 10.0;
   page2.drawText(
-    "Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS",
+    "Technologies: Kubernetes (kubeadm & AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX",
     {
       x: leftMargin,
       y: y2,
@@ -585,14 +585,14 @@ async function generateResumePdf() {
 
   y2 -= 11.0;
 
-  const amFruitsBulletsP2 = [
-    "Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.",
-    "Engineered an immutable snapshot order system in PostgreSQL preserving product descriptions, unit pricing, and tax rates at time of transaction for auditing.",
-    "Implemented Razorpay payment processing featuring cryptographic server-side signature verification of transaction payloads to prevent payment tampering.",
-    "Containerized the full application stack using Docker and deployed behind an NGINX reverse proxy with Cloudflare edge DNS and SSL/TLS termination.",
+  const sohailShopBulletsP2 = [
+    "Engineered a production-grade modular e-commerce backend and deployed it across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.",
+    "Architected a 2-repository GitOps delivery pipeline: application code changes trigger GitHub Actions to build/push immutable Docker images with Git SHA tags, updating infrastructure manifests reconciled automatically by ArgoCD.",
+    "Packaged Kubernetes manifests into modular Helm charts with configurable CPU/memory requests/limits, ConfigMaps, Secrets, and zero-downtime rolling update probes.",
+    "Configured stateful persistence using PostgreSQL StatefulSets, local-path storage, and AWS EBS CSI drivers; offloaded static/media assets to Amazon S3 with IAM Roles for Service Accounts (IRSA) for least-privilege authorization.",
   ];
 
-  for (const bullet of amFruitsBulletsP2) {
+  for (const bullet of sohailShopBulletsP2) {
     page2.drawText("•", {
       x: leftMargin + 4,
       y: y2,
