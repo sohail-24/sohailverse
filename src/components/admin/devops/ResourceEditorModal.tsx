@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   Image as ImageIcon,
@@ -14,6 +14,9 @@ import {
   AlertCircle,
   HelpCircle,
   Sparkles,
+  Upload,
+  Loader2,
+  HardDrive,
 } from "lucide-react";
 import type {
   LearningPillar,
@@ -112,6 +115,101 @@ export default function ResourceEditorModal({
   const [formError, setFormError] = useState<string | null>(null);
   const [imageLoadError, setImageLoadError] = useState(false);
 
+  // PDF Device Upload State
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
+  const [pdfUploadError, setPdfUploadError] = useState<string | null>(null);
+  const [pdfMeta, setPdfMeta] = useState<{
+    id?: number;
+    filename?: string;
+    fileSize?: number;
+  } | null>(null);
+
+  const formatFileSize = (bytes?: number): string => {
+    if (!bytes || bytes <= 0) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const fetchPdfMetadata = async (url: string) => {
+    const match = url.match(/\/api\/project-media\/(\d+)/);
+    if (!match) return;
+    const id = parseInt(match[1], 10);
+    try {
+      const res = await fetch(`/api/project-media/${id}?meta=true`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data) {
+          setPdfMeta({
+            id: data.data.id,
+            filename: data.data.filename,
+            fileSize: data.data.file_size,
+          });
+        }
+      }
+    } catch {
+      // Ignore meta lookup failures
+    }
+  };
+
+  const handleDevicePdfUpload = async (file: File) => {
+    // Validate file type & extension
+    const validMimes = ["application/pdf"];
+    const extension = file.name.split(".").pop()?.toLowerCase();
+
+    if (file.type !== "application/pdf" && extension !== "pdf") {
+      setPdfUploadError("Invalid format. Please select an authentic PDF document (.pdf).");
+      return;
+    }
+
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_SIZE) {
+      setPdfUploadError(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum allowed is 10MB.`);
+      return;
+    }
+
+    setIsUploadingPdf(true);
+    setPdfUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const token = sessionStorage.getItem("sv_admin_token");
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch("/api/project-media", {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || `Upload failed (HTTP ${res.status})`);
+      }
+
+      const uploaded = result.data;
+      const mediaUrl = uploaded.url; // e.g. /api/project-media/12
+
+      setPdfUrl(mediaUrl);
+      setPdfMeta({
+        id: uploaded.id,
+        filename: uploaded.filename || file.name,
+        fileSize: uploaded.file_size || file.size,
+      });
+    } catch (err: any) {
+      console.error("[ResourceEditorModal] PDF upload failed:", err);
+      setPdfUploadError(err?.message || "Failed to upload PDF from device.");
+    } finally {
+      setIsUploadingPdf(false);
+    }
+  };
+
   // Reset when modal opens or resource changes
   useEffect(() => {
     if (resource) {
@@ -121,11 +219,18 @@ export default function ResourceEditorModal({
       setImageUrl(resource.image_url || "");
       setVideoUrl(resource.video_url || "");
       setVideoDuration(resource.video_duration || "");
-      setPdfUrl(resource.pdf_url || "");
+      const currentPdf = resource.pdf_url || "";
+      setPdfUrl(currentPdf);
       setDescription(resource.description || "");
       setHighlights(resource.highlights || "");
       setTechnologies(resource.technologies || "");
       setLinks(resource.links ? [...resource.links] : []);
+
+      if (currentPdf.includes("/api/project-media/")) {
+        fetchPdfMetadata(currentPdf);
+      } else {
+        setPdfMeta(null);
+      }
     } else {
       setPillar(defaultPillar);
       setTitle("");
@@ -144,9 +249,12 @@ export default function ResourceEditorModal({
       setHighlights("");
       setTechnologies("");
       setLinks([]);
+      setPdfMeta(null);
     }
     setFormError(null);
     setImageLoadError(false);
+    setPdfUploadError(null);
+    setIsUploadingPdf(false);
     setNewLinkTitle("");
     setNewLinkUrl("");
   }, [resource, defaultPillar, isOpen]);
@@ -441,7 +549,7 @@ export default function ResourceEditorModal({
 
           {/* SECTION: PDF DOCUMENT / RUNBOOK */}
           <div className="space-y-3 rounded-2xl border border-purple-500/20 bg-purple-950/10 p-4 sm:p-5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <label
                 htmlFor="res-pdf"
                 className="text-xs font-mono font-semibold uppercase tracking-wider text-purple-300 flex items-center gap-1.5"
@@ -449,16 +557,100 @@ export default function ResourceEditorModal({
                 <FileText className="h-4 w-4 text-purple-400" />
                 <span>PDF Document URL</span>
               </label>
-              <span className="text-[11px] text-slate-400">Runbook, cheat sheet, or whitepaper</span>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingPdf}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 transition-all disabled:opacity-50 cursor-pointer"
+                  title="Select and upload a PDF document from your device"
+                >
+                  {isUploadingPdf ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-400" />
+                  ) : (
+                    <Upload className="h-3.5 w-3.5 text-purple-400" />
+                  )}
+                  <span>{isUploadingPdf ? "Uploading..." : pdfUrl.trim() ? "Replace from Device" : "Upload from Device"}</span>
+                </button>
+                <span className="text-[11px] text-slate-400 hidden sm:inline">Runbook, cheat sheet, or PDF</span>
+              </div>
             </div>
+
+            {/* Hidden native file input for PDF */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) {
+                  handleDevicePdfUpload(f);
+                  e.target.value = "";
+                }
+              }}
+              accept="application/pdf,.pdf"
+              className="hidden"
+            />
+
+            {/* Upload Progress Banner */}
+            {isUploadingPdf && (
+              <div className="p-3 rounded-xl border border-purple-500/30 bg-purple-500/10 flex items-center gap-3 animate-pulse">
+                <Loader2 className="h-4 w-4 text-purple-400 animate-spin shrink-0" />
+                <div className="text-xs font-mono text-purple-200">
+                  <p className="font-semibold">Uploading PDF document from device to persistent storage...</p>
+                  <p className="text-[10px] text-purple-400/80">Writing binary PDF data and registering media endpoint...</p>
+                </div>
+              </div>
+            )}
+
+            {/* Inline Upload Error */}
+            {pdfUploadError && (
+              <div className="p-2.5 rounded-xl border border-red-500/30 bg-red-500/10 flex items-center gap-2 text-xs font-mono text-red-300">
+                <AlertCircle className="h-3.5 w-3.5 text-red-400 shrink-0" />
+                <span>{pdfUploadError}</span>
+              </div>
+            )}
+
+            {/* Filename & Storage Metadata Badge */}
+            {pdfMeta && pdfMeta.filename && (
+              <div className="p-2.5 rounded-xl border border-purple-500/30 bg-slate-950/80 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="h-6 w-6 rounded-md bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0">
+                    <FileText className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-xs font-mono font-medium text-white truncate max-w-[260px] inline-block">
+                      {pdfMeta.filename}
+                    </span>
+                    {pdfMeta.fileSize && (
+                      <span className="ml-2 text-[10px] font-mono text-purple-300 px-1.5 py-0.5 rounded bg-purple-500/15 border border-purple-500/25">
+                        {formatFileSize(pdfMeta.fileSize)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono text-purple-300 px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
+                  <HardDrive className="h-2.5 w-2.5" />
+                  <span>Device Uploaded Document</span>
+                </span>
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
               <input
                 id="res-pdf"
                 type="text"
                 value={pdfUrl}
-                onChange={(e) => setPdfUrl(e.target.value)}
-                placeholder="e.g. /resume.pdf or https://example.com/devops-cheatsheet.pdf"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPdfUrl(val);
+                  if (val.includes("/api/project-media/")) {
+                    fetchPdfMetadata(val);
+                  } else {
+                    setPdfMeta(null);
+                  }
+                }}
+                placeholder="e.g. /api/project-media/15 or /resume.pdf or https://example.com/notes.pdf"
                 className="flex-1 px-3.5 py-2 rounded-xl border border-white/10 bg-slate-900/90 text-white text-xs sm:text-sm font-mono placeholder:text-slate-500 focus:outline-none focus:border-purple-400"
               />
 
@@ -476,7 +668,10 @@ export default function ResourceEditorModal({
                   </a>
                   <button
                     type="button"
-                    onClick={() => setPdfUrl("")}
+                    onClick={() => {
+                      setPdfUrl("");
+                      setPdfMeta(null);
+                    }}
                     className="h-9 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                     title="Remove PDF association"
                   >
@@ -487,7 +682,10 @@ export default function ResourceEditorModal({
               ) : (
                 <button
                   type="button"
-                  onClick={() => setPdfUrl("/resume.pdf")}
+                  onClick={() => {
+                    setPdfUrl("/resume.pdf");
+                    setPdfMeta(null);
+                  }}
                   className="h-9 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-mono inline-flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
                   title="Insert sample PDF path"
                 >

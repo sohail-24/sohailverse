@@ -798,8 +798,8 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
               return sendJson(400, { error: "Empty file content" });
             }
 
-            // Detect and validate binary image magic signature
-            let detectedMime: "image/png" | "image/jpeg" | "image/webp" | null = null;
+            // Detect and validate binary image/pdf magic signature
+            let detectedMime: "image/png" | "image/jpeg" | "image/webp" | "application/pdf" | null = null;
             if (
               fileBuffer.length >= 8 &&
               fileBuffer[0] === 0x89 &&
@@ -831,16 +831,25 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
               fileBuffer[11] === 0x50
             ) {
               detectedMime = "image/webp";
+            } else if (
+              fileBuffer.length >= 4 &&
+              fileBuffer[0] === 0x25 && // %
+              fileBuffer[1] === 0x50 && // P
+              fileBuffer[2] === 0x44 && // D
+              fileBuffer[3] === 0x46    // F
+            ) {
+              detectedMime = "application/pdf";
             }
 
             if (!detectedMime) {
               return sendJson(400, {
-                error: "Invalid file format. Only authentic image files (PNG, JPG/JPEG, WEBP) are accepted.",
+                error: "Invalid file format. Only authentic image files (PNG, JPG/JPEG, WEBP) or PDF documents are accepted.",
               });
             }
 
             // Sanitize filename
-            const safeName = fileName.replace(/^.*[\\\/]/, "").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 100) || "image.png";
+            const fallbackExt = detectedMime === "application/pdf" ? "document.pdf" : "image.png";
+            const safeName = fileName.replace(/^.*[\\\/]/, "").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 100) || fallbackExt;
             const base64Data = fileBuffer.toString("base64");
 
             if (querySql) {

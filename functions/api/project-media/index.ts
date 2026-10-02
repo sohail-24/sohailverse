@@ -21,9 +21,9 @@ interface PagesContext {
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 /**
- * Validates real binary image magic numbers to prevent malicious or non-image uploads.
+ * Validates real binary image & PDF magic numbers to prevent malicious or non-supported uploads.
  */
-function detectImageMimeType(bytes: Uint8Array): "image/png" | "image/jpeg" | "image/webp" | null {
+function detectImageMimeType(bytes: Uint8Array): "image/png" | "image/jpeg" | "image/webp" | "application/pdf" | null {
   // PNG: 89 50 4E 47 0D 0A 1A 0A
   if (
     bytes.length >= 8 &&
@@ -57,6 +57,17 @@ function detectImageMimeType(bytes: Uint8Array): "image/png" | "image/jpeg" | "i
     bytes[11] === 0x50
   ) {
     return "image/webp";
+  }
+
+  // PDF: %PDF
+  if (
+    bytes.length >= 4 &&
+    bytes[0] === 0x25 && // %
+    bytes[1] === 0x50 && // P
+    bytes[2] === 0x44 && // D
+    bytes[3] === 0x46    // F
+  ) {
+    return "application/pdf";
   }
 
   return null;
@@ -234,7 +245,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     if (!detectedMime) {
       return new Response(
         JSON.stringify({
-          error: "Invalid file format. Only real image files (PNG, JPG/JPEG, WEBP) are accepted.",
+          error: "Invalid file format. Only authentic image files (PNG, JPG/JPEG, WEBP) or PDF documents are accepted.",
         }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
