@@ -34,6 +34,8 @@ import {
   CreditCard,
   Mail,
   Video,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   SiKubernetes,
@@ -123,10 +125,8 @@ export default function ProjectInformationPage() {
   const [loading, setLoading] = useState(!initialProject);
   const [error, setError] = useState<string | null>(null);
 
-  // Active video session in player
-  const [activeVideo, setActiveVideo] = useState<ProjectVideoSession | null>(() => {
-    return initialProject && initialProject.content.videos.length > 0 ? initialProject.content.videos[0] : null;
-  });
+  // Active external video session in lower player (YouTube / Vimeo)
+  const [activeExternalVideo, setActiveExternalVideo] = useState<ProjectVideoSession | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   // Active document selected in documentation viewer
@@ -171,8 +171,11 @@ export default function ProjectInformationPage() {
       setError(null);
       const data = await fetchProjectDetailsById(id);
       setProject(data);
-      if (data.content.videos.length > 0 && !activeVideo) {
-        setActiveVideo(data.content.videos[0]);
+      const externalVids = data.content.videos.filter(
+        (v) => v.video_url && v.video_url.trim().length > 0 && !isDirectVideoUrl(v.video_url)
+      );
+      if (externalVids.length > 0) {
+        setActiveExternalVideo((prev) => prev || externalVids[0]);
       }
     } catch (err: any) {
       console.error("Failed to load project information:", err);
@@ -182,7 +185,7 @@ export default function ProjectInformationPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, project, activeVideo]);
+  }, [id, project, activeExternalVideo]);
 
   useEffect(() => {
     loadData();
@@ -269,37 +272,111 @@ export default function ProjectInformationPage() {
   const detail = content.projectDetail;
   const activeDoc = content.documents[selectedDocIndex] || null;
 
-  // Project Gallery (up to 5 images) — Only include images where enabled === true AND valid URL
-  const enabledImages: string[] = [];
+  // Unified Gallery Media Item (Image or Uploaded Video)
+  interface ProjectGalleryMediaItem {
+    id: string;
+    type: "image" | "video";
+    url: string;
+    title: string;
+    thumbnailUrl?: string;
+    duration?: string;
+    description?: string;
+  }
+
+  // 1. Gather all enabled project images (up to 5 images)
+  const enabledImages: { url: string; title: string }[] = [];
   if (detail?.images) {
     if (detail.images.image1?.enabled && detail.images.image1?.url?.trim()) {
-      enabledImages.push(detail.images.image1.url.trim());
+      enabledImages.push({ url: detail.images.image1.url.trim(), title: `${project.title} — Image 1` });
     }
     if (detail.images.image2?.enabled && detail.images.image2?.url?.trim()) {
-      enabledImages.push(detail.images.image2.url.trim());
+      enabledImages.push({ url: detail.images.image2.url.trim(), title: `${project.title} — Image 2` });
     }
     if (detail.images.image3?.enabled && detail.images.image3?.url?.trim()) {
-      enabledImages.push(detail.images.image3.url.trim());
+      enabledImages.push({ url: detail.images.image3.url.trim(), title: `${project.title} — Image 3` });
     }
     if (detail.images.image4?.enabled && detail.images.image4?.url?.trim()) {
-      enabledImages.push(detail.images.image4.url.trim());
+      enabledImages.push({ url: detail.images.image4.url.trim(), title: `${project.title} — Image 4` });
     }
     if (detail.images.image5?.enabled && detail.images.image5?.url?.trim()) {
-      enabledImages.push(detail.images.image5.url.trim());
+      enabledImages.push({ url: detail.images.image5.url.trim(), title: `${project.title} — Image 5` });
     }
   } else {
     // Fallback if no projectDetail schema
     if (content.gallery_images && content.gallery_images.length > 0) {
-      enabledImages.push(
-        ...content.gallery_images.filter((img) => typeof img === "string" && img.trim().length > 0)
-      );
+      content.gallery_images
+        .filter((img) => typeof img === "string" && img.trim().length > 0)
+        .forEach((img, idx) => {
+          enabledImages.push({ url: img.trim(), title: `${project.title} — Image ${idx + 1}` });
+        });
     } else if (project.hero_image) {
-      enabledImages.push(project.hero_image);
+      enabledImages.push({ url: project.hero_image.trim(), title: `${project.title} — Hero Image` });
     }
   }
 
-  const galleryList = enabledImages.slice(0, 5);
-  const activeImage = galleryList[selectedGalleryIndex] || galleryList[0] || null;
+  // 2. Gather uploaded videos (from content.videos and direct video URL)
+  const uploadedVideos: ProjectGalleryMediaItem[] = [];
+  content.videos.forEach((vid, vIdx) => {
+    if (vid.video_url && vid.video_url.trim().length > 0 && isDirectVideoUrl(vid.video_url)) {
+      uploadedVideos.push({
+        id: vid.id || `uploaded-video-${vIdx}`,
+        type: "video",
+        url: vid.video_url.trim(),
+        title: vid.title || vid.name || `${project.title} — Demonstration Video`,
+        thumbnailUrl: vid.thumbnail_url?.trim() || undefined,
+        duration: vid.duration?.trim() || undefined,
+        description: vid.description?.trim() || undefined,
+      });
+    }
+  });
+
+  const singleDirectVideo = (detail?.video?.enabled ? (detail.video.url || content.video_url || "") : "").trim();
+  if (
+    singleDirectVideo &&
+    isDirectVideoUrl(singleDirectVideo) &&
+    !uploadedVideos.some((uv) => uv.url === singleDirectVideo)
+  ) {
+    uploadedVideos.push({
+      id: "uploaded-single-video",
+      type: "video",
+      url: singleDirectVideo,
+      title: `${project.title} — Demonstration Video`,
+    });
+  }
+
+  // 3. Combine into unified top gallery media list
+  // Example: [Image 1, Image 2, Uploaded Video, Image 3...]
+  const imageMediaItems: ProjectGalleryMediaItem[] = enabledImages.slice(0, 5).map((img, idx) => ({
+    id: `img-${idx}`,
+    type: "image",
+    url: img.url,
+    title: img.title,
+  }));
+
+  const galleryMediaList: ProjectGalleryMediaItem[] = (() => {
+    if (uploadedVideos.length === 0) return imageMediaItems;
+    if (imageMediaItems.length >= 2) {
+      return [
+        imageMediaItems[0],
+        imageMediaItems[1],
+        ...uploadedVideos,
+        ...imageMediaItems.slice(2),
+      ];
+    }
+    if (imageMediaItems.length === 1) {
+      return [imageMediaItems[0], ...uploadedVideos];
+    }
+    return uploadedVideos;
+  })();
+
+  const activeMedia = galleryMediaList[selectedGalleryIndex] || galleryMediaList[0] || null;
+
+  // External Video Sessions (YouTube, Vimeo walkthroughs)
+  // Uploaded project videos are part of the top gallery and excluded here to prevent duplication
+  const externalVideoSessions = content.videos.filter(
+    (v) => v.video_url && v.video_url.trim().length > 0 && !isDirectVideoUrl(v.video_url)
+  );
+  const currentExternalVideo = activeExternalVideo || (externalVideoSessions.length > 0 ? externalVideoSessions[0] : null);
 
   const isAmFruits =
     project.id === "fresh-flow" ||
@@ -390,11 +467,9 @@ export default function ProjectInformationPage() {
 
   const hasAnyResource = Boolean(gitUrl || websiteUrl || videoUrl || pdfUrl || docUrl);
 
-  // Video Sessions: Must be enabled AND have at least one valid video URL
+  // Video Sessions: Must be enabled AND have at least one valid external video URL (uploaded videos are displayed in top gallery)
   const isVideoSessionsVisible = Boolean(
-    detail?.videoSessions?.enabled &&
-    content.videos.length > 0 &&
-    content.videos.some((v) => v.video_url && v.video_url.trim().length > 0)
+    detail?.videoSessions?.enabled && externalVideoSessions.length > 0
   );
 
   // Documentation section: Must be enabled AND have documents or content
@@ -611,73 +686,165 @@ export default function ProjectInformationPage() {
             - Implemented Features, Important Business Flow, Payment System & Security, Order Data / Historical Records
            ========================================================================= */}
         <section ref={overviewRef} id="section-overview" className="w-full space-y-6 sm:space-y-10">
-          {/* Main Hero Project Image Container - only rendered when at least 1 image is enabled */}
-          {galleryList.length > 0 && activeImage && (
+          {/* Main Hero Project Media Container (Images & Uploaded Videos) */}
+          {galleryMediaList.length > 0 && activeMedia && (
             <div className="space-y-4">
               <div className="relative mx-auto w-full max-w-xl aspect-[16/10] overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/60 shadow-2xl group">
-                <img
-                  src={activeImage}
-                  alt={`${project.title} Preview`}
-                  className="block h-full w-full object-contain object-center"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src =
-                      "/projects/temporary/fresh-flow-desktop.v2.jpg";
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                {activeMedia.type === "video" ? (
+                  <div className="relative h-full w-full bg-black flex items-center justify-center">
+                    <video
+                      key={activeMedia.url}
+                      src={activeMedia.url}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="h-full w-full object-contain bg-black"
+                      title={activeMedia.title}
+                      poster={activeMedia.thumbnailUrl}
+                    >
+                      Your browser does not support HTML5 video playback.
+                    </video>
+                    <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/75 border border-white/15 text-[11px] font-mono text-emerald-300 backdrop-blur-md shadow-md">
+                      <Video className="h-3.5 w-3.5 text-emerald-400" />
+                      <span>Uploaded Video</span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <img
+                      src={activeMedia.url}
+                      alt={`${project.title} Preview`}
+                      className="block h-full w-full object-contain object-center"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src =
+                          "/projects/temporary/fresh-flow-desktop.v2.jpg";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
 
-                {/* Lightbox Zoom Button */}
-                <button
-                  onClick={() =>
-                    setLightboxImage({
-                      url: activeImage,
-                      title: `${project.title} — Image ${selectedGalleryIndex + 1}`,
-                      caption: project.tagline || project.description,
-                    })
-                  }
-                  aria-label="View full screen preview"
-                  className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-xs font-mono text-slate-300 hover:text-white border border-white/10 backdrop-blur-md transition-all shadow-md"
-                >
-                  <Maximize2 className="h-3.5 w-3.5" />
-                  <span>Enlarge</span>
-                </button>
+                    {/* Lightbox Zoom Button */}
+                    <button
+                      onClick={() =>
+                        setLightboxImage({
+                          url: activeMedia.url,
+                          title: activeMedia.title,
+                          caption: project.tagline || project.description,
+                        })
+                      }
+                      aria-label="View full screen preview"
+                      className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-xs font-mono text-slate-300 hover:text-white border border-white/10 backdrop-blur-md transition-all shadow-md"
+                    >
+                      <Maximize2 className="h-3.5 w-3.5" />
+                      <span>Enlarge</span>
+                    </button>
+                  </>
+                )}
+
+                {/* Left/Right Gallery Navigation Arrows */}
+                {galleryMediaList.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Previous media"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedGalleryIndex((prev) =>
+                          prev === 0 ? galleryMediaList.length - 1 : prev - 1
+                        );
+                      }}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-950/70 hover:bg-slate-950 text-slate-200 hover:text-white border border-white/10 backdrop-blur-md opacity-80 group-hover:opacity-100 transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Next media"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedGalleryIndex((prev) =>
+                          prev === galleryMediaList.length - 1 ? 0 : prev + 1
+                        );
+                      }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-950/70 hover:bg-slate-950 text-slate-200 hover:text-white border border-white/10 backdrop-blur-md opacity-80 group-hover:opacity-100 transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
               </div>
 
-              {/* Project Gallery (1 to 5 images) */}
-              {galleryList.length > 1 && (
+              {/* Project Media Gallery Thumbnails */}
+              {galleryMediaList.length > 1 && (
                 <div className="space-y-2 pt-1">
                   <div className="flex items-center justify-between text-xs font-mono text-slate-400">
                     <span className="flex items-center gap-1.5 text-slate-300 font-medium">
-                      <ImageIcon className="h-3.5 w-3.5 text-cyan-400" />
-                      <span>Project Gallery ({galleryList.length} images)</span>
+                      {activeMedia.type === "video" ? (
+                        <Video className="h-3.5 w-3.5 text-emerald-400" />
+                      ) : (
+                        <ImageIcon className="h-3.5 w-3.5 text-cyan-400" />
+                      )}
+                      <span>Project Gallery ({galleryMediaList.length} items)</span>
                     </span>
                     <span>
-                      Viewing {selectedGalleryIndex + 1} of {galleryList.length}
+                      Viewing {selectedGalleryIndex + 1} of {galleryMediaList.length}
                     </span>
                   </div>
                   <div className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar py-1">
-                    {galleryList.map((imgUrl, idx) => (
+                    {galleryMediaList.map((item, idx) => (
                       <button
-                        key={idx}
+                        key={item.id}
                         onClick={() => setSelectedGalleryIndex(idx)}
                         className={`relative shrink-0 w-24 sm:w-32 aspect-[16/10] rounded-xl overflow-hidden border transition-all ${
                           selectedGalleryIndex === idx
                             ? "border-cyan-400 ring-2 ring-cyan-400/30 scale-[1.02]"
                             : "border-white/10 opacity-70 hover:opacity-100 hover:border-white/30"
                         }`}
+                        title={item.title}
                       >
-                        <img
-                          src={imgUrl}
-                          alt={`Gallery view ${idx + 1}`}
-                          className="block h-full w-full object-contain"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src =
-                              "/projects/temporary/fresh-flow-desktop.v2.jpg";
-                          }}
-                        />
-                        <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 text-[10px] font-mono text-slate-200">
-                          {idx + 1}
-                        </div>
+                        {item.type === "video" ? (
+                          <div className="relative h-full w-full bg-slate-950 flex flex-col items-center justify-center">
+                            {item.thumbnailUrl ? (
+                              <img
+                                src={item.thumbnailUrl}
+                                alt={item.title}
+                                className="block h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex flex-col items-center justify-center p-1 text-center">
+                                <div className="p-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 mb-0.5">
+                                  <Play className="h-3.5 w-3.5 fill-cyan-400 text-cyan-400 ml-0.5" />
+                                </div>
+                                <span className="text-[9px] font-mono text-slate-300 font-semibold tracking-tight uppercase">
+                                  Video
+                                </span>
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                              <div className="p-1.5 rounded-full bg-black/60 border border-white/20 text-cyan-300 shadow">
+                                <Play className="h-3.5 w-3.5 fill-cyan-400 text-cyan-400 ml-0.5" />
+                              </div>
+                            </div>
+                            <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/30 text-[9px] font-mono text-emerald-300 flex items-center gap-0.5">
+                              <Video className="h-2.5 w-2.5 text-emerald-400" />
+                              <span>{item.duration || "Video"}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <img
+                              src={item.url}
+                              alt={item.title}
+                              className="block h-full w-full object-contain"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src =
+                                  "/projects/temporary/fresh-flow-desktop.v2.jpg";
+                              }}
+                            />
+                            <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 text-[10px] font-mono text-slate-200">
+                              {idx + 1}
+                            </div>
+                          </>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -2040,7 +2207,9 @@ export default function ProjectInformationPage() {
         )}
 
         {/* =========================================================================
-            SECTION 2: VIDEO SESSIONS (Reusing Cinema/DevOps Video Player)
+            SECTION 2: VIDEO SESSIONS (External Walkthroughs & Masterclasses)
+            - Uploaded project videos are part of the top Media Gallery.
+            - External YouTube / Vimeo walkthrough sessions remain here without duplication.
            ========================================================================= */}
         {isVideoSessionsVisible && (
           <section ref={videosRef} id="section-videos" className="space-y-6 pt-4">
@@ -2057,31 +2226,19 @@ export default function ProjectInformationPage() {
                 </h2>
               </div>
               <span className="text-xs font-mono text-slate-400">
-                {content.videos.length} {content.videos.length === 1 ? "Session" : "Sessions"} Available
+                {externalVideoSessions.length} {externalVideoSessions.length === 1 ? "Session" : "Sessions"} Available
               </span>
             </div>
 
             {/* In-Page Video Player */}
-            {activeVideo && (
+            {currentExternalVideo && (
               <div className="rounded-2xl sm:rounded-3xl border border-cyan-500/30 bg-slate-950 p-3 sm:p-5 shadow-[0_0_40px_rgba(6,182,212,0.15)] space-y-3 sm:space-y-4">
                 {/* Embed / HTML5 Video Container */}
                 <div className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-white/10 shadow-inner">
-                  {isDirectVideoUrl(activeVideo.video_url) ? (
-                    <video
-                      key={activeVideo.video_url}
-                      src={activeVideo.video_url}
-                      controls
-                      autoPlay
-                      playsInline
-                      className="w-full h-full object-contain bg-black"
-                      title={activeVideo.title}
-                    >
-                      Your browser does not support HTML5 video playback.
-                    </video>
-                  ) : getProjectVideoEmbedUrl(activeVideo.video_url) ? (
+                  {getProjectVideoEmbedUrl(currentExternalVideo.video_url) ? (
                     <iframe
-                      src={getProjectVideoEmbedUrl(activeVideo.video_url)!}
-                      title={activeVideo.title}
+                      src={getProjectVideoEmbedUrl(currentExternalVideo.video_url)!}
+                      title={currentExternalVideo.title}
                       className="w-full h-full border-0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
@@ -2089,9 +2246,9 @@ export default function ProjectInformationPage() {
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-slate-900">
                       <Play className="h-12 w-12 text-cyan-400 mb-3" />
-                      <p className="text-white font-semibold">{activeVideo.title}</p>
+                      <p className="text-white font-semibold">{currentExternalVideo.title}</p>
                       <a
-                        href={activeVideo.video_url}
+                        href={currentExternalVideo.video_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-semibold text-xs hover:bg-cyan-400 transition-all"
@@ -2106,43 +2263,37 @@ export default function ProjectInformationPage() {
                 {/* Video Info Bar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
                   <div>
-                    {activeVideo.name && (
+                    {currentExternalVideo.name && (
                       <span className="text-xs font-mono text-cyan-400 font-semibold uppercase tracking-wider block">
-                        {activeVideo.name}
+                        {currentExternalVideo.name}
                       </span>
                     )}
                     <h3 className="font-display text-base sm:text-lg font-bold text-white">
-                      {activeVideo.title}
+                      {currentExternalVideo.title}
                     </h3>
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">
-                    {isDirectVideoUrl(activeVideo.video_url) && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-mono">
-                        <Video className="h-3 w-3 text-emerald-400" />
-                        <span>Uploaded Video</span>
-                      </span>
-                    )}
-                    {activeVideo.duration && (
+                    {currentExternalVideo.duration && (
                       <span className="px-2.5 py-1 rounded-md bg-slate-800 border border-white/10 text-xs font-mono text-slate-300">
-                        ⏱ {activeVideo.duration}
+                        ⏱ {currentExternalVideo.duration}
                       </span>
                     )}
                     <a
-                      href={activeVideo.video_url}
+                      href={currentExternalVideo.video_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs font-mono text-cyan-300 hover:underline px-2 py-1"
                     >
-                      <span>{isDirectVideoUrl(activeVideo.video_url) ? "Direct Video" : "External Link"}</span>
-                      <ExternalLink className="h-3 w-3" />
+                      <span>External Link</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   </div>
                 </div>
 
-                {activeVideo.description && (
+                {currentExternalVideo.description && (
                   <p className="text-xs sm:text-sm text-slate-300/80 leading-relaxed pt-1">
-                    {activeVideo.description}
+                    {currentExternalVideo.description}
                   </p>
                 )}
               </div>
@@ -2150,13 +2301,13 @@ export default function ProjectInformationPage() {
 
             {/* Video Session Selector Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 pt-2">
-              {content.videos.map((vid, idx) => {
-                const isCurrent = activeVideo?.id === vid.id;
+              {externalVideoSessions.map((vid, idx) => {
+                const isCurrent = currentExternalVideo?.id === vid.id;
                 return (
                   <button
                     key={vid.id}
                     onClick={() => {
-                      setActiveVideo(vid);
+                      setActiveExternalVideo(vid);
                       scrollToSection("videos");
                     }}
                     className={`group relative text-left p-3.5 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
@@ -2171,12 +2322,6 @@ export default function ProjectInformationPage() {
                           <span className="text-cyan-400 font-semibold truncate">
                             {vid.name || `Session ${String(idx + 1).padStart(2, "0")}`}
                           </span>
-                          {isDirectVideoUrl(vid.video_url) && (
-                            <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[9px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
-                              <Video className="h-2.5 w-2.5" />
-                              <span>Device Video</span>
-                            </span>
-                          )}
                         </div>
                         {vid.duration && <span className="shrink-0">{vid.duration}</span>}
                       </div>
