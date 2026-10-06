@@ -166,7 +166,7 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="h-screen h-[100dvh] bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
       {/* Print-Specific Stylesheet */}
       <style>{`
         @media print {
@@ -181,6 +181,14 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
             color: #0f172a !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            width: 210mm !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+          #root, .h-screen {
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
           }
           .no-print {
             display: none !important;
@@ -189,21 +197,39 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
             padding: 0 !important;
             margin: 0 !important;
             overflow: visible !important;
-            width: auto !important;
+            width: 210mm !important;
+            max-width: 210mm !important;
+            display: block !important;
+            height: auto !important;
+            min-height: auto !important;
           }
           .resume-container {
             padding: 0 !important;
             margin: 0 !important;
             background: transparent !important;
             gap: 0 !important;
-            width: auto !important;
-            max-width: none !important;
+            width: 210mm !important;
+            max-width: 210mm !important;
+            display: block !important;
+            height: auto !important;
           }
           .a4-page-scaler {
             width: 210mm !important;
             height: 297mm !important;
+            min-height: 297mm !important;
+            max-height: 297mm !important;
             margin: 0 !important;
             padding: 0 !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            page-break-after: always !important;
+            break-after: page !important;
+            display: block !important;
+          }
+          .a4-page-scaler:last-of-type,
+          .a4-page-scaler:last-child {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
           }
           .a4-page {
             box-shadow: none !important;
@@ -213,19 +239,16 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
             height: 297mm !important;
             max-height: 297mm !important;
             transform: none !important;
-            page-break-after: always !important;
-            break-after: page !important;
             overflow: hidden !important;
-          }
-          .a4-page:last-child {
-            page-break-after: avoid !important;
-            break-after: avoid !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            display: flex !important;
           }
         }
       `}</style>
 
       {/* Floating Interactive Toolbar (Hidden during print) */}
-      <header className="no-print sticky top-0 z-50 border-b border-white/10 bg-slate-900/90 backdrop-blur-md px-3 py-2.5 sm:px-8 sm:py-3">
+      <header className="no-print sticky top-0 z-50 flex-shrink-0 border-b border-white/10 bg-slate-900/90 backdrop-blur-md px-3 py-2.5 sm:px-8 sm:py-3">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2.5 sm:gap-4 flex-wrap">
           {/* Back link & title */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -322,18 +345,18 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="resume-canvas-area flex-1 py-4 sm:py-8 px-2 sm:px-4 flex flex-col items-center justify-start overflow-x-hidden overflow-y-auto w-full touch-pan-y"
+        className="resume-canvas-area flex-1 min-h-0 py-4 sm:py-8 px-2 sm:px-4 overflow-x-auto overflow-y-auto w-full touch-auto"
+        style={{ WebkitOverflowScrolling: "touch" }}
       >
-        <div className="resume-container flex flex-col items-center gap-6 sm:gap-8 w-full max-w-[210mm] mx-auto">
+        <div className="resume-container min-w-full w-max flex flex-col items-center gap-6 sm:gap-8 mx-auto pb-10 sm:pb-16">
           {/* =========================================================================
               PAGE 1 (EXACT A4: 210mm x 297mm)
              ========================================================================= */}
           <div
-            className="a4-page-scaler relative mx-auto flex flex-col items-center justify-start transition-all duration-200"
+            className="a4-page-scaler relative mx-auto flex flex-col items-center justify-start transition-all duration-200 flex-shrink-0"
             style={{
               width: `${Math.round(A4_WIDTH_PX * effectiveScale)}px`,
               height: `${scaledWrapperHeight}px`,
-              maxWidth: "100%",
             }}
           >
             <article
@@ -572,11 +595,10 @@ PRODUCTION INCIDENT RESOLUTION & ROOT CAUSE ANALYSIS (RCA)
             PAGE 2 (EXACT A4: 210mm x 297mm)
            ========================================================================= */}
         <div
-          className="a4-page-scaler relative mx-auto flex flex-col items-center justify-start transition-all duration-200"
+          className="a4-page-scaler relative mx-auto flex flex-col items-center justify-start transition-all duration-200 flex-shrink-0"
           style={{
             width: `${Math.round(A4_WIDTH_PX * effectiveScale)}px`,
             height: `${scaledWrapperHeight}px`,
-            maxWidth: "100%",
           }}
         >
           <article

@@ -58,7 +58,7 @@ async function generateResumePdf() {
       x: leftMargin,
       y: yPos - 1.5,
       width: 3.5,
-      height: 10.5,
+      height: 11.0,
       color: colorAccent,
     });
 
@@ -67,13 +67,13 @@ async function generateResumePdf() {
     page.drawText(upperTitle, {
       x: leftMargin + 9,
       y: yPos,
-      size: 9.5,
+      size: 9.8,
       font: fontBold,
       color: colorTitle,
     });
 
     // Subtle technical rule line extending to right margin
-    const titleWidth = fontBold.widthOfTextAtSize(upperTitle, 9.5);
+    const titleWidth = fontBold.widthOfTextAtSize(upperTitle, 9.8);
     page.drawLine({
       start: { x: leftMargin + 15 + titleWidth, y: yPos + 3.5 },
       end: { x: pageWidth - rightMargin, y: yPos + 3.5 },
@@ -81,7 +81,7 @@ async function generateResumePdf() {
       color: colorBorder,
     });
 
-    return yPos - 14;
+    return yPos - 14.5;
   }
 
   // =========================================================================
@@ -105,12 +105,12 @@ async function generateResumePdf() {
   y1 -= 13.5;
 
   const headerTitle = "Cloud, DevOps & Full-Stack Developer | AWS \u2022 Kubernetes \u2022 Automation";
-  const headerTitleWidth = fontBold.widthOfTextAtSize(headerTitle, 8.8);
+  const headerTitleWidth = fontBold.widthOfTextAtSize(headerTitle, 9.2);
   const headerTitleX = leftMargin + (contentWidth - headerTitleWidth) / 2;
   page1.drawText(headerTitle, {
     x: headerTitleX,
     y: y1,
-    size: 8.8,
+    size: 9.2,
     font: fontBold,
     color: colorAccentDark,
   });
@@ -133,7 +133,7 @@ async function generateResumePdf() {
   let totalContactWidth = 0;
   for (const part of contactParts) {
     const f = part.bold ? fontBold : fontRegular;
-    totalContactWidth += f.widthOfTextAtSize(part.text, 7.8);
+    totalContactWidth += f.widthOfTextAtSize(part.text, 8.4);
   }
 
   let curX = leftMargin + (contentWidth - totalContactWidth) / 2;
@@ -143,23 +143,23 @@ async function generateResumePdf() {
     page1.drawText(part.text, {
       x: curX,
       y: y1,
-      size: 7.8,
+      size: 8.4,
       font: f,
       color: c,
     });
-    curX += f.widthOfTextAtSize(part.text, 7.8);
+    curX += f.widthOfTextAtSize(part.text, 8.4);
   }
 
-  y1 -= 10.5;
+  y1 -= 11.0;
 
   // Centered Portfolio URL line
   const portfolioUrlText = "https://sohaildevops.site";
-  const portfolioUrlWidth = fontBold.widthOfTextAtSize(portfolioUrlText, 8.2);
+  const portfolioUrlWidth = fontBold.widthOfTextAtSize(portfolioUrlText, 8.6);
   const portfolioUrlX = leftMargin + (contentWidth - portfolioUrlWidth) / 2;
   page1.drawText(portfolioUrlText, {
     x: portfolioUrlX,
     y: y1,
-    size: 8.2,
+    size: 8.6,
     font: fontBold,
     color: colorAccentDark,
   });
@@ -179,16 +179,16 @@ async function generateResumePdf() {
   const summaryText =
     "Hands-on Cloud, DevOps & Full-Stack Developer with a solid foundation in Electronics & Instrumentation Engineering, cloud infrastructure automation, container orchestration, and full-stack software architecture. Demonstrated practical experience provisioning and managing dual Kubernetes environments (self-managed kubeadm on EC2 and AWS EKS), authoring modular Terraform Infrastructure-as-Code, orchestrating automated GitOps delivery pipelines with GitHub Actions and ArgoCD, and developing production full-stack TypeScript/React and Python applications. Proven track record in diagnosing and resolving complex production incidents spanning Kubernetes CSI storage provisioners, reverse proxies, and IAM governance.";
 
-  const summaryLines = wrapText(summaryText, contentWidth, fontRegular, 8.4);
+  const summaryLines = wrapText(summaryText, contentWidth, fontRegular, 9.0);
   for (const line of summaryLines) {
     page1.drawText(line, {
       x: leftMargin,
       y: y1,
-      size: 8.4,
+      size: 9.0,
       font: fontRegular,
       color: colorBody,
     });
-    y1 -= 11.4;
+    y1 -= 12.4;
   }
 
   y1 -= 4;
@@ -222,31 +222,31 @@ async function generateResumePdf() {
     page1.drawText(skill.category, {
       x: leftMargin,
       y: y1,
-      size: 8.2,
+      size: 8.8,
       font: fontBold,
       color: colorTitle,
     });
-    const catWidth = fontBold.widthOfTextAtSize(skill.category, 8.2);
-    const itemLines = wrapText(skill.items, contentWidth - catWidth, fontRegular, 8.2);
+    const catWidth = fontBold.widthOfTextAtSize(skill.category, 8.8);
+    const itemLines = wrapText(skill.items, contentWidth - catWidth, fontRegular, 8.7);
 
     page1.drawText(itemLines[0], {
       x: leftMargin + catWidth,
       y: y1,
-      size: 8.2,
+      size: 8.7,
       font: fontRegular,
       color: colorBody,
     });
-    y1 -= 10.8;
+    y1 -= 11.8;
 
     for (let i = 1; i < itemLines.length; i++) {
       page1.drawText(itemLines[i], {
         x: leftMargin + 14,
         y: y1,
-        size: 8.2,
+        size: 8.7,
         font: fontRegular,
         color: colorBody,
       });
-      y1 -= 10.8;
+      y1 -= 11.8;
     }
   }
 
@@ -258,31 +258,31 @@ async function generateResumePdf() {
   page1.drawText("Visys Cloud Technologies", {
     x: leftMargin,
     y: y1,
-    size: 9.6,
+    size: 10.0,
     font: fontBold,
     color: colorTitle,
   });
 
-  const companyWidth = fontBold.widthOfTextAtSize("Visys Cloud Technologies", 9.6);
+  const companyWidth = fontBold.widthOfTextAtSize("Visys Cloud Technologies", 10.0);
   page1.drawText(" — DevOps Engineering Intern", {
     x: leftMargin + companyWidth,
     y: y1,
-    size: 8.8,
+    size: 9.2,
     font: fontRegular,
     color: colorDark,
   });
 
   const expDate = "December 2025 – June 2026";
-  const expDateWidth = fontBold.widthOfTextAtSize(expDate, 8.2);
+  const expDateWidth = fontBold.widthOfTextAtSize(expDate, 8.5);
   page1.drawText(expDate, {
     x: pageWidth - rightMargin - expDateWidth,
     y: y1,
-    size: 8.2,
+    size: 8.5,
     font: fontBold,
     color: colorMuted,
   });
 
-  y1 -= 12.0;
+  y1 -= 13.0;
 
   const experienceBullets = [
     "Automated end-to-end continuous integration and deployment pipelines using GitHub Actions, Jenkins, Docker, and Helm to accelerate release velocity.",
@@ -296,20 +296,20 @@ async function generateResumePdf() {
     page1.drawText("•", {
       x: leftMargin + 4,
       y: y1,
-      size: 8.5,
+      size: 8.8,
       font: fontBold,
       color: colorAccent,
     });
-    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.2);
+    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.8);
     for (const bLine of bulletLines) {
       page1.drawText(bLine, {
         x: leftMargin + 14,
         y: y1,
-        size: 8.2,
+        size: 8.8,
         font: fontRegular,
         color: colorBody,
       });
-      y1 -= 10.6;
+      y1 -= 11.8;
     }
   }
 
@@ -321,26 +321,26 @@ async function generateResumePdf() {
   page1.drawText("Muffakham Jah College of Engineering and Technology", {
     x: leftMargin,
     y: y1,
-    size: 9.0,
+    size: 9.6,
     font: fontBold,
     color: colorTitle,
   });
 
   const eduDate = "2019 – 2023";
-  const eduDateWidth = fontBold.widthOfTextAtSize(eduDate, 8.2);
+  const eduDateWidth = fontBold.widthOfTextAtSize(eduDate, 8.5);
   page1.drawText(eduDate, {
     x: pageWidth - rightMargin - eduDateWidth,
     y: y1,
-    size: 8.2,
+    size: 8.5,
     font: fontBold,
     color: colorMuted,
   });
 
-  y1 -= 11.2;
+  y1 -= 12.0;
   page1.drawText("Electronics & Instrumentation Engineering", {
     x: leftMargin,
     y: y1,
-    size: 8.4,
+    size: 9.0,
     font: fontRegular,
     color: colorDark,
   });
@@ -353,34 +353,34 @@ async function generateResumePdf() {
   page1.drawText("AM Fruits (Fresh Flow): Live B2B Wholesale Commerce Platform", {
     x: leftMargin,
     y: y1,
-    size: 9.2,
+    size: 9.6,
     font: fontBold,
     color: colorTitle,
   });
 
   const p1ProjRef = "Live Production: amfruits.shop";
-  const p1ProjRefWidth = fontBold.widthOfTextAtSize(p1ProjRef, 7.6);
+  const p1ProjRefWidth = fontBold.widthOfTextAtSize(p1ProjRef, 8.2);
   page1.drawText(p1ProjRef, {
     x: pageWidth - rightMargin - p1ProjRefWidth,
     y: y1,
-    size: 7.6,
+    size: 8.2,
     font: fontBold,
     color: rgb(0.04, 0.48, 0.30),
   });
 
-  y1 -= 10.5;
+  y1 -= 11.0;
   page1.drawText(
     "Technologies: React, TypeScript, Hono, tRPC, Drizzle ORM, Neon PostgreSQL, Razorpay API, Docker, NGINX, Cloudflare DNS, AWS",
     {
       x: leftMargin,
       y: y1,
-      size: 7.8,
+      size: 8.4,
       font: fontItalic,
       color: colorAccentDark,
     }
   );
 
-  y1 -= 11.5;
+  y1 -= 12.0;
 
   const amFruitsBulletsP1 = [
     "Built and deployed a production B2B wholesale platform (amfruits.shop) supporting role-based access control (RBAC) for wholesale buyers and platform administrators.",
@@ -393,20 +393,20 @@ async function generateResumePdf() {
     page1.drawText("•", {
       x: leftMargin + 4,
       y: y1,
-      size: 8.5,
+      size: 8.8,
       font: fontBold,
       color: colorAccent,
     });
-    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.2);
+    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.8);
     for (const bLine of bulletLines) {
       page1.drawText(bLine, {
         x: leftMargin + 14,
         y: y1,
-        size: 8.2,
+        size: 8.8,
         font: fontRegular,
         color: colorBody,
       });
-      y1 -= 10.6;
+      y1 -= 11.8;
     }
   }
 
@@ -452,12 +452,12 @@ async function generateResumePdf() {
   page2.drawText("MOHAMMED SOHAIL", {
     x: leftMargin,
     y: y2,
-    size: 11.5,
+    size: 11.8,
     font: fontBold,
     color: colorTitle,
   });
 
-  const subHeaderWidth = fontBold.widthOfTextAtSize("MOHAMMED SOHAIL", 11.5);
+  const subHeaderWidth = fontBold.widthOfTextAtSize("MOHAMMED SOHAIL", 11.8);
   page2.drawText(" | Cloud, DevOps & Full-Stack Developer — Technical Portfolio Dossier", {
     x: leftMargin + subHeaderWidth,
     y: y2,
@@ -467,11 +467,11 @@ async function generateResumePdf() {
   });
 
   const p2Email = "mdsohail88008@gmail.com";
-  const p2EmailWidth = fontRegular.widthOfTextAtSize(p2Email, 8.2);
+  const p2EmailWidth = fontRegular.widthOfTextAtSize(p2Email, 8.4);
   page2.drawText(p2Email, {
     x: pageWidth - rightMargin - p2EmailWidth,
     y: y2,
-    size: 8.2,
+    size: 8.4,
     font: fontRegular,
     color: colorMuted,
   });
@@ -493,34 +493,34 @@ async function generateResumePdf() {
   page2.drawText("SmartOrder: Cloud-Native Self-Service Restaurant Commerce System", {
     x: leftMargin,
     y: y2,
-    size: 9.0,
+    size: 9.4,
     font: fontBold,
     color: colorTitle,
   });
 
   const smartOrderRef = "Portfolio Project ID: 35";
-  const smartOrderRefWidth = fontRegular.widthOfTextAtSize(smartOrderRef, 7.5);
+  const smartOrderRefWidth = fontRegular.widthOfTextAtSize(smartOrderRef, 8.0);
   page2.drawText(smartOrderRef, {
     x: pageWidth - rightMargin - smartOrderRefWidth,
     y: y2,
-    size: 7.5,
+    size: 8.0,
     font: fontRegular,
     color: colorMuted,
   });
 
-  y2 -= 10.0;
+  y2 -= 10.5;
   page2.drawText(
     "Technologies: TypeScript, React, Vite, Hono, tRPC, Drizzle ORM, PostgreSQL (Neon Serverless), Tailwind CSS, Git/GitHub",
     {
       x: leftMargin,
       y: y2,
-      size: 7.6,
+      size: 8.2,
       font: fontItalic,
       color: colorAccentDark,
     }
   );
 
-  y2 -= 11.0;
+  y2 -= 11.5;
 
   const smartOrderBulletsP2 = [
     "Designed a full-stack, touchscreen-optimized restaurant ordering system connecting a customer self-service kiosk workflow with an administrative backoffice.",
@@ -533,20 +533,20 @@ async function generateResumePdf() {
     page2.drawText("•", {
       x: leftMargin + 4,
       y: y2,
-      size: 8.5,
+      size: 8.8,
       font: fontBold,
       color: colorAccent,
     });
-    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.0);
+    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.8);
     for (const bLine of bulletLines) {
       page2.drawText(bLine, {
         x: leftMargin + 14,
         y: y2,
-        size: 8.0,
+        size: 8.8,
         font: fontRegular,
         color: colorBody,
       });
-      y2 -= 10.2;
+      y2 -= 11.8;
     }
   }
 
@@ -556,34 +556,34 @@ async function generateResumePdf() {
   page2.drawText("SohailShop: Dual-Cluster Kubernetes E-Commerce Platform", {
     x: leftMargin,
     y: y2,
-    size: 9.0,
+    size: 9.4,
     font: fontBold,
     color: colorTitle,
   });
 
   const sohailShopRef = "github.com/sohail-24/devops-ecommerce-platform";
-  const sohailShopRefWidth = fontRegular.widthOfTextAtSize(sohailShopRef, 7.5);
+  const sohailShopRefWidth = fontRegular.widthOfTextAtSize(sohailShopRef, 8.0);
   page2.drawText(sohailShopRef, {
     x: pageWidth - rightMargin - sohailShopRefWidth,
     y: y2,
-    size: 7.5,
+    size: 8.0,
     font: fontRegular,
     color: colorMuted,
   });
 
-  y2 -= 10.0;
+  y2 -= 10.5;
   page2.drawText(
     "Technologies: Kubernetes (kubeadm & AWS EKS), Terraform, Helm, ArgoCD, Docker, AWS (ALB, S3, IRSA), Django 5, PostgreSQL, Redis, NGINX",
     {
       x: leftMargin,
       y: y2,
-      size: 7.6,
+      size: 8.4,
       font: fontItalic,
       color: colorAccentDark,
     }
   );
 
-  y2 -= 11.0;
+  y2 -= 11.5;
 
   const sohailShopBulletsP2 = [
     "Engineered a production-grade modular e-commerce backend and deployed it across two distinct Kubernetes environments: a self-managed kubeadm cluster on EC2 and a managed AWS EKS cluster provisioned via Terraform IaC.",
@@ -596,20 +596,20 @@ async function generateResumePdf() {
     page2.drawText("•", {
       x: leftMargin + 4,
       y: y2,
-      size: 8.5,
+      size: 8.8,
       font: fontBold,
       color: colorAccent,
     });
-    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.0);
+    const bulletLines = wrapText(bullet, contentWidth - 14, fontRegular, 8.8);
     for (const bLine of bulletLines) {
       page2.drawText(bLine, {
         x: leftMargin + 14,
         y: y2,
-        size: 8.0,
+        size: 8.8,
         font: fontRegular,
         color: colorBody,
       });
-      y2 -= 10.2;
+      y2 -= 11.8;
     }
   }
 
@@ -642,7 +642,7 @@ async function generateResumePdf() {
   ];
 
   for (const item of devopsHandsOn) {
-    const titleWidth = fontBold.widthOfTextAtSize(item.title, 8.2);
+    const titleWidth = fontBold.widthOfTextAtSize(item.title, 8.8);
     const firstLineMax = contentWidth - titleWidth;
     const descWords = item.desc.split(" ");
 
@@ -650,7 +650,7 @@ async function generateResumePdf() {
     let wordIdx = 0;
     while (wordIdx < descWords.length) {
       const test = firstLine ? `${firstLine} ${descWords[wordIdx]}` : descWords[wordIdx];
-      if (fontRegular.widthOfTextAtSize(test, 7.9) > firstLineMax) {
+      if (fontRegular.widthOfTextAtSize(test, 8.7) > firstLineMax) {
         break;
       }
       firstLine = test;
@@ -660,7 +660,7 @@ async function generateResumePdf() {
     page2.drawText(item.title, {
       x: leftMargin,
       y: y2,
-      size: 8.2,
+      size: 8.8,
       font: fontBold,
       color: colorTitle,
     });
@@ -668,24 +668,24 @@ async function generateResumePdf() {
     page2.drawText(firstLine, {
       x: leftMargin + titleWidth,
       y: y2,
-      size: 7.9,
+      size: 8.7,
       font: fontRegular,
       color: colorBody,
     });
-    y2 -= 10.6;
+    y2 -= 11.6;
 
     const remainingText = descWords.slice(wordIdx).join(" ");
     if (remainingText) {
-      const remLines = wrapText(remainingText, contentWidth, fontRegular, 7.9);
+      const remLines = wrapText(remainingText, contentWidth, fontRegular, 8.7);
       for (const rLine of remLines) {
         page2.drawText(rLine, {
           x: leftMargin,
           y: y2,
-          size: 7.9,
+          size: 8.7,
           font: fontRegular,
           color: colorBody,
         });
-        y2 -= 10.6;
+        y2 -= 11.6;
       }
     }
     y2 -= 3.5;
@@ -716,7 +716,7 @@ async function generateResumePdf() {
   ];
 
   for (const item of incidents) {
-    const titleWidth = fontBold.widthOfTextAtSize(item.title, 8.2);
+    const titleWidth = fontBold.widthOfTextAtSize(item.title, 8.8);
     const firstLineMax = contentWidth - titleWidth;
     const descWords = item.desc.split(" ");
 
@@ -724,7 +724,7 @@ async function generateResumePdf() {
     let wordIdx = 0;
     while (wordIdx < descWords.length) {
       const test = firstLine ? `${firstLine} ${descWords[wordIdx]}` : descWords[wordIdx];
-      if (fontRegular.widthOfTextAtSize(test, 7.9) > firstLineMax) {
+      if (fontRegular.widthOfTextAtSize(test, 8.7) > firstLineMax) {
         break;
       }
       firstLine = test;
@@ -734,7 +734,7 @@ async function generateResumePdf() {
     page2.drawText(item.title, {
       x: leftMargin,
       y: y2,
-      size: 8.2,
+      size: 8.8,
       font: fontBold,
       color: colorTitle,
     });
@@ -742,24 +742,24 @@ async function generateResumePdf() {
     page2.drawText(firstLine, {
       x: leftMargin + titleWidth,
       y: y2,
-      size: 7.9,
+      size: 8.7,
       font: fontRegular,
       color: colorBody,
     });
-    y2 -= 10.6;
+    y2 -= 11.6;
 
     const remainingText = descWords.slice(wordIdx).join(" ");
     if (remainingText) {
-      const remLines = wrapText(remainingText, contentWidth, fontRegular, 7.9);
+      const remLines = wrapText(remainingText, contentWidth, fontRegular, 8.7);
       for (const rLine of remLines) {
         page2.drawText(rLine, {
           x: leftMargin,
           y: y2,
-          size: 7.9,
+          size: 8.7,
           font: fontRegular,
           color: colorBody,
         });
-        y2 -= 10.6;
+        y2 -= 11.6;
       }
     }
     y2 -= 3.5;
