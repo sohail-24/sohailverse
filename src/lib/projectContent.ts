@@ -30,6 +30,7 @@ export interface ProjectVideoSession {
   thumbnail_url?: string;
   duration?: string;
   description?: string;
+  showInProjectGallery?: boolean;
 }
 
 export interface ProjectDocument {
@@ -264,24 +265,80 @@ export function isDirectVideoUrl(url?: string): boolean {
 }
 
 /**
- * Extracts embeddable video URL for YouTube / Vimeo or handles direct video
+ * Extracts YouTube video ID from various supported URL formats:
+ * - youtube.com/watch?v=VIDEO_ID (and watch?...&v=VIDEO_ID)
+ * - youtu.be/VIDEO_ID
+ * - youtube.com/embed/VIDEO_ID
+ * - youtube.com/shorts/VIDEO_ID
+ * - youtube.com/v/VIDEO_ID
+ * - youtube.com/live/VIDEO_ID
+ */
+export function extractYouTubeVideoId(url?: string | null): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+
+  // Try standard URL parsing
+  try {
+    const urlObj = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
+    const host = urlObj.hostname.toLowerCase();
+    if (host.includes("youtube.com") || host.includes("youtu.be")) {
+      const vParam = urlObj.searchParams.get("v");
+      if (vParam && /^[a-zA-Z0-9_-]{11}$/.test(vParam)) {
+        return vParam;
+      }
+      const parts = urlObj.pathname.split("/").filter(Boolean);
+      if (host.includes("youtu.be") && parts.length > 0 && /^[a-zA-Z0-9_-]{11}$/.test(parts[0])) {
+        return parts[0];
+      }
+      const markerIdx = parts.findIndex((p) =>
+        ["embed", "shorts", "v", "live"].includes(p.toLowerCase())
+      );
+      if (markerIdx !== -1 && parts[markerIdx + 1] && /^[a-zA-Z0-9_-]{11}$/.test(parts[markerIdx + 1])) {
+        return parts[markerIdx + 1];
+      }
+    }
+  } catch {
+    // Ignore URL parse error and fall back to regex
+  }
+
+  const match = trimmed.match(
+    /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|v\/|live\/))([a-zA-Z0-9_-]{11})/i
+  );
+  return match && match[1] ? match[1] : null;
+}
+
+/**
+ * Extracts Vimeo video ID from various supported URL formats:
+ * - vimeo.com/VIDEO_ID
+ * - player.vimeo.com/video/VIDEO_ID
+ * - vimeo.com/channels/.../VIDEO_ID
+ */
+export function extractVimeoVideoId(url?: string | null): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  const match = trimmed.match(
+    /(?:vimeo\.com\/(?:video\/|channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/)?|player\.vimeo\.com\/video\/)([0-9]+)/i
+  );
+  return match && match[1] ? match[1] : null;
+}
+
+/**
+ * Extracts embeddable video URL for YouTube / Vimeo or returns null for direct/uploaded videos.
+ * - YouTube URLs -> https://www.youtube.com/embed/VIDEO_ID
+ * - Vimeo URLs -> https://player.vimeo.com/video/VIDEO_ID
  */
 export function getProjectVideoEmbedUrl(url: string): string | null {
   if (!url) return null;
   const trimmed = url.trim();
 
-  // YouTube standard watch URL: https://www.youtube.com/watch?v=VIDEO_ID
-  const ytWatchMatch = trimmed.match(
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
-  );
-  if (ytWatchMatch && ytWatchMatch[1]) {
-    return `https://www.youtube-nocookie.com/embed/${ytWatchMatch[1]}?autoplay=0&rel=0`;
+  const ytId = extractYouTubeVideoId(trimmed);
+  if (ytId) {
+    return `https://www.youtube.com/embed/${ytId}`;
   }
 
-  // Vimeo URL: https://vimeo.com/VIDEO_ID
-  const vimeoMatch = trimmed.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
-  if (vimeoMatch && vimeoMatch[1]) {
-    return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=0`;
+  const vimeoId = extractVimeoVideoId(trimmed);
+  if (vimeoId) {
+    return `https://player.vimeo.com/video/${vimeoId}`;
   }
 
   return null;
@@ -322,7 +379,7 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
         id: "vid-shop-1",
         title: "Multi-Cluster EKS Architecture & Ingress Walkthrough",
         name: "Session 01: System Tour",
-        video_url: "https://www.youtube.com/watch?v=0k5G6FmE3s4",
+        video_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
         thumbnail_url: "/projects/temporary/sohail-shop-desktop.v2.jpg",
         duration: "14:20",
         description:
@@ -332,7 +389,7 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
         id: "vid-shop-2",
         title: "ArgoCD GitOps Deployment & Automated Rollbacks",
         name: "Session 02: GitOps CI/CD",
-        video_url: "https://www.youtube.com/watch?v=351gS2H7YgY",
+        video_url: "https://www.youtube.com/watch?v=Ia-UEYYR44s",
         thumbnail_url: "/projects/temporary/sohail-shop-mobile.v2.jpg",
         duration: "11:45",
         description:
@@ -659,7 +716,18 @@ const DEFAULT_PROJECT_CONTENTS: Record<string, ProjectContentDetails> = {
       "Razorpay payment integration featuring server-side cryptographic verification of order IDs and signatures, guaranteeing financial ledger integrity.",
     order_data_preservation:
       "Order-item snapshots preserving historical transaction data, ensuring past invoices and purchasing records remain immutable regardless of catalog changes.",
-    videos: [],
+    videos: [
+      {
+        id: "vid-amfruits-1",
+        title: "AM Fruits Platform Walkthrough & Order Processing",
+        name: "Session 01: Platform Tour",
+        video_url: "https://www.youtube.com/watch?v=X48VuDVv0do",
+        thumbnail_url: "/projects/temporary/fresh-flow-desktop.v2.jpg",
+        duration: "08:40",
+        description:
+          "Walkthrough of AM Fruits B2B procurement, catalog management, and operational order handling.",
+      },
+    ],
     documents: [],
     architecture: [],
     links: [
@@ -1469,12 +1537,22 @@ export function parseProjectContentFromRecord(
         isStaleStudioOverview && fallback?.persistence_architecture
           ? fallback.persistence_architecture
           : parsed.persistence_architecture || fallback?.persistence_architecture,
-      videos:
-        isStaleWeddingOverview
+      videos: (() => {
+        const rawVideos = isStaleWeddingOverview
           ? (fallback?.videos || [])
           : Array.isArray(parsed.videos)
           ? parsed.videos
-          : fallback?.videos || [],
+          : fallback?.videos || [];
+        return rawVideos.map((v: any) => {
+          if (v && typeof v.video_url === "string" && v.video_url.includes("0k5G6FmE3s4")) {
+            return {
+              ...v,
+              video_url: v.video_url.replace("0k5G6FmE3s4", "X48VuDVv0do"),
+            };
+          }
+          return v;
+        });
+      })(),
       documents:
         isStaleWeddingOverview
           ? (fallback?.documents || [])
@@ -1841,6 +1919,18 @@ export function buildFullProjectData(
         type: "github",
       });
     }
+  }
+
+  if (Array.isArray(content.videos)) {
+    content.videos = content.videos.map((v) => {
+      if (v && typeof v.video_url === "string" && v.video_url.includes("0k5G6FmE3s4")) {
+        return {
+          ...v,
+          video_url: v.video_url.replace("0k5G6FmE3s4", "X48VuDVv0do"),
+        };
+      }
+      return v;
+    });
   }
 
   return {

@@ -29,6 +29,7 @@ import { FaGithub } from "react-icons/fa";
 import {
   fetchProjectDetailsById,
   saveProjectContentToDatabase,
+  invalidateProjectDetailsCache,
   normalizeProjectStatus,
   isDirectVideoUrl,
   type FullProjectData,
@@ -683,12 +684,65 @@ export default function ProjectContentManagerModal({
         );
       }
 
-      // Set video form URL
+      // Generate clean session title from filename if empty
+      const cleanTitle =
+        videoForm.title.trim() ||
+        file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ").trim() ||
+        "Project Walkthrough Video";
+      const sessionName =
+        videoForm.name.trim() ||
+        `Session ${String(videos.length + 1).padStart(2, "0")}`;
+
+      const newSession: ProjectVideoSession = {
+        id: `vid-${Date.now()}`,
+        title: cleanTitle,
+        name: sessionName,
+        video_url: mediaUrl,
+        duration: videoForm.duration.trim() || undefined,
+        description: videoForm.description.trim() || undefined,
+        showInProjectGallery: true,
+      };
+
+      // Set video form URL and fields
       setVideoForm((prev) => ({
         ...prev,
+        title: cleanTitle,
+        name: sessionName,
         video_url: mediaUrl,
-        name: prev.name.trim() || `Session ${String(videos.length + 1).padStart(2, "0")}`,
       }));
+
+      // Automatically add/update the session in configured video sessions
+      setVideos((prev) => {
+        // If editing an existing session, replace it
+        if (editingVideoIndex !== null && prev[editingVideoIndex]) {
+          const updated = [...prev];
+          updated[editingVideoIndex] = {
+            ...updated[editingVideoIndex],
+            title: cleanTitle,
+            name: sessionName,
+            video_url: mediaUrl,
+            duration: videoForm.duration.trim() || updated[editingVideoIndex].duration,
+            showInProjectGallery: true,
+          };
+          return updated;
+        }
+        // If already exists with this URL, update it
+        const existingIdx = prev.findIndex((v) => v.video_url === mediaUrl);
+        if (existingIdx !== -1) {
+          const updated = [...prev];
+          updated[existingIdx] = {
+            ...updated[existingIdx],
+            title: cleanTitle,
+            name: sessionName,
+            showInProjectGallery: true,
+          };
+          return updated;
+        }
+        return [...prev, newSession];
+      });
+
+      // Enable video sessions section visibility
+      setVideoSessionsEnabled(true);
 
       // Store metadata
       setVideoMediaMeta({
@@ -741,6 +795,8 @@ export default function ProjectContentManagerModal({
       return;
     }
 
+    const isDirect = isDirectVideoUrl(videoForm.video_url);
+
     if (editingVideoIndex !== null) {
       const updated = [...videos];
       updated[editingVideoIndex] = {
@@ -750,6 +806,7 @@ export default function ProjectContentManagerModal({
         video_url: videoForm.video_url.trim(),
         duration: videoForm.duration.trim() || undefined,
         description: videoForm.description.trim() || undefined,
+        showInProjectGallery: isDirect || updated[editingVideoIndex].showInProjectGallery,
       };
       setVideos(updated);
       setEditingVideoIndex(null);
@@ -763,9 +820,12 @@ export default function ProjectContentManagerModal({
           video_url: videoForm.video_url.trim(),
           duration: videoForm.duration.trim() || undefined,
           description: videoForm.description.trim() || undefined,
+          showInProjectGallery: isDirect || true,
         },
       ]);
     }
+
+    setVideoSessionsEnabled(true);
 
     setVideoForm({
       title: "",
@@ -1042,6 +1102,25 @@ export default function ProjectContentManagerModal({
 
       const effectiveHeroImage = primaryHero || cleanedGallery[0] || "";
 
+      // Ensure any pending video form with a valid URL is committed into videos
+      let finalVideos = [...videos];
+      if (
+        videoForm.video_url.trim() &&
+        !finalVideos.some((v) => v.video_url.trim() === videoForm.video_url.trim())
+      ) {
+        finalVideos.push({
+          id: `vid-${Date.now()}`,
+          title: videoForm.title.trim() || "Project Walkthrough Video",
+          name: videoForm.name.trim() || `Session ${String(finalVideos.length + 1).padStart(2, "0")}`,
+          video_url: videoForm.video_url.trim(),
+          duration: videoForm.duration.trim() || undefined,
+          description: videoForm.description.trim() || undefined,
+          showInProjectGallery: true,
+        });
+      }
+
+      const effectiveVideoSessionsEnabled = videoSessionsEnabled || finalVideos.length > 0;
+
       const detailPayload: ProjectDetailVisibility = {
         images: {
           image1: { url: primaryHero, enabled: galleryEnabled[0] },
@@ -1072,7 +1151,7 @@ export default function ProjectContentManagerModal({
           enabled: docEnabled,
         },
         videoSessions: {
-          enabled: videoSessionsEnabled,
+          enabled: effectiveVideoSessionsEnabled,
         },
         architecture: {
           enabled: architectureEnabled,
@@ -1095,7 +1174,7 @@ export default function ProjectContentManagerModal({
         business_flow: businessFlow.trim() || undefined,
         payment_security: paymentSecurity.trim() || undefined,
         order_data_preservation: orderDataPreservation.trim() || undefined,
-        videos,
+        videos: finalVideos,
         documents,
         architecture,
         links,
@@ -1149,6 +1228,8 @@ export default function ProjectContentManagerModal({
           const body = await res.json().catch(() => null);
           throw new Error(body?.error || "Failed to persist project record.");
         }
+
+        invalidateProjectDetailsCache();
       }
 
       if (fullData) {

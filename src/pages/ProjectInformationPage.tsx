@@ -169,13 +169,19 @@ export default function ProjectInformationPage() {
         setLoading(true);
       }
       setError(null);
-      const data = await fetchProjectDetailsById(id);
+      const data = await fetchProjectDetailsById(id, { forceRefresh: true });
       setProject(data);
-      const externalVids = data.content.videos.filter(
-        (v) => v.video_url && v.video_url.trim().length > 0 && !isDirectVideoUrl(v.video_url)
+      const topGalleryVid = data.content.videos?.find((v) => v.video_url && v.video_url.trim().length > 0);
+      const remainingExternalVids = data.content.videos.filter(
+        (v) =>
+          v.video_url &&
+          v.video_url.trim().length > 0 &&
+          (!topGalleryVid || (v.id !== topGalleryVid.id && v.video_url.trim() !== topGalleryVid.video_url.trim()))
       );
-      if (externalVids.length > 0) {
-        setActiveExternalVideo((prev) => prev || externalVids[0]);
+      if (remainingExternalVids.length > 0) {
+        setActiveExternalVideo((prev) => prev || remainingExternalVids[0]);
+      } else {
+        setActiveExternalVideo(null);
       }
     } catch (err: any) {
       console.error("Failed to load project information:", err);
@@ -314,38 +320,32 @@ export default function ProjectInformationPage() {
     }
   }
 
-  // 2. Gather uploaded videos (from content.videos and direct video URL)
-  const uploadedVideos: ProjectGalleryMediaItem[] = [];
-  content.videos.forEach((vid, vIdx) => {
-    if (vid.video_url && vid.video_url.trim().length > 0 && isDirectVideoUrl(vid.video_url)) {
-      uploadedVideos.push({
-        id: vid.id || `uploaded-video-${vIdx}`,
-        type: "video",
-        url: vid.video_url.trim(),
-        title: vid.title || vid.name || `${project.title} — Demonstration Video`,
-        thumbnailUrl: vid.thumbnail_url?.trim() || undefined,
-        duration: vid.duration?.trim() || undefined,
-        description: vid.description?.trim() || undefined,
-      });
-    }
-  });
+  // 2. Identify the project's configured video session for the top gallery
+  // Always uses the existing project's configured video session when a valid video session exists
+  const galleryVideoSession: ProjectVideoSession | undefined =
+    content.videos?.find((v) => v.video_url && v.video_url.trim().length > 0) ||
+    (detail?.video?.enabled && (detail.video.url || content.video_url)
+      ? {
+          id: "detail-video",
+          title: `${project.title} — Video`,
+          video_url: (detail.video.url || content.video_url || "").trim(),
+        }
+      : undefined);
 
-  const singleDirectVideo = (detail?.video?.enabled ? (detail.video.url || content.video_url || "") : "").trim();
-  if (
-    singleDirectVideo &&
-    isDirectVideoUrl(singleDirectVideo) &&
-    !uploadedVideos.some((uv) => uv.url === singleDirectVideo)
-  ) {
-    uploadedVideos.push({
-      id: "uploaded-single-video",
-      type: "video",
-      url: singleDirectVideo,
-      title: `${project.title} — Demonstration Video`,
-    });
-  }
+  const galleryVideoItem: ProjectGalleryMediaItem | null = galleryVideoSession
+    ? {
+        id: galleryVideoSession.id || "gallery-video",
+        type: "video",
+        url: galleryVideoSession.video_url.trim(),
+        title: galleryVideoSession.title || galleryVideoSession.name || `${project.title} — Video`,
+        thumbnailUrl: galleryVideoSession.thumbnail_url?.trim() || undefined,
+        duration: galleryVideoSession.duration?.trim() || undefined,
+        description: galleryVideoSession.description?.trim() || undefined,
+      }
+    : null;
 
   // 3. Combine into unified top gallery media list
-  // Example: [Image 1, Image 2, Uploaded Video, Image 3...]
+  // Example: [Image 1, Image 2, Video Session]
   const imageMediaItems: ProjectGalleryMediaItem[] = enabledImages.slice(0, 5).map((img, idx) => ({
     id: `img-${idx}`,
     type: "image",
@@ -354,27 +354,31 @@ export default function ProjectInformationPage() {
   }));
 
   const galleryMediaList: ProjectGalleryMediaItem[] = (() => {
-    if (uploadedVideos.length === 0) return imageMediaItems;
+    if (!galleryVideoItem) return imageMediaItems;
     if (imageMediaItems.length >= 2) {
       return [
         imageMediaItems[0],
         imageMediaItems[1],
-        ...uploadedVideos,
+        galleryVideoItem,
         ...imageMediaItems.slice(2),
       ];
     }
     if (imageMediaItems.length === 1) {
-      return [imageMediaItems[0], ...uploadedVideos];
+      return [imageMediaItems[0], galleryVideoItem];
     }
-    return uploadedVideos;
+    return [galleryVideoItem];
   })();
 
   const activeMedia = galleryMediaList[selectedGalleryIndex] || galleryMediaList[0] || null;
 
   // External Video Sessions (YouTube, Vimeo walkthroughs)
-  // Uploaded project videos are part of the top gallery and excluded here to prevent duplication
+  // The video session used in the top gallery is excluded here to prevent duplication
   const externalVideoSessions = content.videos.filter(
-    (v) => v.video_url && v.video_url.trim().length > 0 && !isDirectVideoUrl(v.video_url)
+    (v) =>
+      v.video_url &&
+      v.video_url.trim().length > 0 &&
+      (!galleryVideoSession ||
+        (v.id !== galleryVideoSession.id && v.video_url.trim() !== galleryVideoSession.video_url.trim()))
   );
   const currentExternalVideo = activeExternalVideo || (externalVideoSessions.length > 0 ? externalVideoSessions[0] : null);
 
@@ -692,22 +696,30 @@ export default function ProjectInformationPage() {
               <div className="relative mx-auto w-full max-w-xl aspect-[16/10] overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/60 shadow-2xl group">
                 {activeMedia.type === "video" ? (
                   <div className="relative h-full w-full bg-black flex items-center justify-center">
-                    <video
-                      key={activeMedia.url}
-                      src={activeMedia.url}
-                      controls
-                      playsInline
-                      preload="metadata"
-                      className="h-full w-full object-contain bg-black"
-                      title={activeMedia.title}
-                      poster={activeMedia.thumbnailUrl}
-                    >
-                      Your browser does not support HTML5 video playback.
-                    </video>
-                    <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/75 border border-white/15 text-[11px] font-mono text-emerald-300 backdrop-blur-md shadow-md">
-                      <Video className="h-3.5 w-3.5 text-emerald-400" />
-                      <span>Uploaded Video</span>
-                    </div>
+                    {getProjectVideoEmbedUrl(activeMedia.url) ? (
+                      <iframe
+                        key={activeMedia.url}
+                        src={getProjectVideoEmbedUrl(activeMedia.url)!}
+                        title={activeMedia.title}
+                        className="w-full h-full border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        key={activeMedia.url}
+                        src={activeMedia.url}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="h-full w-full object-contain bg-black"
+                        title={activeMedia.title}
+                        poster={activeMedia.thumbnailUrl}
+                      >
+                        <source src={activeMedia.url} />
+                        Your browser does not support HTML5 video playback.
+                      </video>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -810,23 +822,18 @@ export default function ProjectInformationPage() {
                                 className="block h-full w-full object-cover"
                               />
                             ) : (
-                              <div className="flex flex-col items-center justify-center p-1 text-center">
-                                <div className="p-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 mb-0.5">
-                                  <Play className="h-3.5 w-3.5 fill-cyan-400 text-cyan-400 ml-0.5" />
+                              <div className="flex flex-col items-center justify-center p-1.5 text-center">
+                                <div className="p-1.5 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 mb-1">
+                                  <Play className="h-4 w-4 fill-cyan-400 text-cyan-400 ml-0.5" />
                                 </div>
-                                <span className="text-[9px] font-mono text-slate-300 font-semibold tracking-tight uppercase">
+                                <span className="text-[10px] font-mono text-slate-300 font-semibold tracking-wider uppercase">
                                   Video
                                 </span>
                               </div>
                             )}
-                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                              <div className="p-1.5 rounded-full bg-black/60 border border-white/20 text-cyan-300 shadow">
-                                <Play className="h-3.5 w-3.5 fill-cyan-400 text-cyan-400 ml-0.5" />
-                              </div>
-                            </div>
-                            <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/30 text-[9px] font-mono text-emerald-300 flex items-center gap-0.5">
-                              <Video className="h-2.5 w-2.5 text-emerald-400" />
-                              <span>{item.duration || "Video"}</span>
+                            <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 text-[10px] font-mono text-slate-200 flex items-center gap-1">
+                              <span>🎬</span>
+                              <span>{idx + 1}</span>
                             </div>
                           </div>
                         ) : (
