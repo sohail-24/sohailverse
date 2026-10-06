@@ -249,6 +249,21 @@ export function normalizeProjectStatus(raw?: string | null): ProjectStatus {
 }
 
 /**
+ * Detects if a video URL is a direct video stream or uploaded media
+ * (e.g. /api/project-media/:id, MP4, WebM, MOV, OGG, blob, data).
+ */
+export function isDirectVideoUrl(url?: string): boolean {
+  if (!url) return false;
+  const trimmed = url.trim();
+  return (
+    trimmed.includes("/api/project-media/") ||
+    /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(trimmed) ||
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("data:video/")
+  );
+}
+
+/**
  * Extracts embeddable video URL for YouTube / Vimeo or handles direct video
  */
 export function getProjectVideoEmbedUrl(url: string): string | null {
@@ -267,11 +282,6 @@ export function getProjectVideoEmbedUrl(url: string): string | null {
   const vimeoMatch = trimmed.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
   if (vimeoMatch && vimeoMatch[1]) {
     return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=0`;
-  }
-
-  // Direct MP4/WebM
-  if (/\.(mp4|webm|ogg)$/i.test(trimmed)) {
-    return trimmed;
   }
 
   return null;

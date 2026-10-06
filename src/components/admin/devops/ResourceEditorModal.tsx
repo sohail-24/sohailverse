@@ -188,19 +188,34 @@ export default function ResourceEditorModal({
         body: formData,
       });
 
-      const result = await res.json().catch(() => ({}));
-      if (!res.ok || !result.success) {
-        throw new Error(result.error || `Upload failed (HTTP ${res.status})`);
+      const rawText = await res.text().catch(() => "");
+      let result: any = {};
+      try {
+        result = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        result = {};
       }
 
-      const uploaded = result.data;
-      const mediaUrl = uploaded.url; // e.g. /api/project-media/12
+      const uploaded = result?.data || (result?.url || result?.id ? result : null);
+      const mediaUrl =
+        uploaded?.url ||
+        (uploaded?.id ? `/api/project-media/${uploaded.id}` : "") ||
+        (typeof result?.url === "string" ? result.url : "");
+
+      const isSuccess = res.ok && (result?.success === true || !!mediaUrl);
+      if (!isSuccess) {
+        throw new Error(
+          result?.error ||
+          result?.message ||
+          (rawText && !rawText.startsWith("<") && rawText.length < 200 ? rawText : `Upload failed (HTTP ${res.status})`)
+        );
+      }
 
       setPdfUrl(mediaUrl);
       setPdfMeta({
-        id: uploaded.id,
-        filename: uploaded.filename || file.name,
-        fileSize: uploaded.file_size || file.size,
+        id: uploaded?.id || result?.id,
+        filename: uploaded?.filename || result?.filename || file.name,
+        fileSize: uploaded?.file_size || uploaded?.fileSize || result?.file_size || file.size,
       });
     } catch (err: any) {
       console.error("[ResourceEditorModal] PDF upload failed:", err);

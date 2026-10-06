@@ -33,6 +33,7 @@ import {
   Store,
   CreditCard,
   Mail,
+  Video,
 } from "lucide-react";
 import {
   SiKubernetes,
@@ -65,6 +66,7 @@ import {
   fetchProjectDetailsById,
   getCachedProjectDetailsById,
   getProjectVideoEmbedUrl,
+  isDirectVideoUrl,
   type FullProjectData,
   type ProjectVideoSession,
   type ProjectDocument,
@@ -2062,14 +2064,26 @@ export default function ProjectInformationPage() {
             {/* In-Page Video Player */}
             {activeVideo && (
               <div className="rounded-2xl sm:rounded-3xl border border-cyan-500/30 bg-slate-950 p-3 sm:p-5 shadow-[0_0_40px_rgba(6,182,212,0.15)] space-y-3 sm:space-y-4">
-                {/* Embed Container */}
-                <div className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-white/10">
-                  {getProjectVideoEmbedUrl(activeVideo.video_url) ? (
+                {/* Embed / HTML5 Video Container */}
+                <div className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-white/10 shadow-inner">
+                  {isDirectVideoUrl(activeVideo.video_url) ? (
+                    <video
+                      key={activeVideo.video_url}
+                      src={activeVideo.video_url}
+                      controls
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-contain bg-black"
+                      title={activeVideo.title}
+                    >
+                      Your browser does not support HTML5 video playback.
+                    </video>
+                  ) : getProjectVideoEmbedUrl(activeVideo.video_url) ? (
                     <iframe
                       src={getProjectVideoEmbedUrl(activeVideo.video_url)!}
                       title={activeVideo.title}
-                      className="w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
                     />
                   ) : (
@@ -2102,7 +2116,13 @@ export default function ProjectInformationPage() {
                     </h3>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {isDirectVideoUrl(activeVideo.video_url) && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-mono">
+                        <Video className="h-3 w-3 text-emerald-400" />
+                        <span>Uploaded Video</span>
+                      </span>
+                    )}
                     {activeVideo.duration && (
                       <span className="px-2.5 py-1 rounded-md bg-slate-800 border border-white/10 text-xs font-mono text-slate-300">
                         ⏱ {activeVideo.duration}
@@ -2114,7 +2134,7 @@ export default function ProjectInformationPage() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs font-mono text-cyan-300 hover:underline px-2 py-1"
                     >
-                      <span>External Link</span>
+                      <span>{isDirectVideoUrl(activeVideo.video_url) ? "Direct Video" : "External Link"}</span>
                       <ExternalLink className="h-3 w-3" />
                     </a>
                   </div>
@@ -2147,10 +2167,18 @@ export default function ProjectInformationPage() {
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                        <span className="text-cyan-400 font-semibold">
-                          {vid.name || `Session ${String(idx + 1).padStart(2, "0")}`}
-                        </span>
-                        {vid.duration && <span>{vid.duration}</span>}
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-cyan-400 font-semibold truncate">
+                            {vid.name || `Session ${String(idx + 1).padStart(2, "0")}`}
+                          </span>
+                          {isDirectVideoUrl(vid.video_url) && (
+                            <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[9px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                              <Video className="h-2.5 w-2.5" />
+                              <span>Device Video</span>
+                            </span>
+                          )}
+                        </div>
+                        {vid.duration && <span className="shrink-0">{vid.duration}</span>}
                       </div>
 
                       <h4 className="font-display text-sm font-bold text-white group-hover:text-cyan-200 transition-colors line-clamp-2">

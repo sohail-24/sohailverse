@@ -93,14 +93,42 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
-    const safeFilename = encodeURIComponent(item.filename || "image.png");
+    const safeFilename = encodeURIComponent(item.filename || "media_file");
+    const mimeType = item.mime_type || "video/mp4";
+    const totalBytes = bytes.byteLength;
+
+    // Support HTTP Range requests (essential for HTML5 video playback and seeking)
+    const rangeHeader = request.headers.get("range");
+    if (rangeHeader && rangeHeader.startsWith("bytes=")) {
+      const parts = rangeHeader.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : totalBytes - 1;
+
+      if (!isNaN(start) && start >= 0 && start < totalBytes) {
+        const finalEnd = Math.min(end, totalBytes - 1);
+        const chunk = bytes.subarray(start, finalEnd + 1);
+
+        return new Response(chunk.buffer as ArrayBuffer, {
+          status: 206,
+          headers: {
+            "Content-Type": mimeType,
+            "Content-Disposition": `inline; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`,
+            "Content-Range": `bytes ${start}-${finalEnd}/${totalBytes}`,
+            "Content-Length": String(chunk.byteLength),
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
+      }
+    }
 
     return new Response(bytes.buffer as ArrayBuffer, {
       status: 200,
       headers: {
-        "Content-Type": item.mime_type || "image/png",
+        "Content-Type": mimeType,
         "Content-Disposition": `inline; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`,
-        "Content-Length": String(bytes.byteLength),
+        "Content-Length": String(totalBytes),
         "Cache-Control": "public, max-age=31536000, immutable",
         "Access-Control-Allow-Origin": "*",
         "Accept-Ranges": "bytes",

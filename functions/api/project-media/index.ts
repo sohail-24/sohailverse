@@ -18,12 +18,16 @@ interface PagesContext {
   env: MediaEnv;
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB (Supports project video sessions & media)
 
 /**
- * Validates real binary image & PDF magic numbers to prevent malicious or non-supported uploads.
+ * Validates real binary image, video & PDF magic numbers to prevent malicious or non-supported uploads.
  */
-function detectImageMimeType(bytes: Uint8Array): "image/png" | "image/jpeg" | "image/webp" | "application/pdf" | null {
+function detectMediaMimeType(
+  bytes: Uint8Array,
+  fileName?: string,
+  declaredType?: string
+): "image/png" | "image/jpeg" | "image/webp" | "application/pdf" | "video/mp4" | "video/webm" | "video/quicktime" | "video/ogg" | null {
   // PNG: 89 50 4E 47 0D 0A 1A 0A
   if (
     bytes.length >= 8 &&
@@ -70,13 +74,71 @@ function detectImageMimeType(bytes: Uint8Array): "image/png" | "image/jpeg" | "i
     return "application/pdf";
   }
 
+  // MP4: bytes 4..7 'ftyp'
+  if (
+    bytes.length >= 8 &&
+    bytes[4] === 0x66 && // f
+    bytes[5] === 0x74 && // t
+    bytes[6] === 0x79 && // y
+    bytes[7] === 0x70    // p
+  ) {
+    return "video/mp4";
+  }
+
+  // WebM / MKV: EBML header 1A 45 DF A3
+  if (
+    bytes.length >= 4 &&
+    bytes[0] === 0x1a &&
+    bytes[1] === 0x45 &&
+    bytes[2] === 0xdf &&
+    bytes[3] === 0xa3
+  ) {
+    return "video/webm";
+  }
+
+  // QuickTime MOV: bytes 4..7 'moov' or 'wide' or 'mdat' or 'free'
+  if (
+    bytes.length >= 8 &&
+    ((bytes[4] === 0x6d && bytes[5] === 0x6f && bytes[6] === 0x6f && bytes[7] === 0x76) ||
+      (bytes[4] === 0x77 && bytes[5] === 0x69 && bytes[6] === 0x64 && bytes[7] === 0x65) ||
+      (bytes[4] === 0x6d && bytes[5] === 0x64 && bytes[6] === 0x61 && bytes[7] === 0x74))
+  ) {
+    return "video/quicktime";
+  }
+
+  // OGG: bytes 0..3 'OggS'
+  if (
+    bytes.length >= 4 &&
+    bytes[0] === 0x4f &&
+    bytes[1] === 0x67 &&
+    bytes[2] === 0x67 &&
+    bytes[3] === 0x53
+  ) {
+    return "video/ogg";
+  }
+
+  // Fallback for video streams with valid extension or declared MIME type
+  const ext = fileName?.split(".").pop()?.toLowerCase() || "";
+  if (ext === "mp4" || ext === "m4v" || declaredType === "video/mp4") {
+    return "video/mp4";
+  }
+  if (ext === "webm" || declaredType === "video/webm") {
+    return "video/webm";
+  }
+  if (ext === "mov" || declaredType === "video/quicktime") {
+    return "video/quicktime";
+  }
+  if (ext === "ogg" || ext === "ogv" || declaredType === "video/ogg") {
+    return "video/ogg";
+  }
+
   return null;
 }
 
 function sanitizeFilename(raw: string): string {
   const base = raw.replace(/^.*[\\\/]/, "").trim();
-  const safe = base.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 100);
-  return safe || "image.png";
+  const safe = base.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
+  return safe || "media_file";
 }
 
 function uint8ArrayToBase64(bytes: Uint8Array): string {
@@ -241,11 +303,11 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     }
 
     // Validate MIME type & file magic signature
-    const detectedMime = detectImageMimeType(fileBytes);
+    const detectedMime = detectMediaMimeType(fileBytes, fileName);
     if (!detectedMime) {
       return new Response(
         JSON.stringify({
-          error: "Invalid file format. Only authentic image files (PNG, JPG/JPEG, WEBP) or PDF documents are accepted.",
+          error: "Invalid file format. Authentic image files (PNG, JPG/JPEG, WEBP), PDF documents, or video files (MP4, WEBM, MOV, OGG) are accepted.",
         }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
@@ -282,8 +344,13 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
           created_at: r.created_at,
           url: `/api/project-media/${r.id}`,
         },
+        id: r.id,
+        url: `/api/project-media/${r.id}`,
+        filename: r.filename,
+        file_size: r.file_size,
+        created_at: r.created_at,
       }),
-      { status: 201, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (err: any) {
     console.error("[ProjectMedia API] Upload failed:", err);

@@ -22,12 +22,15 @@ import {
   Loader2,
   HardDrive,
   RefreshCw,
+  Play,
+  Film,
 } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import {
   fetchProjectDetailsById,
   saveProjectContentToDatabase,
   normalizeProjectStatus,
+  isDirectVideoUrl,
   type FullProjectData,
   type ProjectVideoSession,
   type ProjectDocument,
@@ -175,13 +178,28 @@ export default function ProjectContentManagerModal({
         body: formData,
       });
 
-      const result = await res.json().catch(() => ({}));
-      if (!res.ok || !result.success) {
-        throw new Error(result.error || `Upload failed (HTTP ${res.status})`);
+      const rawText = await res.text().catch(() => "");
+      let result: any = {};
+      try {
+        result = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        result = {};
       }
 
-      const uploaded = result.data;
-      const mediaUrl = uploaded.url; // e.g. /api/project-media/12
+      const uploaded = result?.data || (result?.url || result?.id ? result : null);
+      const mediaUrl =
+        uploaded?.url ||
+        (uploaded?.id ? `/api/project-media/${uploaded.id}` : "") ||
+        (typeof result?.url === "string" ? result.url : "");
+
+      const isSuccess = res.ok && (result?.success === true || !!mediaUrl);
+      if (!isSuccess) {
+        throw new Error(
+          result?.error ||
+          result?.message ||
+          (rawText && !rawText.startsWith("<") && rawText.length < 200 ? rawText : `Upload failed (HTTP ${res.status})`)
+        );
+      }
 
       // Update gallery images
       setGalleryImages((prev) => {
@@ -206,10 +224,10 @@ export default function ProjectContentManagerModal({
       setMediaMeta((prev) => ({
         ...prev,
         [slotIdx]: {
-          id: uploaded.id,
-          filename: uploaded.filename,
-          fileSize: uploaded.file_size,
-          uploadedAt: uploaded.created_at,
+          id: uploaded?.id || result?.id || (mediaUrl.includes("/api/project-media/") ? parseInt(mediaUrl.split("/api/project-media/")[1], 10) : undefined),
+          filename: uploaded?.filename || result?.filename || file.name,
+          fileSize: uploaded?.file_size || uploaded?.fileSize || result?.file_size || file.size,
+          uploadedAt: uploaded?.created_at || uploaded?.uploadedAt || result?.created_at || new Date().toISOString(),
         },
       }));
 
@@ -310,6 +328,19 @@ export default function ProjectContentManagerModal({
     description: "",
   });
   const [editingVideoIndex, setEditingVideoIndex] = useState<number | null>(null);
+
+  // Video Device Upload State (Persistent binary storage in Neon PostgreSQL)
+  interface VideoSlotMeta {
+    id?: number;
+    filename: string;
+    fileSize?: number;
+    uploadedAt?: string;
+  }
+  const [videoMediaMeta, setVideoMediaMeta] = useState<VideoSlotMeta | null>(null);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
+  const videoFileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [previewingVideoUrl, setPreviewingVideoUrl] = useState<string | null>(null);
 
   // Documents State
   const [documents, setDocuments] = useState<ProjectDocument[]>([]);
@@ -508,8 +539,202 @@ export default function ProjectContentManagerModal({
   if (!isOpen) return null;
 
   // -------------------------------------------------------------
-  // Video Session Handlers
+  // Video Session Handlers & Device Upload Engine
   // -------------------------------------------------------------
+  const formatVideoDuration = (seconds: number): string => {
+    if (!seconds || isNaN(seconds) || !isFinite(seconds) || seconds <= 0) return "";
+    const totalSecs = Math.round(seconds);
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    if (hrs > 0) {
+      return `${hrs}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+    return `${mins}:${String(secs).padStart(2, "0")}`;
+  };
+
+  const fetchVideoSlotMetadata = async (url: string) => {
+    const match = url.match(/\/api\/project-media\/(\d+)/);
+    if (!match) {
+      setVideoMediaMeta(null);
+      return;
+    }
+    const id = parseInt(match[1], 10);
+    try {
+      const res = await fetch(`/api/project-media/${id}?meta=true`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data) {
+          setVideoMediaMeta({
+            id: data.data.id,
+            filename: data.data.filename,
+            fileSize: data.data.file_size,
+            uploadedAt: data.data.created_at,
+          });
+        }
+      }
+    } catch (e) {
+      console.warn(`Failed to fetch metadata for video media #${id}`, e);
+    }
+  };
+
+  const handleDeviceVideoUpload = async (file: File) => {
+    // Validate video file type
+    const validVideoTypes = [
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+      "video/ogg",
+      "video/x-matroska",
+      "video/m4v",
+    ];
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    const validExtensions = ["mp4", "webm", "mov", "ogg", "m4v", "mkv"];
+
+    const isVideoType = (file.type && file.type.startsWith("video/")) || validVideoTypes.includes(file.type);
+    const isVideoExt = validExtensions.includes(extension || "");
+
+    if (!isVideoType && !isVideoExt) {
+      setVideoUploadError("Invalid format. Only video files (MP4, WebM, MOV, OGG, M4V) are allowed.");
+      return;
+    }
+
+    const MAX_SIZE = 100 * 1024 * 1024; // 100MB
+    if (file.size > MAX_SIZE) {
+      setVideoUploadError(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum allowed is 100MB.`);
+      return;
+    }
+
+    setIsUploadingVideo(true);
+    setVideoUploadError(null);
+
+    // Try reading duration from video element
+    try {
+      const videoEl = document.createElement("video");
+      videoEl.preload = "metadata";
+      const objectUrl = URL.createObjectURL(file);
+      videoEl.src = objectUrl;
+      videoEl.onloadedmetadata = () => {
+        URL.revokeObjectURL(objectUrl);
+        if (videoEl.duration && !videoForm.duration.trim()) {
+          const formatted = formatVideoDuration(videoEl.duration);
+          if (formatted) {
+            setVideoForm((prev) => ({ ...prev, duration: formatted }));
+          }
+        }
+      };
+      videoEl.onerror = () => {
+        try {
+          URL.revokeObjectURL(objectUrl);
+        } catch {}
+      };
+    } catch {
+      // Ignore if metadata extraction fails
+    }
+
+    // Auto-fill title if empty
+    if (!videoForm.title.trim()) {
+      const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ").trim();
+      if (cleanName) {
+        setVideoForm((prev) => ({ ...prev, title: cleanName }));
+      }
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const projId = fullData?.numericId || project.dbId || (typeof project.id === "number" ? project.id : undefined);
+      if (projId) {
+        formData.append("projectId", String(projId));
+      }
+
+      const token = sessionStorage.getItem("sv_admin_token");
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch("/api/project-media", {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+
+      const rawText = await res.text().catch(() => "");
+      let result: any = {};
+      try {
+        result = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        result = {};
+      }
+
+      const uploaded = result?.data || (result?.url || result?.id ? result : null);
+      const mediaUrl =
+        uploaded?.url ||
+        (uploaded?.id ? `/api/project-media/${uploaded.id}` : "") ||
+        (typeof result?.url === "string" ? result.url : "");
+
+      const isSuccess = res.ok && (result?.success === true || !!mediaUrl);
+      if (!isSuccess) {
+        throw new Error(
+          result?.error ||
+          result?.message ||
+          (rawText && !rawText.startsWith("<") && rawText.length < 200 ? rawText : `Upload failed (HTTP ${res.status})`)
+        );
+      }
+
+      // Set video form URL
+      setVideoForm((prev) => ({
+        ...prev,
+        video_url: mediaUrl,
+        name: prev.name.trim() || `Session ${String(videos.length + 1).padStart(2, "0")}`,
+      }));
+
+      // Store metadata
+      setVideoMediaMeta({
+        id: uploaded?.id || result?.id || (mediaUrl.includes("/api/project-media/") ? parseInt(mediaUrl.split("/api/project-media/")[1], 10) : undefined),
+        filename: uploaded?.filename || result?.filename || file.name,
+        fileSize: uploaded?.file_size || uploaded?.fileSize || result?.file_size || file.size,
+        uploadedAt: uploaded?.created_at || uploaded?.uploadedAt || result?.created_at || new Date().toISOString(),
+      });
+
+      setError(null);
+      setVideoUploadError(null);
+    } catch (err: any) {
+      console.error("Device video upload failed:", err);
+      setVideoUploadError(err?.message || "Failed to upload video from device.");
+    } finally {
+      setIsUploadingVideo(false);
+    }
+  };
+
+  const handleRemoveUploadedVideo = async (deleteFromDb = false) => {
+    const currentUrl = videoForm.video_url;
+    const meta = videoMediaMeta;
+
+    if (deleteFromDb && (meta?.id || currentUrl?.includes("/api/project-media/"))) {
+      const mediaId = meta?.id || parseInt(currentUrl.split("/api/project-media/")[1], 10);
+      if (!isNaN(mediaId) && mediaId > 0) {
+        try {
+          const token = sessionStorage.getItem("sv_admin_token");
+          const headers: Record<string, string> = {};
+          if (token) headers["Authorization"] = `Bearer ${token}`;
+
+          await fetch(`/api/project-media/${mediaId}`, {
+            method: "DELETE",
+            headers,
+          });
+        } catch (e) {
+          console.warn("Video media delete error:", e);
+        }
+      }
+    }
+
+    setVideoForm((prev) => ({ ...prev, video_url: "" }));
+    setVideoMediaMeta(null);
+    setVideoUploadError(null);
+  };
+
   const handleSaveVideo = () => {
     if (!videoForm.title.trim() || !videoForm.video_url.trim()) {
       setError("Video title and Video URL are required.");
@@ -549,6 +774,8 @@ export default function ProjectContentManagerModal({
       duration: "",
       description: "",
     });
+    setVideoMediaMeta(null);
+    setVideoUploadError(null);
     setError(null);
   };
 
@@ -562,6 +789,12 @@ export default function ProjectContentManagerModal({
       description: v.description || "",
     });
     setEditingVideoIndex(idx);
+    setVideoUploadError(null);
+    if (v.video_url?.includes("/api/project-media/")) {
+      fetchVideoSlotMetadata(v.video_url);
+    } else {
+      setVideoMediaMeta(null);
+    }
   };
 
   const handleDeleteVideo = (idx: number) => {
@@ -569,6 +802,8 @@ export default function ProjectContentManagerModal({
     if (editingVideoIndex === idx) {
       setEditingVideoIndex(null);
       setVideoForm({ title: "", name: "", video_url: "", duration: "", description: "" });
+      setVideoMediaMeta(null);
+      setVideoUploadError(null);
     }
   };
 
@@ -1936,18 +2171,54 @@ export default function ProjectContentManagerModal({
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="sm:col-span-2">
-                        <label className="block text-[11px] font-mono text-slate-400 mb-1">
-                          Video Stream URL (YouTube, Vimeo, MP4) *
-                        </label>
+                      <div className="sm:col-span-2 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <label className="block text-[11px] font-mono text-slate-400">
+                            Video Stream / File Source *
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => videoFileInputRef.current?.click()}
+                            disabled={isUploadingVideo}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition-all disabled:opacity-50 cursor-pointer"
+                          >
+                            {isUploadingVideo ? (
+                              <Loader2 className="h-3 w-3 animate-spin text-emerald-400" />
+                            ) : (
+                              <Upload className="h-3 w-3 text-emerald-400" />
+                            )}
+                            <span>{isUploadingVideo ? "Uploading Video..." : "Upload from Device"}</span>
+                          </button>
+                        </div>
+
+                        <input
+                          type="file"
+                          ref={videoFileInputRef}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) {
+                              handleDeviceVideoUpload(f);
+                              e.target.value = "";
+                            }
+                          }}
+                          accept="video/mp4,video/webm,video/quicktime,video/ogg,video/x-matroska,video/*"
+                          className="hidden"
+                        />
+
                         <input
                           type="text"
                           value={videoForm.video_url}
-                          onChange={(e) =>
-                            setVideoForm({ ...videoForm, video_url: e.target.value })
-                          }
-                          placeholder="https://www.youtube.com/watch?v=..."
-                          className="w-full px-3 py-1.5 rounded-lg border border-white/10 bg-slate-950 text-xs text-white focus:border-emerald-400 focus:outline-none"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setVideoForm({ ...videoForm, video_url: val });
+                            if (val.includes("/api/project-media/")) {
+                              fetchVideoSlotMetadata(val);
+                            } else {
+                              setVideoMediaMeta(null);
+                            }
+                          }}
+                          placeholder="/api/project-media/12 or https://www.youtube.com/watch?v=..."
+                          className="w-full px-3 py-1.5 rounded-lg border border-white/10 bg-slate-950 text-xs text-white focus:border-emerald-400 focus:outline-none font-mono"
                         />
                       </div>
 
@@ -1966,6 +2237,85 @@ export default function ProjectContentManagerModal({
                         />
                       </div>
                     </div>
+
+                    {/* Upload error banner if any */}
+                    {videoUploadError && (
+                      <div className="p-2.5 rounded-xl border border-red-500/30 bg-red-950/40 text-red-300 text-xs flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+                        <span>{videoUploadError}</span>
+                      </div>
+                    )}
+
+                    {/* Uploaded Video metadata card & player preview */}
+                    {videoForm.video_url.trim() && (
+                      <div className="p-3 rounded-xl border border-white/10 bg-slate-950 space-y-2">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {videoForm.video_url.includes("/api/project-media/") ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">
+                                <HardDrive className="h-3 w-3" />
+                                <span>Neon DB Video</span>
+                              </span>
+                            ) : isDirectVideoUrl(videoForm.video_url) ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                                <Film className="h-3 w-3" />
+                                <span>Direct Video File</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30 shrink-0">
+                                <Video className="h-3 w-3" />
+                                <span>External Stream</span>
+                              </span>
+                            )}
+
+                            {videoMediaMeta?.filename && (
+                              <span className="text-xs text-white font-mono truncate max-w-[200px]">
+                                {videoMediaMeta.filename}
+                              </span>
+                            )}
+
+                            {videoMediaMeta?.fileSize && (
+                              <span className="text-[11px] text-emerald-400 font-mono">
+                                ({formatFileSize(videoMediaMeta.fileSize)})
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => videoFileInputRef.current?.click()}
+                              disabled={isUploadingVideo}
+                              className="px-2 py-1 rounded-lg border border-white/10 text-slate-300 hover:text-white text-[11px] font-mono transition-colors cursor-pointer"
+                            >
+                              Replace
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveUploadedVideo(false)}
+                              className="px-2 py-1 rounded-lg border border-red-500/30 text-red-400 hover:text-red-300 text-[11px] font-mono transition-colors cursor-pointer"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Interactive In-Modal Preview for Uploaded or Direct Videos */}
+                        {isDirectVideoUrl(videoForm.video_url) && (
+                          <div className="pt-1">
+                            <video
+                              key={videoForm.video_url}
+                              src={videoForm.video_url}
+                              controls
+                              playsInline
+                              className="w-full max-h-48 rounded-lg bg-black border border-white/10 object-contain"
+                            >
+                              Your browser does not support HTML5 video preview.
+                            </video>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <div>
                       <label className="block text-[11px] font-mono text-slate-400 mb-1">
@@ -2025,39 +2375,102 @@ export default function ProjectContentManagerModal({
                       videos.map((vid, idx) => (
                         <div
                           key={vid.id || idx}
-                          className="p-3 rounded-xl border border-white/10 bg-slate-900/40 flex items-center justify-between gap-3"
+                          className="p-3 rounded-xl border border-white/10 bg-slate-900/40 space-y-2"
                         >
-                          <div className="min-w-0 space-y-0.5">
-                            <div className="flex items-center gap-2 text-xs font-mono">
-                              <span className="text-emerald-400 font-semibold">
-                                {vid.name || `Session ${idx + 1}`}
-                              </span>
-                              {vid.duration && (
-                                <span className="text-slate-400">⏱ {vid.duration}</span>
-                              )}
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0 space-y-0.5">
+                              <div className="flex items-center gap-2 text-xs font-mono flex-wrap">
+                                <span className="text-emerald-400 font-semibold">
+                                  {vid.name || `Session ${idx + 1}`}
+                                </span>
+                                {vid.video_url?.includes("/api/project-media/") ? (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                    <HardDrive className="h-2.5 w-2.5" />
+                                    <span>Uploaded Video</span>
+                                  </span>
+                                ) : isDirectVideoUrl(vid.video_url) ? (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                    <Film className="h-2.5 w-2.5" />
+                                    <span>Direct Video</span>
+                                  </span>
+                                ) : null}
+                                {vid.duration && (
+                                  <span className="text-slate-400">⏱ {vid.duration}</span>
+                                )}
+                              </div>
+                              <p className="text-xs sm:text-sm font-bold text-white truncate">
+                                {vid.title}
+                              </p>
+                              <p className="text-[11px] font-mono text-slate-400 truncate">
+                                {vid.video_url}
+                              </p>
                             </div>
-                            <p className="text-xs sm:text-sm font-bold text-white truncate">
-                              {vid.title}
-                            </p>
-                            <p className="text-[11px] font-mono text-slate-400 truncate">
-                              {vid.video_url}
-                            </p>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPreviewingVideoUrl((prev) =>
+                                    prev === vid.video_url ? null : vid.video_url
+                                  )
+                                }
+                                title={previewingVideoUrl === vid.video_url ? "Hide Preview" : "Preview Video"}
+                                className={`p-1.5 rounded-lg border transition-colors ${
+                                  previewingVideoUrl === vid.video_url
+                                    ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-300"
+                                    : "border-white/10 text-slate-300 hover:text-white hover:bg-white/5"
+                                }`}
+                              >
+                                <Play className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleEditVideo(idx)}
+                                title="Edit Session"
+                                className="p-1.5 rounded-lg border border-white/10 text-slate-300 hover:text-white hover:bg-white/5"
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteVideo(idx)}
+                                title="Delete Session"
+                                className="p-1.5 rounded-lg border border-red-500/20 text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              onClick={() => handleEditVideo(idx)}
-                              className="p-1.5 rounded-lg border border-white/10 text-slate-300 hover:text-white hover:bg-white/5"
-                            >
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteVideo(idx)}
-                              className="p-1.5 rounded-lg border border-red-500/20 text-red-400 hover:text-red-300 hover:bg-red-950/30"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
+                          {/* Expandable Video Preview Player */}
+                          {previewingVideoUrl === vid.video_url && (
+                            <div className="pt-2 border-t border-white/10">
+                              {isDirectVideoUrl(vid.video_url) ? (
+                                <video
+                                  key={vid.video_url}
+                                  src={vid.video_url}
+                                  controls
+                                  playsInline
+                                  className="w-full max-h-52 rounded-lg bg-black border border-white/10 object-contain"
+                                >
+                                  Your browser does not support HTML5 video preview.
+                                </video>
+                              ) : (
+                                <div className="p-3 rounded-lg bg-slate-950 border border-white/10 flex items-center justify-between text-xs">
+                                  <span className="text-slate-300 truncate">External: {vid.video_url}</span>
+                                  <a
+                                    href={vid.video_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-cyan-400 hover:underline shrink-0 flex items-center gap-1"
+                                  >
+                                    <span>Open Stream</span>
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))
                     )}
