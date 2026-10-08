@@ -12,6 +12,7 @@ import { prefetchProjectDetails } from "../../lib/projectContent";
 import { prefetchRouteData } from "../navigation/Navbar";
 import {
   getCachedUnifiedProjects,
+  getInitialUnifiedProjects,
   loadUnifiedProjects,
   type UnifiedProject,
 } from "../projects/projectData";
@@ -36,13 +37,9 @@ export default function ProjectsShowcase({
 }: ProjectsShowcaseProps) {
   const shouldReduceMotion = useReducedMotion();
   const carouselRef = useRef<HTMLDivElement>(null);
-  const cachedProjects = getCachedUnifiedProjects();
-  const [projects, setProjects] = useState<UnifiedProject[]>(
-    providedProjects || cachedProjects || []
-  );
-  const [isLoading, setIsLoading] = useState(
-    !providedProjects && !cachedProjects
-  );
+  const initialProjects = providedProjects || getInitialUnifiedProjects();
+  const [projects, setProjects] = useState<UnifiedProject[]>(initialProjects);
+  const [isLoading, setIsLoading] = useState(initialProjects.length === 0);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [canScrollLeft, setCanScrollLeft] = useState(false);

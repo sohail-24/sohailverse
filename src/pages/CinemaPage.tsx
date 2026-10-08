@@ -12,8 +12,11 @@ import CinemaEditorialFooter from "../components/cinema/CinemaEditorialFooter";
 
 export default function CinemaPage() {
   const cachedMovies = getCachedApi<Movie>("/api/movies");
-  const [movies, setMovies] = useState<Movie[]>(cachedMovies || []);
-  const [loading, setLoading] = useState(!cachedMovies || cachedMovies.length === 0);
+  const fallbackMovies = (getFallbackForEndpoint("movies") as Movie[]) || [];
+  const initialMovies = cachedMovies && cachedMovies.length > 0 ? cachedMovies : fallbackMovies;
+
+  const [movies, setMovies] = useState<Movie[]>(initialMovies);
+  const [loading, setLoading] = useState(initialMovies.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<MovieStatusFilter>("ALL");
 

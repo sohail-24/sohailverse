@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { fetchApi, getCachedApi, isValidTimelinePost, type TimelinePost } from "../lib/api";
+import { fetchApi, getCachedApi, isValidTimelinePost, getFallbackForEndpoint, type TimelinePost } from "../lib/api";
 import { LoadingSkeleton, ErrorState } from "../components/ui/StatusStates";
 import AboutHero from "../components/about/AboutHero";
 import AboutWhoIAm from "../components/about/AboutWhoIAm";
@@ -9,18 +9,20 @@ import AboutWhatsNextBanner from "../components/about/AboutWhatsNextBanner";
 
 export default function TimelinePage() {
   const cachedTimeline = getCachedApi<TimelinePost>("/api/timeline");
-  const [timeline, setTimeline] = useState<TimelinePost[]>(cachedTimeline || []);
-  const [loading, setLoading] = useState(!cachedTimeline || cachedTimeline.length === 0);
+  const fallbackTimeline = (getFallbackForEndpoint("timeline") as TimelinePost[]) || [];
+  const initialTimeline = cachedTimeline && cachedTimeline.length > 0 ? cachedTimeline : fallbackTimeline;
+
+  const [timeline, setTimeline] = useState<TimelinePost[]>(initialTimeline);
+  const [loading, setLoading] = useState(initialTimeline.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   const loadTimeline = useCallback(async () => {
-    if (timeline.length === 0) {
-      setLoading(true);
-    }
     setError(null);
     try {
       const data = await fetchApi<TimelinePost>("/api/timeline", isValidTimelinePost);
-      setTimeline(data);
+      if (data && data.length > 0) {
+        setTimeline(data);
+      }
     } catch (err: any) {
       console.error("Failed to load timeline milestones:", err);
       if (timeline.length === 0) {

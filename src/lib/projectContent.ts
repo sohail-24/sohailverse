@@ -1972,9 +1972,11 @@ export function getCachedProjectDetailsById(idOrSlug: string | number): FullProj
 
   try {
     const dbProjects = getCachedApi<DevOpsProject>("/api/projects");
-    if (!dbProjects) return null;
-    const data = buildFullProjectData(strId, dbProjects);
-    projectDetailsCache.set(strId, data);
+    const data = buildFullProjectData(strId, dbProjects || []);
+    // Only cache in projectDetailsCache if dbProjects was already cached, so fresh API fetch will enrich it
+    if (dbProjects) {
+      projectDetailsCache.set(strId, data);
+    }
     return data;
   } catch {
     return null;

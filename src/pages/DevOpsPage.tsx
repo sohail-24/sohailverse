@@ -2,15 +2,17 @@ import { useEffect, useState } from "react";
 import DevOpsHero from "../components/devops/DevOpsHero";
 import DevOpsLearningJourney from "../components/devops/DevOpsLearningJourney";
 import DevOpsBottomNav from "../components/devops/DevOpsBottomNav";
-import { fetchApi, getCachedApi, isValidDevOpsProject, type DevOpsProject } from "../lib/api";
+import { fetchApi, getCachedApi, isValidDevOpsProject, getFallbackForEndpoint, type DevOpsProject } from "../lib/api";
 import { isDevOpsRecord } from "../lib/projectDomain";
 
 export default function DevOpsPage() {
   const cached = getCachedApi<DevOpsProject>("/api/devops");
-  const [projects, setProjects] = useState<DevOpsProject[]>(
-    (cached || []).filter(isDevOpsRecord)
-  );
-  const [loading, setLoading] = useState(!cached || cached.length === 0);
+  const fallback = (getFallbackForEndpoint("devops") as DevOpsProject[]) || [];
+  const initialData = cached && cached.length > 0 ? cached : fallback;
+  const initialProjects = initialData.filter(isDevOpsRecord);
+
+  const [projects, setProjects] = useState<DevOpsProject[]>(initialProjects);
+  const [loading, setLoading] = useState(initialProjects.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   const loadProjects = async () => {
@@ -20,7 +22,9 @@ export default function DevOpsPage() {
     setError(null);
     try {
       const data = await fetchApi<DevOpsProject>("/api/devops", isValidDevOpsProject);
-      setProjects(data.filter(isDevOpsRecord));
+      if (data && data.length > 0) {
+        setProjects(data.filter(isDevOpsRecord));
+      }
     } catch (err: any) {
       console.error("Failed to load devops projects:", err);
       if (projects.length === 0) {

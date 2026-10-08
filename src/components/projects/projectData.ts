@@ -286,6 +286,16 @@ export function getCachedUnifiedProjects(): UnifiedProject[] | null {
 }
 
 /**
+ * Returns immediately available UnifiedProject[]:
+ * Uses memory cache if available, otherwise synchronously builds from static project catalog.
+ */
+export function getInitialUnifiedProjects(): UnifiedProject[] {
+  const cached = getCachedUnifiedProjects();
+  if (cached && cached.length > 0) return cached;
+  return buildUnifiedProjects([]);
+}
+
+/**
  * Builds the portfolio list by combining real live database records with
  * established SohailVerse project systems.
  */

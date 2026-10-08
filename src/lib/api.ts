@@ -757,6 +757,16 @@ export function getCachedDevOpsProjectById(id: number | string): DevOpsProject |
       return found;
     }
   }
+
+  // Check fallback devops records for immediate navigation
+  const fallbackList = getFallbackForEndpoint("devops") as DevOpsProject[] | null;
+  if (fallbackList) {
+    const found = fallbackList.find((p) => p.id === numericId);
+    if (found) {
+      return found;
+    }
+  }
+
   return null;
 }
 

@@ -169,7 +169,7 @@ export default function ProjectInformationPage() {
         setLoading(true);
       }
       setError(null);
-      const data = await fetchProjectDetailsById(id, { forceRefresh: true });
+      const data = await fetchProjectDetailsById(id);
       setProject(data);
       const topGalleryVid = data.content.videos?.find((v) => v.video_url && v.video_url.trim().length > 0);
       const remainingExternalVids = data.content.videos.filter(

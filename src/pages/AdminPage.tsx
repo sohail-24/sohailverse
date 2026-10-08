@@ -12,7 +12,9 @@ import AuthenticatedCMS, {
 
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
-  const [authChecking, setAuthChecking] = useState(true);
+  const [authChecking, setAuthChecking] = useState(() => {
+    return typeof window !== "undefined" && Boolean(sessionStorage.getItem("sv_admin_token"));
+  });
 
   // Login form state
   const [password, setPassword] = useState("");
@@ -51,11 +53,16 @@ export default function AdminPage() {
   }, []);
 
   const checkSession = async () => {
+    const token = typeof window !== "undefined" ? sessionStorage.getItem("sv_admin_token") : null;
+    if (!token) {
+      setAuthenticated(false);
+      setAuthChecking(false);
+      return;
+    }
     try {
       setAuthChecking(true);
-      const token = sessionStorage.getItem("sv_admin_token");
       const res = await fetch("/api/auth/session", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();

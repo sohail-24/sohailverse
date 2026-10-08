@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   loadUnifiedProjects,
   getCachedUnifiedProjects,
+  getInitialUnifiedProjects,
   CANONICAL_PROJECT_ORDER,
   type UnifiedProject,
 } from "../components/projects/projectData";
@@ -15,9 +16,9 @@ type StatusFilter = "ALL" | "LIVE" | "BUILDING" | "UPCOMING";
 
 export default function ProjectsPage() {
   const shouldReduceMotion = useReducedMotion();
-  const initialProjectsData = useMemo(() => getCachedUnifiedProjects(), []);
-  const [projects, setProjects] = useState<UnifiedProject[]>(initialProjectsData || []);
-  const [loading, setLoading] = useState<boolean>(!initialProjectsData || initialProjectsData.length === 0);
+  const initialProjectsData = useMemo(() => getInitialUnifiedProjects(), []);
+  const [projects, setProjects] = useState<UnifiedProject[]>(initialProjectsData);
+  const [loading, setLoading] = useState<boolean>(initialProjectsData.length === 0);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("ALL");
 
@@ -42,8 +43,10 @@ export default function ProjectsPage() {
       } catch (err) {
         console.error("Error loading unified projects:", err);
         if (isMounted) {
-          setProjects([]);
-          setLoadError("Unable to load projects from the database.");
+          if (projects.length === 0) {
+            setProjects([]);
+            setLoadError("Unable to load projects from the database.");
+          }
         }
       } finally {
         if (isMounted) {
