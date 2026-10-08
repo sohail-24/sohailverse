@@ -3,9 +3,13 @@ import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
 import Footer from "../navigation/Footer";
 import Navbar from "../navigation/Navbar";
 import { prefetchApi, isValidDevOpsProject, isValidTimelinePost, isValidMovie } from "../../lib/api";
+import { useSEO } from "../SEO";
 
 export default function RootLayout() {
   const location = useLocation();
+
+  // Route-aware SEO head management (title, meta description, canonical, OG, Twitter, JSON-LD, robots)
+  useSEO();
 
   useEffect(() => {
     // Idle background prefetch for the active route only.

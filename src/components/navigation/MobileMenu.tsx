@@ -21,6 +21,7 @@ interface MobileMenuProps {
 
 const navIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   "/": Home,
+  "/about": Compass,
   "/timeline": Compass,
   "/projects": FolderGit2,
   "/cinema": Film,

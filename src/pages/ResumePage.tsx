@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { useSEO } from "../components/SEO";
 import {
   Printer,
   Copy,
@@ -15,6 +16,12 @@ import {
 } from "lucide-react";
 
 export default function ResumePage() {
+  useSEO({
+    title: "Resume — SohailVerse",
+    description: "Curriculum Vitae and professional technical resume of Mohammed Sohail.",
+    canonicalPath: "/resume",
+  });
+
   const [copied, setCopied] = useState(false);
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const containerRef = useRef<HTMLDivElement>(null);

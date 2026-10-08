@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /console
+Disallow: /api/
+
+Sitemap: https://sohaildevops.site/sitemap.xml

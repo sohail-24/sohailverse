@@ -23,8 +23,8 @@ export function isNavLinkActive(pathname: string, targetPath: string): boolean {
   if (targetPath === "/") {
     return pathname === "/";
   }
-  if (targetPath === "/timeline") {
-    return pathname === "/timeline" || pathname === "/about";
+  if (targetPath === "/about" || targetPath === "/timeline") {
+    return pathname === "/about" || pathname === "/timeline";
   }
   if (targetPath === "/projects") {
     return pathname === "/projects" || pathname.startsWith("/projects/");

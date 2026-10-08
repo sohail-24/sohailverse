@@ -7,7 +7,7 @@ export const primaryNavItems: NavigationItem[] = [
   },
   {
     label: "About",
-    path: "/timeline",
+    path: "/about",
   },
   {
     label: "Projects",
