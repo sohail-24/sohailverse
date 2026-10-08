@@ -107,8 +107,12 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       if (!isNaN(start) && start >= 0 && start < totalBytes) {
         const finalEnd = Math.min(end, totalBytes - 1);
         const chunk = bytes.subarray(start, finalEnd + 1);
+        const chunkBuffer = chunk.buffer.slice(
+          chunk.byteOffset,
+          chunk.byteOffset + chunk.byteLength
+        );
 
-        return new Response(chunk.buffer as ArrayBuffer, {
+        return new Response(chunkBuffer, {
           status: 206,
           headers: {
             "Content-Type": mimeType,

@@ -247,7 +247,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
 
       if (file.size > MAX_FILE_SIZE) {
         return new Response(
-          JSON.stringify({ error: `File size exceeds 10MB limit (received ${(file.size / 1024 / 1024).toFixed(2)}MB)` }),
+          JSON.stringify({ error: `File size exceeds 100MB limit (received ${(file.size / 1024 / 1024).toFixed(2)}MB)` }),
           { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
@@ -278,7 +278,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
 
       if (fileBytes.byteLength > MAX_FILE_SIZE) {
         return new Response(
-          JSON.stringify({ error: `File size exceeds 10MB limit (received ${(fileBytes.byteLength / 1024 / 1024).toFixed(2)}MB)` }),
+          JSON.stringify({ error: `File size exceeds 100MB limit (received ${(fileBytes.byteLength / 1024 / 1024).toFixed(2)}MB)` }),
           { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }

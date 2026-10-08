@@ -723,16 +723,17 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                       if (!isNaN(start) && start >= 0 && start < totalBytes) {
                         const finalEnd = Math.min(end, totalBytes - 1);
                         const chunk = imageBuf.subarray(start, finalEnd + 1);
+                        const chunkBuf = Buffer.from(chunk);
                         res.writeHead(206, {
                           "Content-Type": mimeType,
                           "Content-Disposition": `inline; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`,
                           "Content-Range": `bytes ${start}-${finalEnd}/${totalBytes}`,
-                          "Content-Length": String(chunk.length),
+                          "Content-Length": String(chunkBuf.length),
                           "Accept-Ranges": "bytes",
                           "Cache-Control": "public, max-age=31536000, immutable",
                           ...corsHeaders,
                         });
-                        return res.end(chunk);
+                        return res.end(chunkBuf);
                       }
                     }
 
@@ -770,16 +771,17 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                   if (!isNaN(start) && start >= 0 && start < totalBytes) {
                     const finalEnd = Math.min(end, totalBytes - 1);
                     const chunk = imageBuf.subarray(start, finalEnd + 1);
+                    const chunkBuf = Buffer.from(chunk);
                     res.writeHead(206, {
                       "Content-Type": mimeType,
                       "Content-Disposition": `inline; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`,
                       "Content-Range": `bytes ${start}-${finalEnd}/${totalBytes}`,
-                      "Content-Length": String(chunk.length),
+                      "Content-Length": String(chunkBuf.length),
                       "Accept-Ranges": "bytes",
                       "Cache-Control": "public, max-age=31536000, immutable",
                       ...corsHeaders,
                     });
-                    return res.end(chunk);
+                    return res.end(chunkBuf);
                   }
                 }
 
@@ -1080,11 +1082,14 @@ const apiMiddleware = async (req: any, res: any, next: any) => {
                   created_at: r.created_at,
                 });
               } catch (neonErr: any) {
-                console.warn("[ProjectMedia] Neon insert failed, using fallback:", neonErr);
+                console.error("[ProjectMedia] Neon persistent insert failed:", neonErr);
+                return sendJson(500, {
+                  error: `Failed to persist media to Neon database: ${neonErr?.message || String(neonErr)}`,
+                });
               }
             }
 
-            // Fallback insert in mockStore
+            // Fallback insert in mockStore only when DATABASE_URL is genuinely not configured
             const nextMediaId = (mockStore.project_media.reduce((max, m) => Math.max(max, m.id), 0) || 0) + 1;
             const newMedia = {
               id: nextMediaId,
