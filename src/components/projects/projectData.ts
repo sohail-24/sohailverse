@@ -65,49 +65,52 @@ export function findDbRecordForProject(
 ): DevOpsProject | undefined {
   if (!dbProjects || dbProjects.length === 0) return undefined;
 
+  // Strict domain separation: A database record can only override portfolio project data
+  // if it is verified as a valid portfolio project record, never a DevOps educational module.
+  const projectRecords = dbProjects.filter(isProjectRecord);
+  if (projectRecords.length === 0) return undefined;
+
   const strId = String(id).toLowerCase().trim();
   const numId = typeof id === "number" ? id : (!isNaN(Number(strId)) ? Number(strId) : null);
   const searchTitle = (title || "").toLowerCase().trim();
 
-  // 1. Stable catalog record identity. This remains valid when an admin edits
-  // the persisted title or other display fields.
+  // 1. Stable catalog record identity for valid portfolio project records.
   if (databaseId !== undefined) {
-    const stableRecord = dbProjects.find((p) => p.id === databaseId);
+    const stableRecord = projectRecords.find((p) => p.id === databaseId);
     if (stableRecord) return stableRecord;
   }
 
-  // 2. Direct numeric ID match
+  // 2. Direct numeric ID match within valid portfolio projects
   if (numId !== null && numId > 0) {
-    const direct = dbProjects.find((p) => p.id === numId);
+    const direct = projectRecords.find((p) => p.id === numId);
     if (direct) return direct;
   }
 
-  // 3. Canonical project identifiers. These aliases describe the existing
-  // portfolio catalog; they are not database IDs or status overrides.
+  // 3. Canonical project identifiers within valid portfolio projects
   if (strId === "sohail-studio") {
-    return dbProjects.find((p) => normalizeProjectIdentity(p.title) === "sohailstudio");
+    return projectRecords.find((p) => normalizeProjectIdentity(p.title) === "sohailstudio");
   }
 
   if (strId === "fresh-flow" || strId === "am-fruits") {
-    return dbProjects.find((p) => {
+    return projectRecords.find((p) => {
       const identity = normalizeProjectIdentity(p.title);
       return identity === "amfruits" || identity === "freshflow";
     });
   }
 
   if (strId === "sohail-shop") {
-    return dbProjects.find((p) => normalizeProjectIdentity(p.title) === "sohailshop");
+    return projectRecords.find((p) => normalizeProjectIdentity(p.title) === "sohailshop");
   }
 
   if (strId === "wedding" || strId === "wedding-page") {
-    return dbProjects.find((p) => {
+    return projectRecords.find((p) => {
       const id = normalizeProjectIdentity(p.title);
       return id === "weddingpage" || id.includes("wedding") || id === "weddinginvitation";
     });
   }
 
   if (strId === "new-chapter") {
-    return dbProjects.find((p) => p.title.toLowerCase().includes("new chapter"));
+    return projectRecords.find((p) => p.title.toLowerCase().includes("new chapter"));
   }
 
   if (
@@ -116,16 +119,16 @@ export function findDbRecordForProject(
     strId === "bitepoint" ||
     strId === "bite-point"
   ) {
-    return dbProjects.find((p) => {
+    return projectRecords.find((p) => {
       const identity = normalizeProjectIdentity(p.title);
       return identity.includes("smartorder") || identity.includes("bitepoint") || p.id === 35;
     });
   }
 
-  // 4. Match by exact normalized title if provided
+  // 4. Match by exact normalized title within valid portfolio projects
   if (searchTitle) {
     const searchIdentity = normalizeProjectIdentity(searchTitle);
-    const byTitle = dbProjects.find(
+    const byTitle = projectRecords.find(
       (p) => normalizeProjectIdentity(p.title) === searchIdentity
     );
     if (byTitle) return byTitle;

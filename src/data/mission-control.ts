@@ -25,7 +25,6 @@ export const missionPalette: Record<MissionTone | "deepSpace" | "cloudWhite", st
 export const initialProjects: UniverseProject[] = [
   {
     id: "fresh-flow",
-    databaseId: 5,
     name: "AM Fruits",
     category: "B2B Wholesale Commerce",
     tagline: "B2B Wholesale Produce & Business Management Platform",
@@ -58,7 +57,6 @@ export const initialProjects: UniverseProject[] = [
   },
   {
     id: "sohail-shop",
-    databaseId: 1,
     name: "SohailShop",
     category: "Production-Grade E-Commerce / Cloud-Native Backend",
     tagline: "Production-Grade E-Commerce & Cloud-Native Backend",
@@ -94,7 +92,6 @@ export const initialProjects: UniverseProject[] = [
   },
   {
     id: "sohail-studio",
-    databaseId: 7,
     name: "Sohail-Studio",
     category: "DevOps AI Control Plane",
     tagline: "Local-First DevOps AI Control Plane & Engineering Workspace",
@@ -127,7 +124,6 @@ export const initialProjects: UniverseProject[] = [
   },
   {
     id: "wedding",
-    databaseId: 6,
     name: "Wedding Invitation",
     tagline: "Cinematic, Mobile-First Digital Wedding Invitation",
     description:
@@ -168,7 +164,6 @@ export const initialProjects: UniverseProject[] = [
   },
   {
     id: "smartorder",
-    databaseId: 35,
     name: "SmartOrder",
     category: "Cloud Native / Restaurant Commerce",
     tagline: "Self-Service Restaurant Ordering System",

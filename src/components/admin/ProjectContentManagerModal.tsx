@@ -580,23 +580,33 @@ export default function ProjectContentManagerModal({
   };
 
   const handleDeviceVideoUpload = async (file: File) => {
-    // Validate video file type
-    const validVideoTypes = [
-      "video/mp4",
-      "video/webm",
-      "video/quicktime",
-      "video/ogg",
-      "video/x-matroska",
-      "video/m4v",
+    // Validate video file type before uploading
+    const supportedExtensions = ["mp4", "webm", "mov", "ogg"];
+    const extension = file.name.split(".").pop()?.toLowerCase() || "";
+
+    const nonVideoExtensions = [
+      "png", "jpg", "jpeg", "gif", "webp", "pdf", "svg", "txt", "md",
+      "json", "csv", "doc", "docx", "xls", "xlsx", "zip", "tar", "gz"
     ];
-    const extension = file.name.split(".").pop()?.toLowerCase();
-    const validExtensions = ["mp4", "webm", "mov", "ogg", "m4v", "mkv"];
 
-    const isVideoType = (file.type && file.type.startsWith("video/")) || validVideoTypes.includes(file.type);
-    const isVideoExt = validExtensions.includes(extension || "");
+    const hasExplicitNonVideoMime =
+      file.type &&
+      (file.type.startsWith("image/") ||
+       file.type.startsWith("text/") ||
+       file.type === "application/pdf" ||
+       file.type.startsWith("audio/"));
 
-    if (!isVideoType && !isVideoExt) {
-      setVideoUploadError("Invalid format. Only video files (MP4, WebM, MOV, OGG, M4V) are allowed.");
+    const isVideoMime = Boolean(file.type && file.type.startsWith("video/"));
+    const isSupportedVideoExt = supportedExtensions.includes(extension);
+
+    // Accept only genuine video files
+    const isValidVideo =
+      !hasExplicitNonVideoMime &&
+      !nonVideoExtensions.includes(extension) &&
+      (isVideoMime || isSupportedVideoExt);
+
+    if (!isValidVideo) {
+      setVideoUploadError("Please select a video file. Supported formats: MP4, WebM, MOV, OGG.");
       return;
     }
 
